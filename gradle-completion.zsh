@@ -88,7 +88,7 @@ if [[ $words[CURRENT] != -* ]]; then
                 local -a match mbegin mend
                 # Run gradle/gradlew and retrieve possible tasks.
                 for outputline in ${(f)"$($service --build-file $gradle_buildfile -q tasks --all)"}; do
-                    if [[ $outputline == [[:blank:]]#(#b)([[:alnum:][:punct:]]##)(*) ]]; then
+                    if [[ $outputline == [[:blank:]]#(#b)([[:lower:]][[:alnum:][:punct:]]##)(*) ]]; then
                         # The descriptions of main tasks start at beginning of line, descriptions of
                         # secondary tasks are indented.
                         if [[ $outputline == [[:alnum:]]* ]]; then
