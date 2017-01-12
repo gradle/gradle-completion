@@ -8,6 +8,8 @@ This provides tab completion support for completing:
 
 It also handles custom default build files, so `rootProject.defaultBuildFile = 'build.gradle.kts'` is supported.
 
+Performance of Zsh completion is significantly improved.
+
 ## Installation for Zsh 5.0+
 
 Download and place `gradle-completion.zsh` on your `$fpath`. I recommend `$HOME/.zsh/completions`:
@@ -38,3 +40,4 @@ Current improvements over built-in support:
  - Subproject tasks are completed
  - Gradle CLI options are current as of Gradle 3.3
  - Handles default build file as specified in settings.gradle
+ - Completion performance is significantly improved
