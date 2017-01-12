@@ -3,7 +3,7 @@
 local curcontext="$curcontext" ret=1 state state_descr line
 local gradle_inspect=yes cache_policy tag_order
 local -A opt_args
-local -a gradle_group_tasks gradle_all_tasks
+local -a gradle_tasks
 
 # Set the caching policy to invalidate cache if the build file is newer than the cache.
 _gradle_caching_policy() {
@@ -12,11 +12,6 @@ _gradle_caching_policy() {
 
 zstyle -s ":completion:*:*:$service:*" cache-policy cache_policy || \
     zstyle ":completion:*:*:$service:*" cache-policy _gradle_caching_policy
-
-# By default, we only complete main tasks (belonging to a group). Secondary tasks are
-# completed if no main tasks are found.
-zstyle -a ":completion:*:*:$service:*" tag-order tag_order || \
-    zstyle ":completion:*:*:$service:*" tag-order 'gradle_group' 'gradle_all'
 
 # The completion inspects the current build file to find tasks to complete. Setting
 # this style to 'no' or 'false' turns off inspection. In that case only the built-in tasks
@@ -63,8 +58,7 @@ _arguments -C \
     {-t,--continuous}'[Enables continuous build. Gradle does not exit and will re-execute tasks when task file inputs change.]' \
     {-u,--no-search-upward}"[Don't search in parent folders for a settings.gradle file.]" \
     '(-)'{-v,--version}'[Print version info.]' \
-    {-x,--exclude-task}'[Specify a task to be excluded from execution.]:task to exclude:->alltask' \
-    '*:task:->task' \
+    {-x,--exclude-task}'[Specify a task to be excluded from execution.]' \
     && ret=0
 
 if [[ $words[CURRENT] != -* ]]; then
@@ -88,32 +82,14 @@ if [[ $words[CURRENT] != -* ]]; then
                 local -a match mbegin mend
                 # Run gradle/gradlew and retrieve possible tasks.
                 for outputline in ${(f)"$($service --build-file $gradle_buildfile -q tasks --all)"}; do
-                    if [[ $outputline == [[:blank:]]#(#b)([[:lower:]][[:alnum:][:punct:]]##)(*) ]]; then
-                        # The descriptions of main tasks start at beginning of line, descriptions of
-                        # secondary tasks are indented.
-                        if [[ $outputline == [[:alnum:]]* ]]; then
-                            gradle_group_tasks+=( "${match[1]//:/\\:}:${match[2]// - /}" )
-                        else
-                            gradle_all_tasks+=( "${match[1]//:/\\:}:${match[2]// - /}" )
-                        fi
+                    if [[ $outputline == (#b)([[:lower:]][[:alnum:][:punct:]]##)(*) ]]; then
+                        gradle_tasks+=( "${match[1]//:/\\:}:${match[2]// - /}" )
                     fi
                 done
-                _store_cache $cache_name gradle_group_tasks gradle_all_tasks
+                _store_cache $cache_name gradle_tasks
             fi
 
-            if [[ $state == task ]]; then
-                _tags gradle_group gradle_all
-                while _tags; do
-                    # Offer main tasks and secondary tasks in different tags.
-                    _requested gradle_group && _describe 'group tasks' gradle_group_tasks && ret=0
-                    _requested gradle_all && _describe 'secondary tasks' gradle_all_tasks && ret=0
-                    (( ret )) || break
-                done
-            elif [[ $state == alltask ]]; then
-                # After '--exclude-task', we don't make a distinction between main tasks and
-                # secondary tasks.
-                _describe 'all tasks' gradle_group_tasks -- gradle_all_tasks && ret=0
-            fi
+            _describe 'all tasks' gradle_tasks && ret=0
         fi
     else
         _describe 'built-in tasks' '(
