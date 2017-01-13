@@ -80,8 +80,12 @@ if [[ $words[CURRENT] != -* ]]; then
                 zle -R "Generating cache from $gradle_buildfile"
                 local outputline
                 local -a match mbegin mend
+                local gradle_cmd='gradle'
+                if [[ -x ./gradlew ]]; then
+                    gradle_cmd='./gradlew'
+                fi
                 # Run gradle/gradlew and retrieve possible tasks.
-                for outputline in ${(f)"$($service --build-file $gradle_buildfile -q tasks --all)"}; do
+                for outputline in ${(f)"$($gradle_cmd --build-file $gradle_buildfile -q tasks --all)"}; do
                     if [[ $outputline == (#b)([[:lower:]][[:alnum:][:punct:]]##)(*) ]]; then
                         gradle_tasks+=( "${match[1]//:/\\:}:${match[2]// - /}" )
                     fi
