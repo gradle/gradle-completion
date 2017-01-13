@@ -12,24 +12,32 @@ Performance of Zsh completion is significantly improved.
 
 ## Installation for Zsh 5.0+
 
-Download and place `gradle-completion.zsh` on your `$fpath`. I recommend `$HOME/.zsh/completions`:
+Download and place `gradle-completion.zsh` on your `$fpath`. I recommend `$HOME/.zsh/gradle-completion`:
 ```
-wget -O $HOME/.zsh/completions/_gradle https://raw.githubusercontent.com/eriwen/gradle-completion/master/gradle-completion.zsh
+git clone git://github.com/eriwen/gradle-completion ~/.zsh/gradle-completion
 ```
+
+Add the following do your '.zshrc' file:
+```
+echo "\nfpath=($HOME/.zsh/gradle-completion \$fpath)" >> ~/.zshrc
+```
+
+Start a new terminal session.
 
 ## Installation for Bash 3.2+
 
-Download from GitHub:
+Download and place `gradle-completion.bash` in your `bash_completion.d` folder, usually `/etc/bash_completion.d`, `/usr/local/etc/bash_completion.d`, or `$HOME/bash_completion.d`:
 ```
-wget -O https://raw.githubusercontent.com/eriwen/gradle-completion/master/gradle-completion.bash
+mkdir $HOME/bash_completion.d
+wget -O $HOME/bash_completion.d/gradle-completion.bash https://raw.githubusercontent.com/eriwen/gradle-completion/master/gradle-completion.bash
 ```
 
-Place it in your `bash_completion.d` folder, usually `/etc/bash_completion.d`, `/usr/local/etc/bash_completion.d`, or `$HOME/bash_completion.d`
+Add the following to your `.bashrc` file:
+```
+source $HOME/bash_completion.d/gradle-completion.bash
+```
 
-Alternatively, you can source it manually or through your `.bashrc` file:
-```
-source /path/to/gradle-completion.bash
-```
+Start a new terminal session.
 
 ## Acknowledgements
 Bash completion is inspired by [Nolan Lawson's Gradle tab completion for bash](https://gist.github.com/nolanlawson/8694399).
