@@ -1,7 +1,7 @@
 #compdef gradle gradlew
 
 local curcontext="$curcontext" ret=1 state state_descr line
-local gradle_inspect=yes cache_policy tag_order
+local gradle_inspect=yes cache_policy
 local -A opt_args
 local -a gradle_tasks
 
