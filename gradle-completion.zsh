@@ -5,9 +5,9 @@ local gradle_inspect=yes cache_policy
 local -A opt_args
 local -a gradle_tasks
 
-# Set the caching policy to invalidate cache if the build file is newer than the cache.
+# The cache key is md5 sum of all gradle scripts, so it's valid if it exists.
 _gradle_caching_policy() {
-    [[ $gradle_buildfile -nt $1 || $gradle_settingsfile -nt $1 ]]
+    [[ ! -e $1 ]]
 }
 
 zstyle -s ":completion:*:*:$service:*" cache-policy cache_policy || \
@@ -76,15 +76,25 @@ if [[ $words[CURRENT] != -* ]]; then
         if [[ -f $gradle_buildfile ]]; then
             # Cache name is constructed from the absolute path of the build file.
             local cache_name=${${gradle_buildfile:a}//[^[:alnum:]]/_}
-            if _cache_invalid $cache_name || ! _retrieve_cache $cache_name; then
+            # Compute hash of hashes of all build/setting scripts for cache key
+            if [[ -x `which md5 2>/dev/null` ]]; then #macOS
+                local -a gradle_build_scripts
+                gradle_build_scripts=( $(find . -type f -name "*.gradle" -o -name "*.gradle.kts" 2>/dev/null) )
+                cache_name="$(md5 -q -s "$(md5 -q ${gradle_build_scripts})")_$cache_name"
+            else
+                cache_name="$(find . -type f -name "*.gradle" -o -name "*.gradle.kts" | xargs md5sum | md5sum)_$cache_name"
+            fi
+
+            if ! _retrieve_cache $cache_name; then
                 zle -R "Generating cache from $gradle_buildfile"
-                local outputline
-                local -a match mbegin mend
+                # Use Gradle wrapper when it exists.
                 local gradle_cmd='gradle'
                 if [[ -x ./gradlew ]]; then
                     gradle_cmd='./gradlew'
                 fi
-                # Run gradle/gradlew and retrieve possible tasks.
+                # Run gradle and retrieve possible tasks.
+                local outputline
+                local -a match mbegin mend
                 for outputline in ${(f)"$($gradle_cmd --build-file $gradle_buildfile -q tasks --all)"}; do
                     if [[ $outputline == (#b)([[:lower:]][[:alnum:][:punct:]]##)(*) ]]; then
                         gradle_tasks+=( "${match[1]//:/\\:}:${match[2]// - /}" )
