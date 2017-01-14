@@ -15,25 +15,25 @@ _gradle()
     local IFS=$'\n'
 
     if [[ ${cur} == -* ]]; then
-        local args="-a  - Do not rebuild project dependencies
--b  - Specifies the build file
--c  - Specifies the settings file
--d  - Log at the debug level
--g  - Specifies the Gradle user home directory
--h  - Shows a help message
--i  - Set log level to INFO
--m  - Runs the build with all task actions disabled
--p  - Specifies the start directory for Gradle
--q  - Log errors only
--s  - Print out the stacktrace also for user exceptions
--t  - Continuous mode. Automatically re-run build after changes
--u  - Do not search in parent directories for a settings.gradle
--v  - Prints Gradle version info
--x  - Specify a task to be excluded
--D  - Set a system property
--I  - Specifies an initialization script
--P  - Sets a project property of the root project
--S  - Print out the full (very verbose) stacktrace
+        local args="-a                      - Do not rebuild project dependencies
+-b                      - Specifies the build file
+-c                      - Specifies the settings file
+-d                      - Log at the debug level
+-g                      - Specifies the Gradle user home directory
+-h                      - Shows a help message
+-i                      - Set log level to INFO
+-m                      - Runs the build with all task actions disabled
+-p                      - Specifies the start directory for Gradle
+-q                      - Log errors only
+-s                      - Print out the stacktrace also for user exceptions
+-t                      - Continuous mode. Automatically re-run build after changes
+-u                      - Do not search in parent directories for a settings.gradle
+-v                      - Prints Gradle version info
+-x                      - Specify a task to be excluded
+-D                      - Set a system property
+-I                      - Specifies an initialization script
+-P                      - Sets a project property of the root project
+-S                      - Print out the full (very verbose) stacktrace
 --build-file            - Specifies the build file
 --configure-on-demand   - Only relevant projects are configured
 --console               - Type of console output to generate (plain auto rich)
