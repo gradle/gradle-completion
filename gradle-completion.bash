@@ -121,6 +121,6 @@ _gradle()
     fi
     return 0
 }
-complete -o nosort -F _gradle gradle
-complete -o nosort -F _gradle gradlew
-complete -o nosort -F _gradle ./gradlew
+complete -F _gradle gradle
+complete -F _gradle gradlew
+complete -F _gradle ./gradlew
