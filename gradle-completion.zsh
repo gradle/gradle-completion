@@ -27,7 +27,14 @@ _arguments -C \
     '--configure-on-demand[Only relevant projects are configured in this build run.]' \
     '--console[Specifies which type of console output to generate. Values are 'plain', 'auto' (default) or 'rich'.]:console output type:' \
     '--continue[Continues task execution after a task failure.]' \
-    \*{-D+,--system-prop}'[Set system property of the JVM (e.g. -Dmyprop=myvalue).]:system property (prop=val):' \
+    '-Dorg.gradle.cache.reserved.mb=[Reserve Gradle Daemon memory for operations.]' \
+    '-Dorg.gradle.daemon.debug=[Set true to debug Gradle Daemon.]' \
+    '-Dorg.gradle.daemon.idletimeout=[Kill Gradle Daemon after # idle millis.]' \
+    '-Dorg.gradle.debug=[Set true to debug Gradle Client.]' \
+    '-Dorg.gradle.jvmargs=[Set JVM arguments.]' \
+    '-Dorg.gradle.java.home=[Set JDK home dir.]' \
+    '-Dorg.gradle.parallel=[Set true to enable parallel project builds.]' \
+    '-Dorg.gradle.parallel.intra=[Set true to enable intra-project parallel builds.]' \
     '(-i --info -q --quiet)'{-d,--debug}'[Log in debug mode (includes normal stacktrace).]' \
     '(--no-daemon)--daemon[Uses the Gradle daemon to run the build. Starts the daemon if not running.]' \
     '--foreground[Starts the Gradle daemon in the foreground.]' \
@@ -55,6 +62,7 @@ _arguments -C \
     '(-s --stacktrace)'{-S,--full-stacktrace}'[Print out the full (very verbose) stacktrace for all exceptions.]' \
     '(-)--status[Shows status of running and recently stopped Gradle Daemons.]' \
     '(-)--stop[Stops all Gradle daemons.]' \
+    '--system-prop[system property (prop=val)]' \
     {-t,--continuous}'[Enables continuous build. Gradle does not exit and will re-execute tasks when task file inputs change.]' \
     {-u,--no-search-upward}"[Don't search in parent folders for a settings.gradle file.]" \
     '(-)'{-v,--version}'[Print version info.]' \

@@ -1,6 +1,7 @@
 _gradle()
 {
     local cur=${COMP_WORDS[COMP_CWORD]}
+    local args
     COMPREPLY=()
     local gradle_cmd='gradle'
     if [[ -x ./gradlew ]]; then
@@ -14,27 +15,8 @@ _gradle()
     local OLDIFS="$IFS"
     local IFS=$'\n'
 
-    if [[ ${cur} == -* ]]; then
-        local args="-a                      - Do not rebuild project dependencies
--b                      - Specifies the build file
--c                      - Specifies the settings file
--d                      - Log at the debug level
--g                      - Specifies the Gradle user home directory
--h                      - Shows a help message
--i                      - Set log level to INFO
--m                      - Runs the build with all task actions disabled
--p                      - Specifies the start directory for Gradle
--q                      - Log errors only
--s                      - Print out the stacktrace also for user exceptions
--t                      - Continuous mode. Automatically re-run build after changes
--u                      - Do not search in parent directories for a settings.gradle
--v                      - Prints Gradle version info
--x                      - Specify a task to be excluded
--D                      - Set a system property
--I                      - Specifies an initialization script
--P                      - Sets a project property of the root project
--S                      - Print out the full (very verbose) stacktrace
---build-file            - Specifies the build file
+    if [[ ${cur} == --* ]]; then
+        args="--build-file            - Specifies the build file
 --configure-on-demand   - Only relevant projects are configured
 --console               - Type of console output to generate (plain auto rich)
 --continue              - Continues task execution after a task failure
@@ -70,6 +52,38 @@ _gradle()
 --stop                  - Stop all Gradle Daemons
 --system-prop           - Set a system property
 --version               - Prints Gradle version info"
+        COMPREPLY=( $(compgen -W "$args" -- "$cur") )
+    elif [[ ${cur} == -D* ]]; then
+        args="-Dorg.gradle.cache.reserved.mb=   - Reserve Gradle Daemon memory for operations
+-Dorg.gradle.daemon.debug=        - Set true to debug Gradle Daemon
+-Dorg.gradle.daemon.idletimeout=  - Kill Gradle Daemon after # idle millis
+-Dorg.gradle.debug=               - Set true to debug Gradle Client
+-Dorg.gradle.jvmargs=             - Set JVM arguments
+-Dorg.gradle.java.home=           - Set JDK home dir
+-Dorg.gradle.parallel=            - Set true to enable parallel project builds (incubating)
+-Dorg.gradle.parallel.intra=      - Set true to enable intra-project parallel builds (incubating)"
+        COMPREPLY=( $(compgen -W "$args" -- "$cur") )
+    elif [[ ${cur} == -* ]]; then
+        args="-?                      - Shows a help message
+-a                      - Do not rebuild project dependencies
+-b                      - Specifies the build file
+-c                      - Specifies the settings file
+-d                      - Log at the debug level
+-g                      - Specifies the Gradle user home directory
+-h                      - Shows a help message
+-i                      - Set log level to INFO
+-m                      - Runs the build with all task actions disabled
+-p                      - Specifies the start directory for Gradle
+-q                      - Log errors only
+-s                      - Print out the stacktrace also for user exceptions
+-t                      - Continuous mode. Automatically re-run build after changes
+-u                      - Do not search in parent directories for a settings.gradle
+-v                      - Prints Gradle version info
+-x                      - Specify a task to be excluded
+-D                      - Set a system property
+-I                      - Specifies an initialization script
+-P                      - Sets a project property of the root project
+-S                      - Print out the full (very verbose) stacktrace"
         COMPREPLY=( $(compgen -W "$args" -- "$cur") )
     else
         # Look for default build script in the settings file (settings.gradle by default)
