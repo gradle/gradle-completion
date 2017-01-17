@@ -96,26 +96,34 @@ _gradle()
 
         local gradle_files_checksum
         if [[ -f $gradle_buildfile ]]; then
-            if [[ -x `which md5 2>/dev/null` ]]; then
-                # Hash all build/settings scripts on macOS
-                local gradle_build_scripts=$(find . -type f -name "*.gradle" -o -name "*.gradle.kts" 2>/dev/null)
+            local gradle_build_scripts=$(find . -type f -name "*.gradle" -o -name "*.gradle.kts" 2>/dev/null | egrep -v "/(build|integTest)/")
+            if builtin command -v md5 > /dev/null; then
                 gradle_files_checksum=$(md5 -q -s "$(md5 -q $gradle_build_scripts)")
+            elif builtin command -v md5sum > /dev/null; then
+                gradle_files_checksum=($(echo "$gradle_build_scripts" | xargs md5sum | md5sum))
             else
-                # Hash all build/settings scripts on linux
-                gradle_files_checksum=($(find . -type f -name "*.gradle" -o -name "*.gradle.kts" | xargs md5sum | md5sum))
+                echo "Could not find md5 or md5sum on \$PATH"
+                return 1
             fi
         else
             gradle_files_checksum='NO_BUILD_SCRIPTS_FOUND'
         fi
 
-        # Check task name cache and regenerate if necessary
+        # Check task name cache and regenerate if necessary.
         local -a gradle_all_tasks=()
         if [[ -f $cache_dir/$gradle_files_checksum ]]; then
             gradle_all_tasks=( $(cat $cache_dir/$gradle_files_checksum) )
         else
+            # Reuse Gradle Daemon if IDLE but don't start a new one.
+            local gradle_tasks_output
+            if [[ ! -z "$(./gradlew --status 2>/dev/null | grep IDLE)" ]]; then
+                gradle_tasks_output="$($gradle_cmd --daemon -q tasks --all | sed 's/:/\\:/g')"
+            else
+                gradle_tasks_output="$($gradle_cmd --no-daemon -q tasks --all | sed 's/:/\\:/g')"
+            fi
             # Tasks not cached. Run gradle to retrieve possible tasks.
             local outputline
-            for outputline in $($gradle_cmd -q tasks --all); do
+            for outputline in $gradle_tasks_output; do
                 if [[ $outputline =~ ([[:alnum:][:punct:]]*)[[:space:]]-[[:space:]]([[:print:]]*) ]]; then
                     gradle_all_tasks+=( "${BASH_REMATCH[1]}  - ${BASH_REMATCH[2]}" )
                 fi

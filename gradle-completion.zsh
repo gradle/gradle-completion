@@ -85,12 +85,14 @@ if [[ $words[CURRENT] != -* ]]; then
             # Cache name is constructed from the absolute path of the build file.
             local cache_name=${${gradle_buildfile:a}//[^[:alnum:]]/_}
             # Compute hash of hashes of all build/setting scripts for cache key
-            if [[ -x `which md5 2>/dev/null` ]]; then #macOS
-                local -a gradle_build_scripts
-                gradle_build_scripts=( $(find . -type f -name "*.gradle" -o -name "*.gradle.kts" 2>/dev/null) )
+            local -a gradle_build_scripts
+            gradle_build_scripts=( $(find . -type f -name "*.gradle" -o -name "*.gradle.kts" 2>/dev/null | egrep -v "/(build|integTest)/" | sed -e 's/ /\\ /g') )
+            if [[ -x `which md5 2>/dev/null` ]]; then
                 cache_name="$(md5 -q -s "$(md5 -q ${gradle_build_scripts})")_$cache_name"
+            elif [[ -x `which md5sum 2>/dev/null` ]]; then
+                cache_name="$(echo "${gradle_build_scripts}" | xargs md5sum | md5sum)_$cache_name"
             else
-                cache_name="$(find . -type f -name "*.gradle" -o -name "*.gradle.kts" | xargs md5sum | md5sum)_$cache_name"
+                _message 'Cannot generate completions as neither md5 nor md5sum exist on \$PATH'
             fi
 
             if ! _retrieve_cache $cache_name; then
@@ -100,10 +102,17 @@ if [[ $words[CURRENT] != -* ]]; then
                 if [[ -x ./gradlew ]]; then
                     gradle_cmd='./gradlew'
                 fi
+                # Reuse Gradle Daemon if IDLE but don't start a new one.
+                local gradle_tasks_output
+                if [[ ! -z "$(./gradlew --status 2>/dev/null | grep IDLE)" ]]; then
+                    gradle_tasks_output="$($gradle_cmd --daemon --build-file $gradle_buildfile -q tasks --all)"
+                else
+                    gradle_tasks_output="$($gradle_cmd --no-daemon --build-file $gradle_buildfile -q tasks --all)"
+                fi
                 # Run gradle and retrieve possible tasks.
                 local outputline
                 local -a match mbegin mend
-                for outputline in ${(f)"$($gradle_cmd --build-file $gradle_buildfile -q tasks --all)"}; do
+                for outputline in ${(f)"$(echo $gradle_tasks_output)"}; do
                     if [[ $outputline == (#b)([[:lower:]][[:alnum:][:punct:]]##)(*) ]]; then
                         gradle_tasks+=( "${match[1]//:/\\:}:${match[2]// - /}" )
                     fi
