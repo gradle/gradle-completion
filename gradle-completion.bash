@@ -1,8 +1,12 @@
 _gradle()
 {
+    # Bash breaks words on : by default. Subproject tasks have ':'
+    # Avoid inaccurate completions for subproject tasks
+    local OLDCOMP_WORDBREAKS="$COMP_WORDBREAKS"
+    local COMP_WORDBREAKS=$(echo "$COMP_WORDBREAKS" | sed -e 's/://g')
     local cur=${COMP_WORDS[COMP_CWORD]}
+
     local args
-    COMPREPLY=()
     local gradle_cmd='gradle'
     if [[ -x ./gradlew ]]; then
         gradle_cmd='./gradlew'
@@ -95,44 +99,65 @@ _gradle()
         fi
 
         local gradle_files_checksum
+        # If we're in a Gradle project, check if completion cache is up-to-date
         if [[ -f $gradle_buildfile ]]; then
-            local gradle_build_scripts=$(find . -type f -name "*.gradle" -o -name "*.gradle.kts" 2>/dev/null | egrep -v "/(build|integTest)/")
+            # Cache name is constructed from the absolute path of the build file.
+            local cache_name=$(echo $(pwd)/$gradle_buildfile | sed -e 's/\//_/g')
+            if [[ ! -f $cache_dir/$cache_name ]]; then
+                # Cache all Gradle scripts
+                local gradle_build_scripts=$(find . -type f -name "*.gradle" -o -name "*.gradle.kts" 2>/dev/null | egrep -v "/(build|integTest)/")
+                printf "%s\n" "${gradle_build_scripts[@]}" > $cache_dir/$cache_name
+            fi
+
+            # Cache MD5 sum of all Gradle scripts and modified timestamps
             if builtin command -v md5 > /dev/null; then
-                gradle_files_checksum=$(md5 -q -s "$(md5 -q $gradle_build_scripts)")
+                gradle_files_checksum=$(md5 -q -s "$(cat "$cache_dir/$cache_name" | xargs stat -f %N:%m)")
             elif builtin command -v md5sum > /dev/null; then
-                gradle_files_checksum=($(echo "$gradle_build_scripts" | xargs md5sum | md5sum))
+                gradle_files_checksum=$(cat "$cache_dir/$cache_name" | xargs stat -f %N:%m | md5sum)
             else
                 echo "Could not find md5 or md5sum on \$PATH"
                 return 1
             fi
-        else
-            gradle_files_checksum='NO_BUILD_SCRIPTS_FOUND'
-        fi
 
-        # Check task name cache and regenerate if necessary.
-        local -a gradle_all_tasks=()
-        if [[ -f $cache_dir/$gradle_files_checksum ]]; then
-            gradle_all_tasks=( $(cat $cache_dir/$gradle_files_checksum) )
-        else
-            # Reuse Gradle Daemon if IDLE but don't start a new one.
-            local gradle_tasks_output
-            if [[ ! -z "$(./gradlew --status 2>/dev/null | grep IDLE)" ]]; then
-                gradle_tasks_output="$($gradle_cmd --daemon -q tasks --all | sed 's/:/\\:/g')"
-            else
-                gradle_tasks_output="$($gradle_cmd --no-daemon -q tasks --all | sed 's/:/\\:/g')"
-            fi
-            # Tasks not cached. Run gradle to retrieve possible tasks.
-            local outputline
-            for outputline in $gradle_tasks_output; do
-                if [[ $outputline =~ ([[:alnum:][:punct:]]*)[[:space:]]-[[:space:]]([[:print:]]*) ]]; then
-                    gradle_all_tasks+=( "${BASH_REMATCH[1]}  - ${BASH_REMATCH[2]}" )
+            if [[ ! -f $cache_dir/$cache_name.md5 || $gradle_files_checksum != "$(cat $cache_dir/$cache_name.md5)" || ! -f $cache_dir/$gradle_files_checksum ]]; then
+                # Run gradle to retrieve possible tasks and cache.
+                # Reuse Gradle Daemon if IDLE but don't start a new one.
+                local gradle_tasks_output
+                if [[ ! -z "$($gradle_cmd --status 2>/dev/null | grep IDLE)" ]]; then
+                    gradle_tasks_output="$($gradle_cmd --daemon -q tasks --all)"
+                else
+                    gradle_tasks_output="$($gradle_cmd --no-daemon -q tasks --all)"
                 fi
-            done
+                local outputline
+                local task_description
+                local -a gradle_all_tasks=()
+                for outputline in $gradle_tasks_output; do
+                    if [[ $outputline =~ ([[:alnum:][:punct:]]*)[[:space:]]-[[:space:]]([[:print:]]*) ]]; then
+                        task_description="${BASH_REMATCH[1]}  - ${BASH_REMATCH[2]}"
+                        gradle_all_tasks+=( "$task_description" )
+                        # Completion for subproject tasks with ':' prefix
+                        if [[ $outputline =~ [[:alnum:]]:[[:alnum:]]* ]]; then
+                            gradle_all_tasks+=( ":$task_description" )
+                        fi
+                    fi
+                done
 
-            # Cache results
-            printf "%s\n" "${gradle_all_tasks[@]}" > $cache_dir/$gradle_files_checksum
+                printf "%s\n" "${gradle_all_tasks[@]}" > $cache_dir/$gradle_files_checksum
+                echo $gradle_files_checksum > $cache_dir/$cache_name.md5
+            fi
+        else
+            return 1
         fi
-        COMPREPLY=( $(compgen -W "${gradle_all_tasks[*]}" -- "$cur") )
+
+        if [[ -f $cache_dir/$gradle_files_checksum ]]; then
+            local -a cached_tasks
+            cached_tasks=( $(cat $cache_dir/$gradle_files_checksum) )
+            COMPREPLY=( $(compgen -W "${cached_tasks[*]}" -- "$cur") )
+        else
+            echo "D'oh! There's a bug in the completion script, please submit an issue to eriwen/gradle-completion"
+            # previous steps failed, maybe cache dir is not readable/writable
+            return 1
+        fi
     fi
 
     IFS="$OLDIFS"
@@ -141,6 +166,9 @@ _gradle()
     if [[ ${#COMPREPLY[*]} -eq 1 ]]; then
         COMPREPLY=( ${COMPREPLY[0]%%  *} )
     fi
+
+    COMP_WORDBREAKS="$OLDCOMP_WORDBREAKS"
+
     return 0
 }
 complete -F _gradle gradle
