@@ -116,6 +116,9 @@ _gradle()
             fi
 
             if [[ ! -f $cache_dir/$cache_name.md5 || $gradle_files_checksum != "$(cat $cache_dir/$cache_name.md5)" || ! -f $cache_dir/$gradle_files_checksum ]]; then
+                # Notify user of cache rebuild
+                echo -e " (Building completion cache. Please wait)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\c"
+
                 # Run gradle to retrieve possible tasks and cache.
                 # Reuse Gradle Daemon if IDLE but don't start a new one.
                 local gradle_tasks_output
@@ -140,6 +143,9 @@ _gradle()
 
                 printf "%s\n" "${gradle_all_tasks[@]}" > $cache_dir/$gradle_files_checksum
                 echo $gradle_files_checksum > $cache_dir/$cache_name.md5
+
+                # Remove "please wait" message by writing a bunch of spaces then moving back to the left
+                echo -e "                                         \b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\c"
             fi
         else
             return 1
