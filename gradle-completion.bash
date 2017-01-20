@@ -1,11 +1,10 @@
+# Bash breaks words on : by default. Subproject tasks have ':'
+# Avoid inaccurate completions for subproject tasks
+COMP_WORDBREAKS=$(echo "$COMP_WORDBREAKS" | sed -e 's/://g')
+
 _gradle()
 {
-    # Bash breaks words on : by default. Subproject tasks have ':'
-    # Avoid inaccurate completions for subproject tasks
-    local OLDCOMP_WORDBREAKS="$COMP_WORDBREAKS"
-    local COMP_WORDBREAKS=$(echo "$COMP_WORDBREAKS" | sed -e 's/://g')
     local cur=${COMP_WORDS[COMP_CWORD]}
-
     local args
     local gradle_cmd='gradle'
     if [[ -x ./gradlew ]]; then
@@ -14,10 +13,6 @@ _gradle()
 
     local cache_dir="$HOME/.gradle/completion"
     mkdir -p $cache_dir
-
-    # Set bash internal field separator to '\n'
-    local OLDIFS="$IFS"
-    local IFS=$'\n'
 
     if [[ ${cur} == --* ]]; then
         args="--build-file            - Specifies the build file
@@ -94,7 +89,8 @@ _gradle()
         # Otherwise, default is the file 'build.gradle' in the current directory.
         local gradle_buildfile=build.gradle
         if [[ -f settings.gradle ]]; then
-            local build_file_name=$(grep "^rootProject\.buildFileName" settings.gradle | sed -n -e "s/rootProject\.buildFileName = [\'\"]\(.*\)[\'\"]/\1/p")
+            local build_file_name=$(grep "^rootProject\.buildFileName" settings.gradle | \
+                sed -n -e "s/rootProject\.buildFileName = [\'\"]\(.*\)[\'\"]/\1/p")
             gradle_buildfile=${build_file_name:-build.gradle}
         fi
 
@@ -160,14 +156,10 @@ _gradle()
         fi
     fi
 
-    IFS="$OLDIFS"
-
     # Remove description ("[:space:]" and after) if only one possibility
     if [[ ${#COMPREPLY[*]} -eq 1 ]]; then
         COMPREPLY=( ${COMPREPLY[0]%%  *} )
     fi
-
-    COMP_WORDBREAKS="$OLDCOMP_WORDBREAKS"
 
     return 0
 }
