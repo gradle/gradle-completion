@@ -39,6 +39,19 @@ source $HOME/bash_completion.d/gradle-completion.bash
 
 Start a new terminal session.
 
+## Additional Configuration
+
+#### Cache config
+The build script cache is invalidated if any *.gradle or *.gradle.kts files change. 
+However, these completion scripts do not search for new build scripts every time completion is invoked, because
+that would make completion ~20x slower (unless you have so really good ideas on this).
+
+By default, the build script cache is invalidated every 3 weeks (30240 minutes). 
+You can configure this value by exporting a new value for `$GRADLE_CACHE_TTL_MINUTES`:
+```
+export GRADLE_CACHE_TTL_MINUTES=$(expr 1440 \* number_of_days_you_want)
+```
+
 ## Acknowledgements
 Bash completion is inspired by [Nolan Lawson's Gradle tab completion for bash](https://gist.github.com/nolanlawson/8694399).
 

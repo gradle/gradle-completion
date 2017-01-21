@@ -2,12 +2,20 @@
 
 local curcontext="$curcontext" ret=1
 local cache_policy
+# Invalidate cache after 3 weeks by default
+local cache_ttl_mins=${$(echo $GRADLE_CACHE_TTL_MINUTES):-30240}
 local -A opt_args
 local -a gradle_build_scripts
 local -a previous_checksum
 local -a gradle_tasks
 
-zstyle -s ":completion:*:*:$service:*" cache-policy cache_policy
+# The cache key is md5 sum of all gradle scripts, so it's valid if it exists.
+_gradle_caching_policy() {
+    [[ ! $(find $1 -mmin -$cache_ttl_mins 2>/dev/null) ]]
+}
+
+zstyle -s ":completion:*:*:$service:*" cache-policy cache_policy || \
+    zstyle ":completion:*:*:$service:*" cache-policy _gradle_caching_policy
 
 _arguments -C \
     '(-)'{-\?,-h,--help}'[Shows a help message.]' \

@@ -13,6 +13,7 @@ _gradle()
 
     local cache_dir="$HOME/.gradle/completion"
     mkdir -p $cache_dir
+    local cache_ttl_mins=${GRADLE_CACHE_TTL_MINUTES:-30240}
 
     # Set bash internal field separator to '\n'
     # This allows us to provide descriptions for options and tasks
@@ -104,7 +105,7 @@ _gradle()
         if [[ -f $gradle_buildfile ]]; then
             # Cache name is constructed from the absolute path of the build file.
             local cache_name=$(echo $(pwd)/$gradle_buildfile | sed -e 's/\//_/g')
-            if [[ ! -f $cache_dir/$cache_name ]]; then
+            if [[ ! $(find $cache_dir/$cache_name -mmin -$cache_ttl_mins 2>/dev/null) ]]; then
                 # Cache all Gradle scripts
                 local gradle_build_scripts=$(find . -type f -name "*.gradle" -o -name "*.gradle.kts" 2>/dev/null | egrep -v "/(build|integTest|samples)/")
                 printf "%s\n" "${gradle_build_scripts[@]}" > $cache_dir/$cache_name
