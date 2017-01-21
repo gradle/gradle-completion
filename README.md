@@ -3,8 +3,9 @@ Bash and Zsh completion support for [Gradle](https://gradle.org).
 
 This provides tab completion support for completing:
 
- * Gradle tasks for the current project and subprojects
- * Gradle CLI options
+ * Gradle tasks for the current project and sub-projects
+ * Gradle CLI switches (e.g. `--parallel`)
+ * Common Gradle properties (e.g. `-Dorg.gradle.debug`)
 
 It also handles custom default build files, so `rootProject.defaultBuildFile = 'build.gradle.kts'` is supported.
 
@@ -52,6 +53,18 @@ You can configure this value by exporting a new value for `$GRADLE_CACHE_TTL_MIN
 export GRADLE_CACHE_TTL_MINUTES=$(expr 1440 \* number_of_days_you_want)
 ```
 
+## Troubleshooting
+If zsh completion isn't working, first try checking your `$fpath` with `echo $fpath`. 
+
+zsh completion using `./gradlew` may not work on Linux if you don't have `.` on your `$PATH`,
+so I recommend adding it in your `~/.zshrc` file:
+```bash
+export PATH=".:$PATH"
+```
+
+Completion outside of the root project directory isn't supported yet. 
+Please follow [#3](https://github.com/eriwen/gradle-completion/issues/3) — contributions welcome!
+
 ## Acknowledgements
 Bash completion is inspired by [Nolan Lawson's Gradle tab completion for bash](https://gist.github.com/nolanlawson/8694399).
 
@@ -60,5 +73,6 @@ Zsh completion is an improved version of [zsh](https://github.com/zsh-users/zsh)
 Current improvements over built-in support:
  - Subproject tasks are completed
  - Gradle CLI options are current as of Gradle 3.3
+ - Common Gradle properties are completed
  - Handles default build file as specified in settings.gradle
- - Completion performance is significantly improved
+ - ~20x faster completion speed for medium to large projects
