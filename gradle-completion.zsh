@@ -84,16 +84,16 @@ if [[ $words[CURRENT] != -* ]]; then
         if ! _retrieve_cache $script_path_cache; then
             zle -R "Generating Gradle script cache"
             # Cache all Gradle scripts
-            gradle_build_scripts=( $(find . -type f -name "*.gradle" -o -name "*.gradle.kts" 2>/dev/null | egrep -v "/(build|integTest)/") )
+            gradle_build_scripts=( $(find . -type f -name "*.gradle" -o -name "*.gradle.kts" 2>/dev/null | egrep -v "/(build|integTest|samples)/") )
             _store_cache $script_path_cache gradle_build_scripts
         fi
 
         local current_checksum
         # Cache MD5 sum of all Gradle scripts and modified timestamps
         if builtin command -v md5 > /dev/null; then
-            current_checksum=( $(md5 -q -s "$(printf "%s\n" "$gradle_build_scripts[@]" | xargs stat -f %N:%m)") )
+            current_checksum=( $(md5 -q -s "$(printf "%s\n" "$gradle_build_scripts[@]" | xargs ls -o 2>/dev/null)") )
         elif builtin command -v md5sum > /dev/null; then
-            current_checksum=( $(printf "%s\n" "$gradle_build_scripts[@]" | xargs stat -f %N:%m | md5sum) )
+            current_checksum=( $(printf "%s\n" "$gradle_build_scripts[@]" | xargs ls -o 2>/dev/null | md5sum) )
         else
             _message 'Cannot generate completions as neither md5 nor md5sum exist on \$PATH'
             return 1
@@ -127,7 +127,7 @@ if [[ $words[CURRENT] != -* ]]; then
             done
 
             _store_cache $current_checksum gradle_tasks
-            previous_checksum+=( $current_checksum )
+            previous_checksum=( $current_checksum )
             _store_cache "$script_path_cache.md5" previous_checksum
         fi
 

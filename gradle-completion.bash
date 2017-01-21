@@ -106,15 +106,15 @@ _gradle()
             local cache_name=$(echo $(pwd)/$gradle_buildfile | sed -e 's/\//_/g')
             if [[ ! -f $cache_dir/$cache_name ]]; then
                 # Cache all Gradle scripts
-                local gradle_build_scripts=$(find . -type f -name "*.gradle" -o -name "*.gradle.kts" 2>/dev/null | egrep -v "/(build|integTest)/")
+                local gradle_build_scripts=$(find . -type f -name "*.gradle" -o -name "*.gradle.kts" 2>/dev/null | egrep -v "/(build|integTest|samples)/")
                 printf "%s\n" "${gradle_build_scripts[@]}" > $cache_dir/$cache_name
             fi
 
             # Cache MD5 sum of all Gradle scripts and modified timestamps
             if builtin command -v md5 > /dev/null; then
-                gradle_files_checksum=$(md5 -q -s "$(cat "$cache_dir/$cache_name" | xargs stat -f %N:%m)")
+                gradle_files_checksum=$(md5 -q -s "$(cat "$cache_dir/$cache_name" | xargs ls -o 2>/dev/null)")
             elif builtin command -v md5sum > /dev/null; then
-                gradle_files_checksum=$(cat "$cache_dir/$cache_name" | xargs stat -f %N:%m | md5sum)
+                gradle_files_checksum=$(cat "$cache_dir/$cache_name" | xargs ls -o 2>/dev/null | md5sum)
             else
                 echo "Could not find md5 or md5sum on \$PATH"
                 return 1
