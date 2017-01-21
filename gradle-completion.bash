@@ -14,6 +14,11 @@ _gradle()
     local cache_dir="$HOME/.gradle/completion"
     mkdir -p $cache_dir
 
+    # Set bash internal field separator to '\n'
+    # This allows us to provide descriptions for options and tasks
+    local OLDIFS="$IFS"
+    local IFS=$'\n'
+
     if [[ ${cur} == --* ]]; then
         args="--build-file            - Specifies the build file
 --configure-on-demand   - Only relevant projects are configured
@@ -161,6 +166,8 @@ _gradle()
             return 1
         fi
     fi
+
+    IFS="$OLDIFS"
 
     # Remove description ("[:space:]" and after) if only one possibility
     if [[ ${#COMPREPLY[*]} -eq 1 ]]; then
