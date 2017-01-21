@@ -101,7 +101,7 @@ if [[ $words[CURRENT] != -* ]]; then
         if builtin command -v md5 > /dev/null; then
             current_checksum=( $(md5 -q -s "$(printf "%s\n" "$gradle_build_scripts[@]" | xargs ls -o 2>/dev/null)") )
         elif builtin command -v md5sum > /dev/null; then
-            current_checksum=( $(printf "%s\n" "$gradle_build_scripts[@]" | xargs ls -o 2>/dev/null | md5sum) )
+            current_checksum=( $(printf "%s\n" "$gradle_build_scripts[@]" | xargs ls -o 2>/dev/null | md5sum | awk '{print $1}') )
         else
             _message 'Cannot generate completions as neither md5 nor md5sum exist on \$PATH'
             return 1

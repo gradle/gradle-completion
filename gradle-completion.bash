@@ -115,7 +115,7 @@ _gradle()
             if builtin command -v md5 > /dev/null; then
                 gradle_files_checksum=$(md5 -q -s "$(cat "$cache_dir/$cache_name" | xargs ls -o 2>/dev/null)")
             elif builtin command -v md5sum > /dev/null; then
-                gradle_files_checksum=$(cat "$cache_dir/$cache_name" | xargs ls -o 2>/dev/null | md5sum)
+                gradle_files_checksum=$(cat "$cache_dir/$cache_name" | xargs ls -o 2>/dev/null | md5sum | awk '{print $1}')
             else
                 echo "Could not find md5 or md5sum on \$PATH"
                 return 1
