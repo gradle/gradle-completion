@@ -70,8 +70,9 @@ if [[ $words[CURRENT] != -* ]]; then
     # Look for default build script in the settings file (settings.gradle by default)
     # Otherwise, default is the file 'build.gradle' in the current directory.
     local gradle_settingsfile=${${(v)opt_args[(i)-c|--settings-file]}:-settings.gradle}
+    local default_gradle_buildfile="build.gradle"
     if [[ -f $gradle_settingsfile ]]; then
-        local default_gradle_buildfile=${$(grep "^rootProject\.buildFileName" $gradle_settingsfile | \
+        default_gradle_buildfile=${$(grep "^rootProject\.buildFileName" $gradle_settingsfile | \
             sed -n -e "s/rootProject\.buildFileName = [\'\"]\(.*\)[\'\"]/\1/p"):-build.gradle}
     fi
 
