@@ -62,6 +62,12 @@ so I recommend adding it in your `~/.zshrc` file:
 export PATH=".:$PATH"
 ```
 
+If zsh completion reports "Generating Gradle task cache..." every time, the zsh completion cache
+may be disabled. Enable it by adding the following to your `~/.zshrc` file:
+```bash
+zstyle ':completion:*' use-cache on
+```
+
 Completion outside of the root project directory isn't supported yet. 
 Please follow [#3](https://github.com/eriwen/gradle-completion/issues/3) — contributions welcome!
 
