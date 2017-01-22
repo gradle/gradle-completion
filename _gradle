@@ -124,8 +124,8 @@ if [[ $words[CURRENT] != -* ]]; then
             local task_description
             local -a match
             for outputline in ${(f)"$(echo $gradle_tasks_output)"}; do
-                if [[ $outputline =~ ([[:alnum:][:punct:]]*)[[:space:]]-[[:space:]]([[:print:]]*) ]]; then
-                    task_description="${match[1]//:/\\:}:${match[2]// - /}"
+                if [[ $outputline =~ ^([[:lower:]][[:alnum:][:punct:]]*)([[:space:]]-[[:space:]]([[:print:]]*))? ]]; then
+                    task_description="${match[1]//:/\\:}:${match[3]// - /}"
                     gradle_tasks+=( "$task_description" )
                     # Completion for subproject tasks with ':' prefix
                     if [[ $outputline =~ [[:alnum:]]:[[:alnum:]]* ]]; then
