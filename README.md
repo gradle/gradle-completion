@@ -1,7 +1,7 @@
 # gradle-completion
 Bash and Zsh completion support for [Gradle](https://gradle.org).
 
-This provides _fast_ tab completion support for completing:
+This provides _fast_ tab completion for:
 
  * Gradle tasks for the current project and sub-projects
  * Gradle CLI switches (e.g. `--parallel`)
@@ -11,7 +11,7 @@ It also handles custom default build files, so `rootProject.defaultBuildFile = '
 
 Performance of Zsh completion is significantly improved.
 
-![Completion demo](gradle-completion-demo.gif)
+![Completion demo](gradle-completion-short.gif)
 
 ## Installation for Zsh 5.0+
 
