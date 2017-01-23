@@ -9,8 +9,7 @@ This provides _fast_ tab completion for:
 
 It also handles custom default build files, so `rootProject.defaultBuildFile = 'build.gradle.kts'` is supported.
 
-Performance of Zsh completion is significantly improved.
-
+Here's a demo for the gradle project itself:
 ![Completion demo](gradle-completion-short.gif)
 
 ## Installation for Zsh 5.0+
