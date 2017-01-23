@@ -25,7 +25,7 @@ Add the following do your '.zshrc' file:
 echo "\nfpath=($HOME/.zsh/gradle-completion \$fpath)" >> ~/.zshrc
 ```
 
-Start a new terminal session.
+Start a new terminal session. You may need to disable the `gradle` plugin for `oh-my-zsh`.
 
 ## Installation for Bash 3.2+
 
