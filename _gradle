@@ -1,4 +1,4 @@
-#compdef gradle gradlew
+#compdef gradle gradlew gw
 
 local curcontext="$curcontext" ret=1
 local cache_policy
