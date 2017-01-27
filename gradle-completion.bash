@@ -133,15 +133,15 @@ _gradle()
                 else
                     gradle_tasks_output="$($gradle_cmd --no-daemon -q tasks --all)"
                 fi
-                local outputline
+                local output_line
                 local task_description
                 local -a gradle_all_tasks=()
-                for outputline in $gradle_tasks_output; do
-                    if [[ $outputline =~ ^([[:lower:]][[:alnum:][:punct:]]*)([[:space:]]-[[:space:]]([[:print:]]*))? ]]; then
+                for output_line in $gradle_tasks_output; do
+                    if [[ $output_line =~ ^([[:lower:]][[:alnum:][:punct:]]*)([[:space:]]-[[:space:]]([[:print:]]*))? ]]; then
                         task_description="${BASH_REMATCH[1]}  - ${BASH_REMATCH[3]}"
                         gradle_all_tasks+=( "$task_description" )
                         # Completion for subproject tasks with ':' prefix
-                        if [[ $outputline =~ [[:alnum:]]:[[:alnum:]]* ]]; then
+                        if [[ $output_line =~ [[:alnum:]]:[[:alnum:]]* ]]; then
                             gradle_all_tasks+=( ":$task_description" )
                         fi
                     fi

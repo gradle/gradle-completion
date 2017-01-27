@@ -77,18 +77,18 @@ if [[ $words[CURRENT] != -* ]]; then
 
     # Look for default build script in the settings file (settings.gradle by default)
     # Otherwise, default is the file 'build.gradle' in the current directory.
-    local gradle_settingsfile=${${(v)opt_args[(i)-c|--settings-file]}:-settings.gradle}
-    local default_gradle_buildfile="build.gradle"
-    if [[ -f $gradle_settingsfile ]]; then
-        default_gradle_buildfile=${$(grep "^rootProject\.buildFileName" $gradle_settingsfile | \
+    local gradle_settings_file=${${(v)opt_args[(i)-c|--settings-file]}:-settings.gradle}
+    local default_gradle_build_file="build.gradle"
+    if [[ -f $gradle_settings_file ]]; then
+        default_gradle_build_file=${$(grep "^rootProject\.buildFileName" $gradle_settings_file | \
             sed -n -e "s/rootProject\.buildFileName = [\'\"]\(.*\)[\'\"]/\1/p"):-build.gradle}
     fi
 
     # If a build file is specified after '-b' or '--build-file', use this file.
-    local gradle_buildfile=${${(v)opt_args[(i)-b|--build-file]}:-$default_gradle_buildfile}
-    if [[ -f $gradle_buildfile ]]; then
+    local gradle_build_file=${${(v)opt_args[(i)-b|--build-file]}:-$default_gradle_build_file}
+    if [[ -f $gradle_build_file ]]; then
         # Cache name is constructed from the absolute path of the build file.
-        local script_path_cache=${${gradle_buildfile:a}//[^[:alnum:]]/_}
+        local script_path_cache=${${gradle_build_file:a}//[^[:alnum:]]/_}
         if ! _retrieve_cache $script_path_cache; then
             zle -R "Generating Gradle script cache"
             # Cache all Gradle scripts
@@ -111,24 +111,24 @@ if [[ $words[CURRENT] != -* ]]; then
         # _retrieve_cache "$script_path_cache.md5" sets previous_checksum to an array wrapping the previous checksum
         # If the current and previous checksums match, try to load the tasks cache
         if ! _retrieve_cache "$script_path_cache.md5" || [[ $current_checksum != "${previous_checksum[1]}" ]] || ! _retrieve_cache "${previous_checksum[1]}"; then
-            zle -R "Generating Gradle task cache using $gradle_buildfile"
+            zle -R "Generating Gradle task cache using $gradle_build_file"
             # Run gradle to retrieve possible tasks and cache.
             # Reuse Gradle Daemon if IDLE but don't start a new one.
             local gradle_tasks_output
             if [[ ! -z "$($gradle_cmd --status 2>/dev/null | grep IDLE)" ]]; then
-                gradle_tasks_output="$($gradle_cmd --daemon --build-file $gradle_buildfile -q tasks --all)"
+                gradle_tasks_output="$($gradle_cmd --daemon --build-file $gradle_build_file -q tasks --all)"
             else
-                gradle_tasks_output="$($gradle_cmd --no-daemon --build-file $gradle_buildfile -q tasks --all)"
+                gradle_tasks_output="$($gradle_cmd --no-daemon --build-file $gradle_build_file -q tasks --all)"
             fi
-            local outputline
+            local output_line
             local task_description
             local -a match
-            for outputline in ${(f)"$(echo $gradle_tasks_output)"}; do
-                if [[ $outputline =~ ^([[:lower:]][[:alnum:][:punct:]]*)([[:space:]]-[[:space:]]([[:print:]]*))? ]]; then
+            for output_line in ${(f)"$(echo $gradle_tasks_output)"}; do
+                if [[ $output_line =~ ^([[:lower:]][[:alnum:][:punct:]]*)([[:space:]]-[[:space:]]([[:print:]]*))? ]]; then
                     task_description="${match[1]//:/\\:}:${match[3]// - /}"
                     gradle_tasks+=( "$task_description" )
                     # Completion for subproject tasks with ':' prefix
-                    if [[ $outputline =~ [[:alnum:]]:[[:alnum:]]* ]]; then
+                    if [[ $output_line =~ [[:alnum:]]:[[:alnum:]]* ]]; then
                         gradle_tasks+=( "\\:$task_description" )
                     fi
                 fi
