@@ -69,10 +69,10 @@ gradle-completion will not tab complete these tasks by default because it adds a
 significant number of completion options, which may not be what you want and 
 negatively impacts completion speed.
 
-To allow completion of implicit tasks, set `$GRADLE_COMPLETION_IMPLICIT_TASKS=true`:
+To allow completion of implicit tasks, set `$GRADLE_COMPLETION_UNQUALIFIED_TASKS=true`:
 
 ```bash
-export GRADLE_COMPLETION_IMPLICIT_TASKS="true"
+export GRADLE_COMPLETION_UNQUALIFIED_TASKS="true"
 ```
 
 You may need to invalidate the cache using the cache config above or by executing `touch build.gradle`.
