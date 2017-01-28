@@ -195,3 +195,7 @@ _gradle()
 complete -F _gradle gradle
 complete -F _gradle gradlew
 complete -F _gradle ./gradlew
+
+if hash gw 2>/dev/null; then
+    complete -F _gradle gw
+fi
