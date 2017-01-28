@@ -43,6 +43,17 @@ Start a new terminal session.
 
 ## Additional Configuration
 
+#### Excluding build scripts from UP-TO-DATE check
+Tab completion checks known build scripts to see if they've been changed and refreshes the task cache if so.
+You can exclude build scripts from this check (and speed up completion) by specifying:
+
+```bash
+# Default is `"/(build|integTest|out)/"` 
+export GRADLE_COMPLETION_EXCLUDE_PATTERN="/(build|integTest|samples|smokeTest|testFixtures|templates|out|features)/"
+# Essentially turn off checking for changed scripts
+export GRADLE_COMPLETION_EXCLUDE_PATTERN="gradle"
+```
+
 #### Cache config
 The build script cache is invalidated if any *.gradle or *.gradle.kts files change. 
 However, these completion scripts do not search for new build scripts every time completion is invoked, because
@@ -50,7 +61,7 @@ that would make completion ~20x slower (unless you have so really good ideas on 
 
 By default, the build script cache is invalidated every 3 weeks (30240 minutes). 
 You can configure this value by exporting a new value for `$GRADLE_CACHE_TTL_MINUTES`:
-```
+```bash
 export GRADLE_CACHE_TTL_MINUTES=$(expr 1440 \* number_of_days_you_want)
 ```
 
