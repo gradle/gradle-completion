@@ -136,16 +136,31 @@ _gradle()
                 local output_line
                 local task_description
                 local -a gradle_all_tasks=()
+                local -a root_tasks=()
+                local -a subproject_tasks=()
                 for output_line in $gradle_tasks_output; do
                     if [[ $output_line =~ ^([[:lower:]][[:alnum:][:punct:]]*)([[:space:]]-[[:space:]]([[:print:]]*))? ]]; then
-                        task_description="${BASH_REMATCH[1]}  - ${BASH_REMATCH[3]}"
-                        gradle_all_tasks+=( "$task_description" )
+                        task_name="${BASH_REMATCH[1]}"
+                        task_description="${BASH_REMATCH[3]}"
+                        gradle_all_tasks+=( "$task_name  - $task_description" )
                         # Completion for subproject tasks with ':' prefix
-                        if [[ $output_line =~ [[:alnum:]]:[[:alnum:]]* ]]; then
-                            gradle_all_tasks+=( ":$task_description" )
+                        if [[ $task_name =~ ^([[:alnum:]:]+):([[:alnum:]]+) ]]; then
+                            gradle_all_tasks+=( ":$task_name  - $task_description" )
+                            subproject_tasks+=( "${BASH_REMATCH[2]}" )
+                        else
+                            root_tasks+=( "$task_name" )
                         fi
                     fi
                 done
+
+                # subproject tasks can be referenced implicitly from root project
+                if [[ $GRADLE_COMPLETION_IMPLICIT_TASKS == "true" ]]; then
+                    local -a implicit_tasks=()
+                    implicit_tasks=( $(comm -23 <(printf "%s\n" "${subproject_tasks[@]}" | sort) <(printf "%s\n" "${root_tasks[@]}" | sort)) )
+                    for task in $(printf "%s\n" "${implicit_tasks[@]}"); do
+                        gradle_all_tasks+=( $task )
+                    done
+                fi
 
                 printf "%s\n" "${gradle_all_tasks[@]}" > $cache_dir/$gradle_files_checksum
                 echo $gradle_files_checksum > $cache_dir/$cache_name.md5

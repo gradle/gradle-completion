@@ -54,6 +54,29 @@ You can configure this value by exporting a new value for `$GRADLE_CACHE_TTL_MIN
 export GRADLE_CACHE_TTL_MINUTES=$(expr 1440 \* number_of_days_you_want)
 ```
 
+#### Implicit Tasks
+Gradle allows you to access tasks of subprojects from the project root implicitly.
+For example, given these tasks:
+```
+:foo
+:help
+:bar:baz
+```
+
+You can execute `gradle baz` from the project root and it will execute `:bar:baz`.
+
+gradle-completion will not tab complete these tasks by default because it adds a
+significant number of completion options, which may not be what you want and 
+negatively impacts completion speed.
+
+To allow completion of implicit tasks, set `$GRADLE_COMPLETION_IMPLICIT_TASKS=true`:
+
+```bash
+export GRADLE_COMPLETION_IMPLICIT_TASKS="true"
+```
+
+You may need to invalidate the cache using the cache config above or by executing `touch build.gradle`.
+
 ## Troubleshooting
 If zsh completion isn't working, first try checking your `$fpath` with `echo $fpath`. 
 
