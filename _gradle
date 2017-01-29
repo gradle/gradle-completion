@@ -1,22 +1,18 @@
 #compdef gradle gradlew gw
 
+local cur=${words[CURRENT]}
 local curcontext="$curcontext" ret=1
-local cache_policy
+# Use Gradle wrapper when it exists.
+local gradle_cmd='gradle'
+if [[ -x ./gradlew ]]; then
+    gradle_cmd='./gradlew'
+fi
+local cache_dir="$HOME/.gradle/completion"
+mkdir -p $cache_dir
 # Invalidate cache after 3 weeks by default
 local cache_ttl_mins=${$(echo $GRADLE_CACHE_TTL_MINUTES):-30240}
 local script_exclude_pattern=${$(echo $GRADLE_COMPLETION_EXCLUDE_PATTERN):-"/(build|integTest|out)/"}
 local -A opt_args
-local -a gradle_build_scripts
-local -a previous_checksum
-local -a gradle_tasks
-
-# The cache key is md5 sum of all gradle scripts, so it's valid if it exists.
-_gradle_caching_policy() {
-    [[ ! $(find $1 -mmin -$cache_ttl_mins 2>/dev/null) ]]
-}
-
-zstyle -s ":completion:*:*:$service:*" cache-policy cache_policy || \
-    zstyle ":completion:*:*:$service:*" cache-policy _gradle_caching_policy
 
 _arguments -C \
     '(-)'{-\?,-h,--help}'[Shows a help message.]' \
@@ -69,13 +65,7 @@ _arguments -C \
     {-x,--exclude-task}'[Specify a task to be excluded from execution.]' \
     && ret=0
 
-if [[ $words[CURRENT] != -* ]]; then
-    # Use Gradle wrapper when it exists.
-    local gradle_cmd='gradle'
-    if [[ -x ./gradlew ]]; then
-        gradle_cmd='./gradlew'
-    fi
-
+if [[ $cur != -* ]]; then
     # Look for default build script in the settings file (settings.gradle by default)
     # Otherwise, default is the file 'build.gradle' in the current directory.
     local gradle_settings_file=${${(v)opt_args[(i)-c|--settings-file]}:-settings.gradle}
@@ -89,30 +79,31 @@ if [[ $words[CURRENT] != -* ]]; then
     local gradle_build_file=${${(v)opt_args[(i)-b|--build-file]}:-$default_gradle_build_file}
     if [[ -f $gradle_build_file ]]; then
         # Cache name is constructed from the absolute path of the build file.
-        local script_path_cache=${${gradle_build_file:a}//[^[:alnum:]]/_}
-        if ! _retrieve_cache $script_path_cache; then
+        local cache_name=${${gradle_build_file:a}//[^[:alnum:]]/_}
+        if [[ ! $(find $cache_dir/$cache_name -mmin -$cache_ttl_mins 2>/dev/null) ]]; then
             zle -R "Generating Gradle script cache"
             # Cache all Gradle scripts
+            local -a gradle_build_scripts
             gradle_build_scripts=( $(find . -type f -name "*.gradle" -o -name "*.gradle.kts" 2>/dev/null | egrep -v "$script_exclude_pattern") )
-            _store_cache $script_path_cache gradle_build_scripts
+            printf "%s\n" "${gradle_build_scripts[@]}" > $cache_dir/$cache_name
         fi
 
-        local current_checksum
+        local gradle_files_checksum
         # Cache MD5 sum of all Gradle scripts and modified timestamps
         if builtin command -v md5 > /dev/null; then
-            current_checksum=( $(md5 -q -s "$(printf "%s\n" "$gradle_build_scripts[@]" | xargs ls -o 2>/dev/null)") )
+            gradle_files_checksum=( $(md5 -q -s "$(cat "$cache_dir/$cache_name" | xargs ls -o 2>/dev/null)") )
         elif builtin command -v md5sum > /dev/null; then
-            current_checksum=( $(printf "%s\n" "$gradle_build_scripts[@]" | xargs ls -o 2>/dev/null | md5sum | awk '{print $1}') )
+            gradle_files_checksum=( $(cat "$cache_dir/$cache_name" | xargs ls -o 2>/dev/null | md5sum | awk '{print $1}') )
         else
             _message 'Cannot generate completions as neither md5 nor md5sum exist on \$PATH'
             return 1
         fi
 
-        # This is confusing due to the way caching/retrieval works.
-        # _retrieve_cache "$script_path_cache.md5" sets previous_checksum to an array wrapping the previous checksum
-        # If the current and previous checksums match, try to load the tasks cache
-        if ! _retrieve_cache "$script_path_cache.md5" || [[ $current_checksum != "${previous_checksum[1]}" ]] || ! _retrieve_cache "${previous_checksum[1]}"; then
+        # The cache key is md5 sum of all gradle scripts, so it's valid if it exists.
+        if [[ ! -f $cache_dir/$cache_name.md5 || $gradle_files_checksum != "$(cat $cache_dir/$cache_name.md5)" || ! -f $cache_dir/$gradle_files_checksum ]]; then
+            # Notify user of cache rebuild
             zle -R "Generating Gradle task cache using $gradle_build_file"
+
             # Run gradle to retrieve possible tasks and cache.
             # Reuse Gradle Daemon if IDLE but don't start a new one.
             local gradle_tasks_output
@@ -122,18 +113,18 @@ if [[ $words[CURRENT] != -* ]]; then
                 gradle_tasks_output="$($gradle_cmd --no-daemon --build-file $gradle_build_file -q tasks --all)"
             fi
             local output_line
-            local task_description
+            local -a gradle_all_tasks
             local -a root_tasks
             local -a subproject_tasks
             local -a match
             for output_line in ${(f)"$(echo $gradle_tasks_output)"}; do
                 if [[ $output_line =~ ^([[:lower:]][[:alnum:][:punct:]]*)([[:space:]]-[[:space:]]([[:print:]]*))? ]]; then
-                    task_name="${match[1]}"
-                    task_description="${match[3]}"
-                    gradle_tasks+=( "${task_name//:/\\:}:$task_description" )
+                    local task_name="${match[1]}"
+                    local task_description="${match[3]}"
+                    gradle_all_tasks+=( "${task_name//:/\\:}:$task_description" )
                     # Completion for subproject tasks with ':' prefix
                     if [[ $task_name =~ ^([[:alnum:]:]+):([[:alnum:]]+) ]]; then
-                        gradle_tasks+=( "\\:${task_name//:/\\:}:$task_description" )
+                        gradle_all_tasks+=( "\\:${task_name//:/\\:}:$task_description" )
                         subproject_tasks+=( "${match[2]}" )
                     else
                         root_tasks+=( "$task_name" )
@@ -146,16 +137,19 @@ if [[ $words[CURRENT] != -* ]]; then
                 local -a implicit_tasks
                 implicit_tasks=( $(comm -23 <(printf "%s\n" "$subproject_tasks[@]" | sort) <(printf "%s\n" "$root_tasks[@]" | sort)) )
                 for task in $(printf "%s\n" "${implicit_tasks[@]}"); do
-                    gradle_tasks+=( $task )
+                    gradle_all_tasks+=( $task )
                 done
             fi
 
-            _store_cache $current_checksum gradle_tasks
-            previous_checksum=( $current_checksum )
-            _store_cache "$script_path_cache.md5" previous_checksum
+            printf "%s\n" "${gradle_all_tasks[@]}" > $cache_dir/$gradle_files_checksum
+            echo $gradle_files_checksum > $cache_dir/$cache_name.md5
         fi
 
-        _describe 'all tasks' gradle_tasks && ret=0
+        if [[ -f $cache_dir/$gradle_files_checksum ]]; then
+            local -a cached_tasks
+            cached_tasks=( $(grep "${cur//:/\\\\:}" $cache_dir/$gradle_files_checksum) )
+            _describe 'all tasks' cached_tasks && ret=0
+        fi
     else
         _describe 'built-in tasks' '(
             "buildEnvironment:Displays all buildscript dependencies declared in root project."
