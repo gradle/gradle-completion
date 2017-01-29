@@ -174,8 +174,9 @@ _gradle()
         fi
 
         if [[ -f $cache_dir/$gradle_files_checksum ]]; then
+            # Optimize here - this is the slowest part of completion
             local -a cached_tasks
-            cached_tasks=( $(cat $cache_dir/$gradle_files_checksum) )
+            cached_tasks=( $(grep "$cur" $cache_dir/$gradle_files_checksum) )
             COMPREPLY=( $(compgen -W "${cached_tasks[*]}" -- "$cur") )
         else
             echo "D'oh! There's a bug in the completion script, please submit an issue to eriwen/gradle-completion"
