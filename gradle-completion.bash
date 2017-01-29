@@ -6,6 +6,7 @@ _gradle()
 {
     local cur=${COMP_WORDS[COMP_CWORD]}
     local args
+    # Use Gradle wrapper when it exists.
     local gradle_cmd='gradle'
     if [[ -x ./gradlew ]]; then
         gradle_cmd='./gradlew'
@@ -13,6 +14,7 @@ _gradle()
 
     local cache_dir="$HOME/.gradle/completion"
     mkdir -p $cache_dir
+    # Invalidate cache after 3 weeks by default
     local cache_ttl_mins=${GRADLE_CACHE_TTL_MINUTES:-30240}
     local script_exclude_pattern=${GRADLE_COMPLETION_EXCLUDE_PATTERN:-"/(build|integTest|out)/"}
 
@@ -118,7 +120,7 @@ _gradle()
             elif builtin command -v md5sum > /dev/null; then
                 gradle_files_checksum=$(cat "$cache_dir/$cache_name" | xargs ls -o 2>/dev/null | md5sum | awk '{print $1}')
             else
-                echo "Could not find md5 or md5sum on \$PATH"
+                echo "Cannot generate completions as neither md5 nor md5sum exist on \$PATH"
                 return 1
             fi
 
