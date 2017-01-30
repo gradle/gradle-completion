@@ -147,7 +147,11 @@ if [[ $cur != -* ]]; then
 
         if [[ -f $cache_dir/$gradle_files_checksum ]]; then
             local -a cached_tasks
-            cached_tasks=( $(grep "${cur//:/\\\\:}" $cache_dir/$gradle_files_checksum) )
+            if [[ -z $cur ]]; then
+                cached_tasks=( $(cat $cache_dir/$gradle_files_checksum) )
+            else
+                cached_tasks=( $(grep "^${cur//:/\\\\:}" $cache_dir/$gradle_files_checksum) )
+            fi
             _describe 'all tasks' cached_tasks && ret=0
         fi
     else
