@@ -14,6 +14,10 @@ local cache_ttl_mins=${$(echo $GRADLE_CACHE_TTL_MINUTES):-30240}
 local script_exclude_pattern=${$(echo $GRADLE_COMPLETION_EXCLUDE_PATTERN):-"/(build|integTest|out)/"}
 local -A opt_args
 
+# Set internal field separator to '\n'. This allows us to provide descriptions for tasks
+local OLDIFS="$IFS"
+local IFS=$'\n'
+
 _arguments -C \
     '(-)'{-\?,-h,--help}'[Shows a help message.]' \
     {-a,--no-rebuild}'[Do not rebuild project dependencies.]' \
@@ -171,5 +175,7 @@ if [[ $cur != -* ]]; then
             )' && ret=0
     fi
 fi
+
+IFS="$OLDIFS"
 
 return ret
