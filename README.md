@@ -97,6 +97,9 @@ so I recommend adding it in your `~/.zshrc` file:
 export PATH=".:$PATH"
 ```
 
+> HEADS UP: If you get an error 'parse error near `]]"', please [upgrade zsh](http://stackoverflow.com/questions/17648621/how-do-i-update-zsh-to-the-latest-version).
+zsh 5.0.5 has a bug in script parsing that is fixed as of zsh 5.0.8. See issues #4 and #7 for more details. 
+
 If zsh completion reports "Generating Gradle task cache..." every time, the zsh completion cache
 may be disabled. Enable it by adding the following to your `~/.zshrc` file:
 ```bash
