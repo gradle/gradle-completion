@@ -108,40 +108,42 @@ _gradle()
         if [[ -f $gradle_buildfile ]]; then
             # Cache name is constructed from the absolute path of the build file.
             local cache_name=$(echo $(pwd)/$gradle_buildfile | sed -e 's/\//_/g')
-            if [[ ! $(find $cache_dir/$cache_name -mmin -$cache_ttl_mins 2>/dev/null) ]]; then
+            if [[ ! $(find $cache_dir/$cache_name.scripts -mmin -$cache_ttl_mins ! -size 0 2>/dev/null) ]]; then
                 # Cache all Gradle scripts
                 local gradle_build_scripts=$(find . -type f -name "*.gradle" -o -name "*.gradle.kts" 2>/dev/null | egrep -v "$script_exclude_pattern")
-                printf "%s\n" "${gradle_build_scripts[@]}" > $cache_dir/$cache_name
+                printf "%s\n" "${gradle_build_scripts[@]}" > $cache_dir/$cache_name.scripts
             fi
 
             # Cache MD5 sum of all Gradle scripts and modified timestamps
             if builtin command -v md5 > /dev/null; then
-                gradle_files_checksum=$(md5 -q -s "$(cat "$cache_dir/$cache_name" | xargs ls -o 2>/dev/null)")
+                gradle_files_checksum=$(md5 -q -s "$(cat "$cache_dir/$cache_name.scripts" | xargs ls -o 2>/dev/null)")
             elif builtin command -v md5sum > /dev/null; then
-                gradle_files_checksum=$(cat "$cache_dir/$cache_name" | xargs ls -o 2>/dev/null | md5sum | awk '{print $1}')
+                gradle_files_checksum=$(cat "$cache_dir/$cache_name.scripts" | xargs ls -o 2>/dev/null | md5sum | awk '{print $1}')
             else
                 echo "Cannot generate completions as neither md5 nor md5sum exist on \$PATH"
                 return 1
             fi
 
-            if [[ ! -f $cache_dir/$cache_name.md5 || $gradle_files_checksum != "$(cat $cache_dir/$cache_name.md5)" || ! -f $cache_dir/$gradle_files_checksum ]]; then
-                # Notify user of cache rebuild
-                echo -e " (Building completion cache. Please wait)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\c"
-
+            if [[ ! $(find $cache_dir/$cache_name.tasks -mmin -$cache_ttl_mins ! -size 0 2>/dev/null) ]]; then
                 # Run gradle to retrieve possible tasks and cache.
                 # Reuse Gradle Daemon if IDLE but don't start a new one.
-                local gradle_tasks_output
                 if [[ ! -z "$($gradle_cmd --status 2>/dev/null | grep IDLE)" ]]; then
-                    gradle_tasks_output="$($gradle_cmd --daemon -q tasks --all)"
+                    ($gradle_cmd --daemon -q tasks --all > $cache_dir/$cache_name.tasks &)
                 else
-                    gradle_tasks_output="$($gradle_cmd --no-daemon -q tasks --all)"
+                    ($gradle_cmd --no-daemon -q tasks --all > $cache_dir/$cache_name.tasks &)
                 fi
+
+                echo -e " # Building tasks cache in background (pid: $!). Please retry in a moment.\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\c"
+                return 2
+            fi
+
+            if [[ ! -f $cache_dir/$cache_name.md5 || $gradle_files_checksum != "$(cat $cache_dir/$cache_name.md5)" || ! -f $cache_dir/$gradle_files_checksum ]]; then
                 local output_line
                 local task_description
                 local -a gradle_all_tasks=()
                 local -a root_tasks=()
                 local -a subproject_tasks=()
-                for output_line in $gradle_tasks_output; do
+                while read output_line; do
                     if [[ $output_line =~ ^([[:lower:]][[:alnum:][:punct:]]*)([[:space:]]-[[:space:]]([[:print:]]*))? ]]; then
                         task_name="${BASH_REMATCH[1]}"
                         task_description="${BASH_REMATCH[3]}"
@@ -154,7 +156,7 @@ _gradle()
                             root_tasks+=( "$task_name" )
                         fi
                     fi
-                done
+                done < $cache_dir/$cache_name.tasks
 
                 # subproject tasks can be referenced implicitly from root project
                 if [[ $GRADLE_COMPLETION_UNQUALIFIED_TASKS == "true" ]]; then
@@ -172,7 +174,7 @@ _gradle()
                 echo -e "                                         \b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\c"
             fi
         else
-            return 1
+            return 3
         fi
 
         if [[ -f $cache_dir/$gradle_files_checksum ]]; then
@@ -187,7 +189,7 @@ _gradle()
         else
             echo "D'oh! There's a bug in the completion script, please submit an issue to eriwen/gradle-completion"
             # previous steps failed, maybe cache dir is not readable/writable
-            return 1
+            return 4
         fi
     fi
 
