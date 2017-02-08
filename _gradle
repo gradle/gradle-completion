@@ -1,75 +1,11 @@
 #compdef gradle gradlew gw
 
-local cur=${words[CURRENT]}
-local curcontext="$curcontext" ret=1
-# Use Gradle wrapper when it exists.
-local gradle_cmd='gradle'
-if [[ -x ./gradlew ]]; then
-    gradle_cmd='./gradlew'
-fi
-local cache_dir="$HOME/.gradle/completion"
-mkdir -p $cache_dir
-# Invalidate cache after 3 weeks by default
-local cache_ttl_mins=${$(echo $GRADLE_CACHE_TTL_MINUTES):-30240}
-local script_exclude_pattern=${$(echo $GRADLE_COMPLETION_EXCLUDE_PATTERN):-"/(build|integTest|out)/"}
-local -A opt_args
+__gradle-init-cache-dir() {
+    cache_dir="$HOME/.gradle/completion"
+    mkdir -p $cache_dir
+}
 
-# Set internal field separator to '\n'. This allows us to provide descriptions for tasks
-local OLDIFS="$IFS"
-local IFS=$'\n'
-
-_arguments -C \
-    '(-)'{-\?,-h,--help}'[Shows a help message.]' \
-    {-a,--no-rebuild}'[Do not rebuild project dependencies.]' \
-    {-b,--build-file}'[Specifies the build file.]:build file:_files -g "*.gradle(-.)"' \
-    {-C,--cache}'[Specifies how compiled build scripts should be cached.]:cache policy:(on rebuild)' \
-    {-c,--settings-file}'[Specifies the settings file.]:settings file:_files -g "*.properties(-.)"' \
-    '--configure-on-demand[Only relevant projects are configured in this build run.]' \
-    '--console[Specifies which type of console output to generate. Values are 'plain', 'auto' (default) or 'rich'.]:console output type:' \
-    '--continue[Continues task execution after a task failure.]' \
-    '-Dorg.gradle.cache.reserved.mb=[Reserve Gradle Daemon memory for operations.]' \
-    '-Dorg.gradle.daemon.debug=[Set true to debug Gradle Daemon.]' \
-    '-Dorg.gradle.daemon.idletimeout=[Kill Gradle Daemon after # idle millis.]' \
-    '-Dorg.gradle.debug=[Set true to debug Gradle Client.]' \
-    '-Dorg.gradle.jvmargs=[Set JVM arguments.]' \
-    '-Dorg.gradle.java.home=[Set JDK home dir.]' \
-    '-Dorg.gradle.parallel=[Set true to enable parallel project builds.]' \
-    '-Dorg.gradle.parallel.intra=[Set true to enable intra-project parallel builds.]' \
-    '(-i --info -q --quiet)'{-d,--debug}'[Log in debug mode (includes normal stacktrace).]' \
-    '(--no-daemon)--daemon[Uses the Gradle daemon to run the build. Starts the daemon if not running.]' \
-    '--foreground[Starts the Gradle daemon in the foreground.]' \
-    {-g,--gradle-user-home}'[Specifies the gradle user home directory.]:home directory:_directories' \
-    '(-)--gui[Launches the Gradle GUI.]' \
-    '--include-build[Includes the specified build in the composite.]:project directory:_directories' \
-    {-I,--init-script}'[Specifies an initialization script.]:init script:_files -g "*.gradle(-.)"' \
-    '(-d --debug -q --quiet)'{-i,--info}'[Set log level to info.]' \
-    '--max-workers[Set the maximum number of concurrent workers that Gradle may use.]:number workers:-># processors' \
-    {-m,--dry-run}'[Runs the builds with all task actions disabled.]' \
-    '--no-color[Do not use color in the console output. (Removed in Gradle 3.0)]' \
-    '(--daemon)--no-daemon[Do not use the Gradle daemon to run the build.]' \
-    '--offline[The build should operate without accessing network resources.]' \
-    \*{-P+,--project-prop}'[Set project property for the build script (e.g. -Pmyprop=myvalue).]:project property (prop=val):' \
-    {-p,--project-dir}'[Specifies the start directory for Gradle.]:start directory:_directories' \
-    '--parallel[Build projects in parallel. Gradle will attempt to determine the optimal number of executor threads to use.]' \
-    '--profile[Profiles build execution time and generates a report in the <build_dir>/reports/profile directory.]' \
-    '--project-cache-dir[Specifies the project-specific cache directory.]:cache directory:_directories' \
-    '(-d --debug -i --info)'{-q,--quiet}'[Log errors only.]' \
-    '--recompile-scripts[Force build script recompiling.]' \
-    '--refresh[Refresh the state of resources of the type(s) specified.]:refresh policy:(dependencies)' \
-    '--refresh-dependencies[Refresh the state of dependencies.]' \
-    '--rerun-tasks[Ignore previously cached task results.]' \
-    '(-S --full-stacktrace)'{-s,--stacktrace}'[Print out the stacktrace for all exceptions.]' \
-    '(-s --stacktrace)'{-S,--full-stacktrace}'[Print out the full (very verbose) stacktrace for all exceptions.]' \
-    '(-)--status[Shows status of running and recently stopped Gradle Daemons.]' \
-    '(-)--stop[Stops all Gradle daemons.]' \
-    '--system-prop[system property (prop=val)]' \
-    {-t,--continuous}'[Enables continuous build. Gradle does not exit and will re-execute tasks when task file inputs change.]' \
-    {-u,--no-search-upward}"[Don't search in parent folders for a settings.gradle file.]" \
-    '(-)'{-v,--version}'[Print version info.]' \
-    {-x,--exclude-task}'[Specify a task to be excluded from execution.]' \
-    && ret=0
-
-if [[ $cur != -* ]]; then
+__gradle-set-build-file() {
     # Look for default build script in the settings file (settings.gradle by default)
     # Otherwise, default is the file 'build.gradle' in the current directory.
     local gradle_settings_file=${${(v)opt_args[(i)-c|--settings-file]}:-settings.gradle}
@@ -80,102 +16,218 @@ if [[ $cur != -* ]]; then
     fi
 
     # If a build file is specified after '-b' or '--build-file', use this file.
-    local gradle_build_file=${${(v)opt_args[(i)-b|--build-file]}:-$default_gradle_build_file}
-    if [[ -f $gradle_build_file ]]; then
-        # Cache name is constructed from the absolute path of the build file.
-        local cache_name=${${gradle_build_file:a}//[^[:alnum:]]/_}
-        if [[ ! $(find $cache_dir/$cache_name -mmin -$cache_ttl_mins 2>/dev/null) ]]; then
-            zle -R "Generating Gradle script cache"
-            # Cache all Gradle scripts
-            local -a gradle_build_scripts
-            gradle_build_scripts=( $(find . -type f -name "*.gradle" -o -name "*.gradle.kts" 2>/dev/null | egrep -v "$script_exclude_pattern") )
-            printf "%s\n" "${gradle_build_scripts[@]}" > $cache_dir/$cache_name
-        fi
+    gradle_build_file=${${(v)opt_args[(i)-b|--build-file]}:-$default_gradle_build_file}
+}
 
-        local gradle_files_checksum
-        # Cache MD5 sum of all Gradle scripts and modified timestamps
-        if builtin command -v md5 > /dev/null; then
-            gradle_files_checksum=( $(md5 -q -s "$(cat "$cache_dir/$cache_name" | xargs ls -o 2>/dev/null)") )
-        elif builtin command -v md5sum > /dev/null; then
-            gradle_files_checksum=( $(cat "$cache_dir/$cache_name" | xargs ls -o 2>/dev/null | md5sum | awk '{print $1}') )
-        else
-            _message 'Cannot generate completions as neither md5 nor md5sum exist on \$PATH'
-            return 1
-        fi
+__gradle-set-cache-name() {
+    # Cache name is constructed from the absolute path of the build file.
+    cache_name=${${gradle_build_file:a}//[^[:alnum:]]/_}
+}
 
-        # The cache key is md5 sum of all gradle scripts, so it's valid if it exists.
-        if [[ ! -f $cache_dir/$cache_name.md5 || $gradle_files_checksum != "$(cat $cache_dir/$cache_name.md5)" || ! -f $cache_dir/$gradle_files_checksum ]]; then
-            # Notify user of cache rebuild
-            zle -R "Generating Gradle task cache using $gradle_build_file"
-
-            # Run gradle to retrieve possible tasks and cache.
-            # Reuse Gradle Daemon if IDLE but don't start a new one.
-            local gradle_tasks_output
-            if [[ ! -z "$($gradle_cmd --status 2>/dev/null | grep IDLE)" ]]; then
-                gradle_tasks_output="$($gradle_cmd --daemon --build-file $gradle_build_file -q tasks --all)"
-            else
-                gradle_tasks_output="$($gradle_cmd --no-daemon --build-file $gradle_build_file -q tasks --all)"
-            fi
-            local output_line
-            local -a gradle_all_tasks
-            local -a root_tasks
-            local -a subproject_tasks
-            local -a match
-            for output_line in ${(f)"$(echo $gradle_tasks_output)"}; do
-                if [[ $output_line =~ ^([[:lower:]][[:alnum:][:punct:]]*)([[:space:]]-[[:space:]]([[:print:]]*))? ]]; then
-                    local task_name="${match[1]}"
-                    local task_description="${match[3]}"
-                    gradle_all_tasks+=( "${task_name//:/\\:}:$task_description" )
-                    # Completion for subproject tasks with ':' prefix
-                    if [[ $task_name =~ ^([[:alnum:]:]+):([[:alnum:]]+) ]]; then
-                        gradle_all_tasks+=( "\\:${task_name//:/\\:}:$task_description" )
-                        subproject_tasks+=( "${match[2]}" )
-                    else
-                        root_tasks+=( "$task_name" )
-                    fi
-                fi
-            done
-
-            # subproject tasks can be referenced implicitly from root project
-            if [[ $GRADLE_COMPLETION_UNQUALIFIED_TASKS == "true" ]]; then
-                local -a implicit_tasks
-                implicit_tasks=( $(comm -23 <(printf "%s\n" "$subproject_tasks[@]" | sort) <(printf "%s\n" "$root_tasks[@]" | sort)) )
-                for task in $(printf "%s\n" "${implicit_tasks[@]}"); do
-                    gradle_all_tasks+=( $task )
-                done
-            fi
-
-            printf "%s\n" "${gradle_all_tasks[@]}" > $cache_dir/$gradle_files_checksum
-            echo $gradle_files_checksum > $cache_dir/$cache_name.md5
-        fi
-
-        if [[ -f $cache_dir/$gradle_files_checksum ]]; then
-            local -a cached_tasks
-            if [[ -z $cur ]]; then
-                cached_tasks=( $(cat $cache_dir/$gradle_files_checksum) )
-            else
-                cached_tasks=( $(grep "^${cur//:/\\\\:}" $cache_dir/$gradle_files_checksum) )
-            fi
-            _describe 'all tasks' cached_tasks && ret=0
-        fi
+__gradle-set-files-checksum() {
+    # Cache MD5 sum of all Gradle scripts and modified timestamps
+    if builtin command -v md5 > /dev/null; then
+        gradle_files_checksum=( $(md5 -q -s "$(cat "$cache_dir/$cache_name" | xargs ls -o 2>/dev/null)") )
+    elif builtin command -v md5sum > /dev/null; then
+        gradle_files_checksum=( $(cat "$cache_dir/$cache_name" | xargs ls -o 2>/dev/null | md5sum | awk '{print $1}') )
     else
-        _describe 'built-in tasks' '(
-            "buildEnvironment:Displays all buildscript dependencies declared in root project."
-            "components:Displays the components produced by root project."
-            "dependencies:Displays all dependencies declared in root project."
-            "dependencyInsight:Displays the insight into a specific dependency in root project."
-            "dependentComponents:Displays the dependent components of components in root project."
-            "help:Displays a help message."
-            "init:Initializes a new Gradle build."
-            "model:Displays the configuration model of root project."
-            "projects:Displays the sub-projects of root project."
-            "properties:Displays the properties of root project."
-            "tasks:Displays the tasks runnable from root project."
-            "wrapper:Generates Gradle wrapper files."
-            )' && ret=0
+        _message 'Cannot generate completions as neither md5 nor md5sum exist on \$PATH'
+        return 1
     fi
-fi
+}
 
-IFS="$OLDIFS"
+__gradle-generate-script-cache() {
+    # Invalidate cache after 3 weeks by default
+    local cache_ttl_mins=${$(echo $GRADLE_CACHE_TTL_MINUTES):-30240}
+    local script_exclude_pattern=${$(echo $GRADLE_COMPLETION_EXCLUDE_PATTERN):-"/(build|integTest|out)/"}
+    if [[ ! $(find $cache_dir/$cache_name -mmin -$cache_ttl_mins 2>/dev/null) ]]; then
+        zle -R "Generating Gradle build script cache"
+        # Cache all Gradle scripts
+        local -a gradle_build_scripts
+        gradle_build_scripts=( $(find . -type f -name "*.gradle" -o -name "*.gradle.kts" 2>/dev/null | egrep -v "$script_exclude_pattern") )
+        printf "%s\n" "${gradle_build_scripts[@]}" > $cache_dir/$cache_name
+    fi
+}
 
-return ret
+__gradle-generate-tasks-cache() {
+    __gradle-set-files-checksum
+
+    # Use Gradle wrapper when it exists.
+    local gradle_cmd='gradle'
+    if [[ -x ./gradlew ]]; then
+        gradle_cmd='./gradlew'
+    fi
+
+    zle -R "Generating Gradle task cache from $gradle_build_file"
+
+    # Run gradle to retrieve possible tasks and cache.
+    # Reuse Gradle Daemon if IDLE but don't start a new one.
+    local gradle_tasks_output
+    if [[ ! -z "$($gradle_cmd --status 2>/dev/null | grep IDLE)" ]]; then
+        gradle_tasks_output="$($gradle_cmd --daemon --build-file $gradle_build_file -q tasks --all)"
+    else
+        gradle_tasks_output="$($gradle_cmd --no-daemon --build-file $gradle_build_file -q tasks --all)"
+    fi
+    local output_line
+    local -a gradle_all_tasks
+    local -a root_tasks
+    local -a subproject_tasks
+    local -a match
+    for output_line in ${(f)"$(echo $gradle_tasks_output)"}; do
+        if [[ $output_line =~ ^([[:lower:]][[:alnum:][:punct:]]*)([[:space:]]-[[:space:]]([[:print:]]*))? ]]; then
+            local task_name="${match[1]}"
+            local task_description="${match[3]}"
+            gradle_all_tasks+=( "${task_name//:/\\:}:$task_description" )
+            # Completion for subproject tasks with ':' prefix
+            if [[ $task_name =~ ^([[:alnum:]:]+):([[:alnum:]]+) ]]; then
+                gradle_all_tasks+=( "\\:${task_name//:/\\:}:$task_description" )
+                subproject_tasks+=( "${match[2]}" )
+            else
+                root_tasks+=( "$task_name" )
+            fi
+        fi
+    done
+
+    # subproject tasks can be referenced implicitly from root project
+    if [[ $GRADLE_COMPLETION_UNQUALIFIED_TASKS == "true" ]]; then
+        local -a implicit_tasks
+        implicit_tasks=( $(comm -23 <(printf "%s\n" "$subproject_tasks[@]" | sort) <(printf "%s\n" "$root_tasks[@]" | sort)) )
+        for task in $(printf "%s\n" "${implicit_tasks[@]}"); do
+            gradle_all_tasks+=( $task )
+        done
+    fi
+
+    printf "%s\n" "${gradle_all_tasks[@]}" > $cache_dir/$gradle_files_checksum
+    echo $gradle_files_checksum > $cache_dir/$cache_name.md5
+}
+
+__gradle-completion-init() {
+    local cache_dir
+    local cache_name
+    local gradle_build_file
+    local gradle_files_checksum
+
+    __gradle-init-cache-dir
+    __gradle-set-build-file
+    if [[ -f $gradle_build_file ]]; then
+        __gradle-set-cache-name
+        __gradle-generate-script-cache
+        __gradle-set-files-checksum
+        __gradle-generate-tasks-cache
+    fi
+}
+
+_gradle() {
+    local cur=${words[CURRENT]}
+    local curcontext="$curcontext" ret=1
+    local cache_dir
+    local cache_name
+    local -A opt_args
+    local gradle_build_file
+    local gradle_files_checksum
+
+    # Set internal field separator to '\n'. This allows us to provide descriptions for tasks
+    local OLDIFS="$IFS"
+    local IFS=$'\n'
+
+    _arguments -C \
+        '(-)'{-\?,-h,--help}'[Shows a help message.]' \
+        {-a,--no-rebuild}'[Do not rebuild project dependencies.]' \
+        {-b,--build-file}'[Specifies the build file.]:build file:_files -g "*.gradle(-.)"' \
+        {-C,--cache}'[Specifies how compiled build scripts should be cached.]:cache policy:(on rebuild)' \
+        {-c,--settings-file}'[Specifies the settings file.]:settings file:_files -g "*.properties(-.)"' \
+        '--configure-on-demand[Only relevant projects are configured in this build run.]' \
+        '--console[Specifies which type of console output to generate. Values are 'plain', 'auto' (default) or 'rich'.]:console output type:' \
+        '--continue[Continues task execution after a task failure.]' \
+        '-Dorg.gradle.cache.reserved.mb=[Reserve Gradle Daemon memory for operations.]' \
+        '-Dorg.gradle.daemon.debug=[Set true to debug Gradle Daemon.]' \
+        '-Dorg.gradle.daemon.idletimeout=[Kill Gradle Daemon after # idle millis.]' \
+        '-Dorg.gradle.debug=[Set true to debug Gradle Client.]' \
+        '-Dorg.gradle.jvmargs=[Set JVM arguments.]' \
+        '-Dorg.gradle.java.home=[Set JDK home dir.]' \
+        '-Dorg.gradle.parallel=[Set true to enable parallel project builds.]' \
+        '-Dorg.gradle.parallel.intra=[Set true to enable intra-project parallel builds.]' \
+        '(-i --info -q --quiet)'{-d,--debug}'[Log in debug mode (includes normal stacktrace).]' \
+        '(--no-daemon)--daemon[Uses the Gradle daemon to run the build. Starts the daemon if not running.]' \
+        '--foreground[Starts the Gradle daemon in the foreground.]' \
+        {-g,--gradle-user-home}'[Specifies the gradle user home directory.]:home directory:_directories' \
+        '(-)--gui[Launches the Gradle GUI.]' \
+        '--include-build[Includes the specified build in the composite.]:project directory:_directories' \
+        {-I,--init-script}'[Specifies an initialization script.]:init script:_files -g "*.gradle(-.)"' \
+        '(-d --debug -q --quiet)'{-i,--info}'[Set log level to info.]' \
+        '--max-workers[Set the maximum number of concurrent workers that Gradle may use.]:number workers:-># processors' \
+        {-m,--dry-run}'[Runs the builds with all task actions disabled.]' \
+        '--no-color[Do not use color in the console output. (Removed in Gradle 3.0)]' \
+        '(--daemon)--no-daemon[Do not use the Gradle daemon to run the build.]' \
+        '--offline[The build should operate without accessing network resources.]' \
+        \*{-P+,--project-prop}'[Set project property for the build script (e.g. -Pmyprop=myvalue).]:project property (prop=val):' \
+        {-p,--project-dir}'[Specifies the start directory for Gradle.]:start directory:_directories' \
+        '--parallel[Build projects in parallel. Gradle will attempt to determine the optimal number of executor threads to use.]' \
+        '--profile[Profiles build execution time and generates a report in the <build_dir>/reports/profile directory.]' \
+        '--project-cache-dir[Specifies the project-specific cache directory.]:cache directory:_directories' \
+        '(-d --debug -i --info)'{-q,--quiet}'[Log errors only.]' \
+        '--recompile-scripts[Force build script recompiling.]' \
+        '--refresh[Refresh the state of resources of the type(s) specified.]:refresh policy:(dependencies)' \
+        '--refresh-dependencies[Refresh the state of dependencies.]' \
+        '--rerun-tasks[Ignore previously cached task results.]' \
+        '(-S --full-stacktrace)'{-s,--stacktrace}'[Print out the stacktrace for all exceptions.]' \
+        '(-s --stacktrace)'{-S,--full-stacktrace}'[Print out the full (very verbose) stacktrace for all exceptions.]' \
+        '(-)--status[Shows status of running and recently stopped Gradle Daemons.]' \
+        '(-)--stop[Stops all Gradle daemons.]' \
+        '--system-prop[system property (prop=val)]' \
+        {-t,--continuous}'[Enables continuous build. Gradle does not exit and will re-execute tasks when task file inputs change.]' \
+        {-u,--no-search-upward}"[Don't search in parent folders for a settings.gradle file.]" \
+        '(-)'{-v,--version}'[Print version info.]' \
+        {-x,--exclude-task}'[Specify a task to be excluded from execution.]' \
+        && ret=0
+
+    if [[ $cur != -* ]]; then
+        __gradle-init-cache-dir
+        __gradle-set-build-file
+        if [[ -f $gradle_build_file ]]; then
+            __gradle-set-cache-name
+            __gradle-generate-script-cache
+            __gradle-set-files-checksum
+
+            # The cache key is md5 sum of all gradle scripts, so it's valid if it exists.
+            if [[ -f $cache_dir/$cache_name.md5 ]]; then
+                local cached_checksum="$(cat $cache_dir/$cache_name.md5)"
+                local -a cached_tasks
+                if [[ -z $cur ]]; then
+                    cached_tasks=( $(cat $cache_dir/$cached_checksum) )
+                else
+                    cached_tasks=( $(grep "^${cur//:/\\\\:}" $cache_dir/$cached_checksum) )
+                fi
+                _describe 'all tasks' cached_tasks && ret=0
+            else
+                __gradle-generate-tasks-cache
+            fi
+
+            # Regenerate tasks cache in the background
+            if [[ $gradle_files_checksum != "$(cat $cache_dir/$cache_name.md5)" || ! -f $cache_dir/$gradle_files_checksum ]]; then
+                $(__gradle-generate-tasks-cache 1&>2 2>/dev/null &)
+            fi
+        else
+            _describe 'built-in tasks' '(
+                "buildEnvironment:Displays all buildscript dependencies declared in root project."
+                "components:Displays the components produced by root project."
+                "dependencies:Displays all dependencies declared in root project."
+                "dependencyInsight:Displays the insight into a specific dependency in root project."
+                "dependentComponents:Displays the dependent components of components in root project."
+                "help:Displays a help message."
+                "init:Initializes a new Gradle build."
+                "model:Displays the configuration model of root project."
+                "projects:Displays the sub-projects of root project."
+                "properties:Displays the properties of root project."
+                "tasks:Displays the tasks runnable from root project."
+                "wrapper:Generates Gradle wrapper files."
+                )' && ret=0
+        fi
+    fi
+
+    IFS="$OLDIFS"
+
+    return ret
+}
+
+_gradle "$@"
