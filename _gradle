@@ -119,9 +119,6 @@ __gradle-completion-init() {
 
 __gradle_tasks() {
     local cache_dir cache_name gradle_build_file gradle_files_checksum
-    # Set internal field separator to '\n'. This allows us to provide descriptions for tasks
-    local OLDIFS="$IFS"
-    local IFS=$'\n'
 
     __gradle-init-cache-dir
     __gradle-set-build-file
@@ -135,9 +132,9 @@ __gradle_tasks() {
             local cached_checksum="$(cat $cache_dir/$cache_name.md5)"
             local -a cached_tasks
             if [[ -z $cur ]]; then
-                cached_tasks=( $(cat $cache_dir/$cached_checksum) )
+                cached_tasks=(${(f)"$(cat $cache_dir/$cached_checksum)"})
             else
-                cached_tasks=( $(grep "^${cur//:/\\\\:}" $cache_dir/$cached_checksum) )
+                cached_tasks=(${(f)"$(grep "^${cur//:/\\\\:}" $cache_dir/$cached_checksum)"})
             fi
             _describe 'all tasks' cached_tasks && ret=0
         else
@@ -164,8 +161,6 @@ __gradle_tasks() {
             "wrapper:Generates Gradle wrapper files."
             )' && ret=0
     fi
-
-    IFS="$OLDIFS"
 }
 
 __gradle_subcommand() {
