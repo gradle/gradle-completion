@@ -34,7 +34,7 @@ mkdir $HOME/bash_completion.d
 wget -O $HOME/bash_completion.d/gradle-completion.bash https://raw.githubusercontent.com/eriwen/gradle-completion/master/gradle-completion.bash
 ```
 
-Add the following to your `.bashrc` file:
+Add the following to your `.bash_profile` (macOS) or `.bashrc` (Linux) file:
 ```
 source $HOME/bash_completion.d/gradle-completion.bash
 ```
