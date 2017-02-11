@@ -185,6 +185,7 @@ __gradle_subcommand() {
                 '-Dorg.gradle.java.home=[Set JDK home dir.]' \
                 '-Dorg.gradle.parallel=[Set true to enable parallel project builds.]' \
                 '-Dorg.gradle.parallel.intra=[Set true to enable intra-project parallel builds.]' \
+                '-Dorg.gradle.workers.max=[Set the number of workers Gradle is allowed to use.]' \
                 '(-i --info -q --quiet)'{-d,--debug}'[Log in debug mode (includes normal stacktrace).]' \
                 '(--no-daemon)--daemon[Uses the Gradle daemon to run the build. Starts the daemon if not running.]' \
                 '--foreground[Starts the Gradle daemon in the foreground.]' \
@@ -196,6 +197,7 @@ __gradle_subcommand() {
                 {-m,--dry-run}'[Runs the builds with all task actions disabled.]' \
                 '--no-color[Do not use color in the console output. (Removed in Gradle 3.0)]' \
                 '(--daemon)--no-daemon[Do not use the Gradle daemon to run the build.]' \
+                '(--scan)--no-scan[Do not create a build scan.]' \
                 '--offline[The build should operate without accessing network resources.]' \
                 \*{-P+,--project-prop}'[Set project property for the build script (e.g. -Pmyprop=myvalue).]:project property (prop=val):' \
                 {-p,--project-dir}'[Specifies the start directory for Gradle.]:start directory:_directories' \
@@ -207,6 +209,7 @@ __gradle_subcommand() {
                 '--refresh[Refresh the state of resources of the type(s) specified.]:refresh policy:(dependencies)' \
                 '--refresh-dependencies[Refresh the state of dependencies.]' \
                 '--rerun-tasks[Ignore previously cached task results.]' \
+                '(--no-scan)--scan[Create a build scan.]' \
                 '(-S --full-stacktrace)'{-s,--stacktrace}'[Print out the stacktrace for all exceptions.]' \
                 '(-s --stacktrace)'{-S,--full-stacktrace}'[Print out the full (very verbose) stacktrace for all exceptions.]' \
                 '--system-prop[system property (prop=val)]' \

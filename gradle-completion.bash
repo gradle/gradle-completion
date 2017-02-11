@@ -66,6 +66,7 @@ __gradle-long-options() {
 --max-workers           - Set the maximum number of workers that Gradle may use
 --no-daemon             - Do not use the Gradle Daemon
 --no-rebuild            - Do not rebuild project dependencies
+--no-scan               - Do not create a build scan
 --no-search-upwards     - Do not search in parent directories for a settings.gradle
 --offline               - Build without accessing network resources
 --parallel              - Build projects in parallel
@@ -77,6 +78,7 @@ __gradle-long-options() {
 --recompile-scripts     - Forces scripts to be recompiled, bypassing caching
 --refresh-dependencies  - Refresh the state of dependencies
 --rerun-task            - Specifies that any task optimization is ignored
+--scan                  - Create a build scan
 --settings-file         - Specifies the settings file
 --stacktrace            - Print out the stacktrace also for user exceptions
 --status                - Print Gradle Daemon status
@@ -94,7 +96,8 @@ __gradle-properties() {
 -Dorg.gradle.jvmargs=             - Set JVM arguments
 -Dorg.gradle.java.home=           - Set JDK home dir
 -Dorg.gradle.parallel=            - Set true to enable parallel project builds (incubating)
--Dorg.gradle.parallel.intra=      - Set true to enable intra-project parallel builds (incubating)"
+-Dorg.gradle.parallel.intra=      - Set true to enable intra-project parallel builds (incubating)
+-Dorg.gradle.workers.max=         - Set the number of workers Gradle is allowed to use"
     COMPREPLY=( $(compgen -W "$args" -- "${COMP_WORDS[COMP_CWORD]}") )
     return 0
 }
