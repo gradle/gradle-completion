@@ -102,11 +102,7 @@ __gradle-generate-tasks-cache() {
 }
 
 __gradle-completion-init() {
-    local cache_dir
-    local cache_name
-    local gradle_build_file
-    local gradle_files_checksum
-
+    local cache_dir cache_name gradle_build_file gradle_files_checksum
     __gradle-init-cache-dir
     __gradle-set-build-file
     if [[ -f $gradle_build_file ]]; then
@@ -115,6 +111,7 @@ __gradle-completion-init() {
         __gradle-set-files-checksum
         __gradle-generate-tasks-cache
     fi
+    return 0
 }
 
 __gradle_tasks() {
