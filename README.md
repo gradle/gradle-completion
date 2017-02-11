@@ -54,7 +54,11 @@ export GRADLE_COMPLETION_EXCLUDE_PATTERN="/(build|integTest|samples|smokeTest|te
 export GRADLE_COMPLETION_EXCLUDE_PATTERN="gradle"
 ```
 
-#### Cache config
+#### Completion cache
+One can manually (re)generate the completion cache by invoking `__gradle-completion-init` after the
+completion script has been sourced. This graciously avoids an unexpected cache build when invoking
+completion.
+
 The build script cache is invalidated if any *.gradle or *.gradle.kts files change. 
 However, these completion scripts do not search for new build scripts every time completion is invoked, because
 that would make completion ~20x slower (unless you have so really good ideas on this).
