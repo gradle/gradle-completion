@@ -164,6 +164,10 @@ __gradle_subcommand() {
     integer ret=1
 
     case "$words[1]" in
+        (init)
+            _arguments \
+                '--type=[Project type to generate.]:*:project type:(basic groovy-library java-library pom scala-library)' && ret=0
+            ;;
         (tasks)
             _arguments \
                 '--all[List all tasks, including subproject tasks]' && ret=0
