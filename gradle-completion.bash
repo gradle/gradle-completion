@@ -222,9 +222,9 @@ _gradle() {
                 local cached_checksum="$(cat $cache_dir/$cache_name.md5)"
                 local -a cached_tasks
                 if [[ -z $cur ]]; then
-                    cached_tasks=( $(cat $cache_dir/$gradle_files_checksum) )
+                    cached_tasks=( $(cat $cache_dir/$cached_checksum) )
                 else
-                    cached_tasks=( $(grep "^$cur" $cache_dir/$gradle_files_checksum) )
+                    cached_tasks=( $(grep "^$cur" $cache_dir/$cached_checksum) )
                 fi
                 COMPREPLY=( $(compgen -W "${cached_tasks[*]}" -- "$cur") )
             else
