@@ -169,6 +169,11 @@ __gradle_subcommand() {
             _arguments \
                 '--all[List all tasks, including subproject tasks]' && ret=0
             ;;
+        (wrapper)
+            _arguments \
+                '--gradle-version[Set Gradle version for wrapper]' \
+                '--gradle-distribution-url[Set Gradle distribution URL]' && ret=0
+            ;;
         (*)
             _arguments -C \
                 {-a,--no-rebuild}'[Do not rebuild project dependencies.]' \
