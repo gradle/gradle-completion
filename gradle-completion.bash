@@ -146,22 +146,18 @@ __gradle-generate-tasks-cache() {
     else
         gradle_tasks_output="$($gradle_cmd --no-daemon -q tasks --all)"
     fi
-    local output_line
-    local task_description
-    local -a gradle_all_tasks=()
-    local -a root_tasks=()
-    local -a subproject_tasks=()
+    local output_line task_name task_description gradle_all_tasks="" root_tasks="" subproject_tasks=""
     for output_line in $gradle_tasks_output; do
         if [[ $output_line =~ ^([[:lower:]][[:alnum:][:punct:]]*)([[:space:]]-[[:space:]]([[:print:]]*))? ]]; then
             task_name="${BASH_REMATCH[1]}"
             task_description="${BASH_REMATCH[3]}"
-            gradle_all_tasks+=( "$task_name  - $task_description" )
             # Completion for subproject tasks with ':' prefix
             if [[ $task_name =~ ^([[:alnum:]:]+):([[:alnum:]]+) ]]; then
-                gradle_all_tasks+=( ":$task_name  - $task_description" )
-                subproject_tasks+=( "${BASH_REMATCH[2]}" )
+                gradle_all_tasks+="$task_name  - $task_description\n:$task_name  - $task_description\n"
+                subproject_tasks+="${BASH_REMATCH[2]}\n"
             else
-                root_tasks+=( "$task_name" )
+                gradle_all_tasks+="$task_name  - $task_description\n"
+                root_tasks+="$task_name\n"
             fi
         fi
     done
@@ -169,13 +165,13 @@ __gradle-generate-tasks-cache() {
     # subproject tasks can be referenced implicitly from root project
     if [[ $GRADLE_COMPLETION_UNQUALIFIED_TASKS == "true" ]]; then
         local -a implicit_tasks=()
-        implicit_tasks=( $(comm -23 <(printf "%s\n" "${subproject_tasks[@]}" | sort) <(printf "%s\n" "${root_tasks[@]}" | sort)) )
+        implicit_tasks=( $(comm -23 <(echo $subproject_tasks | sort) <(echo $root_tasks | sort)) )
         for task in $(printf "%s\n" "${implicit_tasks[@]}"); do
-            gradle_all_tasks+=( $task )
+            gradle_all_tasks+="$task\n"
         done
     fi
 
-    printf "%s\n" "${gradle_all_tasks[@]}" > $cache_dir/$gradle_files_checksum
+    echo $gradle_all_tasks > $cache_dir/$gradle_files_checksum
     echo $gradle_files_checksum > $cache_dir/$cache_name.md5
 
     # Remove "please wait" message by writing a bunch of spaces then moving back to the left
