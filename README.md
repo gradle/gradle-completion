@@ -31,7 +31,7 @@ Start a new terminal session. You may need to disable the `gradle` plugin for `o
 Download and place `gradle-completion.bash` in your `bash_completion.d` folder, usually `/etc/bash_completion.d`, `/usr/local/etc/bash_completion.d`, or `$HOME/bash_completion.d`:
 ```
 mkdir $HOME/bash_completion.d
-wget -O $HOME/bash_completion.d/gradle-completion.bash https://raw.githubusercontent.com/eriwen/gradle-completion/master/gradle-completion.bash
+curl -LA gradle-completion https://edub.me/gradle-completion-bash -o $HOME/bash_completion.d/gradle-completion.bash
 ```
 
 Add the following to your `.bash_profile` (macOS) or `.bashrc` (Linux) file:
