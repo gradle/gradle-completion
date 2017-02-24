@@ -110,9 +110,6 @@ may be disabled. Enable it by adding the following to your `~/.zshrc` file:
 zstyle ':completion:*' use-cache on
 ```
 
-Completion outside of the root project directory isn't supported yet. 
-Please follow [#3](https://github.com/eriwen/gradle-completion/issues/3) — contributions welcome!
-
 ## Acknowledgements
 Bash completion is inspired by [Nolan Lawson's Gradle tab completion for bash](https://gist.github.com/nolanlawson/8694399).
 
