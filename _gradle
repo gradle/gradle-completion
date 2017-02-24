@@ -1,5 +1,18 @@
 #compdef gradle gradlew gw
 
+__gradle-set-project-root-dir() {
+    local dir=`pwd`
+    project_root_dir=`pwd`
+    while [[ $dir != '/' ]]; do
+        if [[ -f "$dir/settings.gradle" || -f "$dir/gradlew" ]]; then
+            project_root_dir=$dir
+            return 0
+        fi
+        dir="$(dirname "$dir")"
+    done
+    return 1
+}
+
 __gradle-init-cache-dir() {
     cache_dir="$HOME/.gradle/completion"
     mkdir -p $cache_dir
@@ -8,11 +21,13 @@ __gradle-init-cache-dir() {
 __gradle-set-build-file() {
     # Look for default build script in the settings file (settings.gradle by default)
     # Otherwise, default is the file 'build.gradle' in the current directory.
-    local gradle_settings_file=${${(v)opt_args[(i)-c|--settings-file]}:-settings.gradle}
-    local default_gradle_build_file="build.gradle"
+    local gradle_settings_file=${${(v)opt_args[(i)-c|--settings-file]}:-"$project_root_dir/settings.gradle"}
+    local default_gradle_build_file="$project_root_dir/build.gradle"
+
     if [[ -f $gradle_settings_file ]]; then
         default_gradle_build_file=${$(grep "^rootProject\.buildFileName" $gradle_settings_file | \
-            sed -n -e "s/rootProject\.buildFileName = [\'\"]\(.*\)[\'\"]/\1/p"):-build.gradle}
+            sed -n -e "s/rootProject\.buildFileName = [\'\"]\(.*\)[\'\"]/\1/p")}
+        default_gradle_build_file="$project_root_dir/${default_gradle_build_file:-build.gradle}"
     fi
 
     # If a build file is specified after '-b' or '--build-file', use this file.
@@ -44,7 +59,7 @@ __gradle-generate-script-cache() {
         zle -R "Generating Gradle build script cache"
         # Cache all Gradle scripts
         local -a gradle_build_scripts
-        gradle_build_scripts=( $(find . -type f -name "*.gradle" -o -name "*.gradle.kts" 2>/dev/null | egrep -v "$script_exclude_pattern") )
+        gradle_build_scripts=( $(find $project_root_dir -type f -name "*.gradle" -o -name "*.gradle.kts" 2>/dev/null | egrep -v "$script_exclude_pattern") )
         printf "%s\n" "${gradle_build_scripts[@]}" > $cache_dir/$cache_name
     fi
 }
@@ -53,9 +68,9 @@ __gradle-generate-tasks-cache() {
     __gradle-set-files-checksum
 
     # Use Gradle wrapper when it exists.
-    local gradle_cmd='gradle'
-    if [[ -x ./gradlew ]]; then
-        gradle_cmd='./gradlew'
+    local gradle_cmd="gradle"
+    if [[ -x "$project_root_dir/gradlew" ]]; then
+        gradle_cmd="$project_root_dir/gradlew"
     fi
 
     zle -R "Generating Gradle task cache from $gradle_build_file"
@@ -70,7 +85,7 @@ __gradle-generate-tasks-cache() {
     fi
     local gradle_all_tasks="" root_tasks="" subproject_tasks="" output_line
     local -a match
-    for output_line in ${(f)"$(echo $gradle_tasks_output)"}; do
+    for output_line in ${(f)"$(printf "%s\n" "${gradle_tasks_output[@]}")"}; do
         if [[ $output_line =~ ^([[:lower:]][[:alnum:][:punct:]]*)([[:space:]]-[[:space:]]([[:print:]]*))? ]]; then
             local task_name="${match[1]}"
             local task_description="${match[3]}"
@@ -99,8 +114,9 @@ __gradle-generate-tasks-cache() {
 }
 
 __gradle-completion-init() {
-    local cache_dir cache_name gradle_build_file gradle_files_checksum
+    local cache_dir cache_name gradle_build_file gradle_files_checksum project_root_dir
     __gradle-init-cache-dir
+    __gradle-set-project-root-dir
     __gradle-set-build-file
     if [[ -f $gradle_build_file ]]; then
         __gradle-set-cache-name
@@ -112,9 +128,10 @@ __gradle-completion-init() {
 }
 
 __gradle_tasks() {
-    local cache_dir cache_name gradle_build_file gradle_files_checksum
+    local cache_dir cache_name gradle_build_file gradle_files_checksum project_root_dir
 
     __gradle-init-cache-dir
+    __gradle-set-project-root-dir
     __gradle-set-build-file
     if [[ -f $gradle_build_file ]]; then
         __gradle-set-cache-name

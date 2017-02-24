@@ -2,6 +2,19 @@
 # Avoid inaccurate completions for subproject tasks
 COMP_WORDBREAKS=$(echo "$COMP_WORDBREAKS" | sed -e 's/://g')
 
+__gradle-set-project-root-dir() {
+    local dir=`pwd`
+    project_root_dir=`pwd`
+    while [[ $dir != '/' ]]; do
+        if [[ -f "$dir/settings.gradle" || -f "$dir/gradlew" ]]; then
+            project_root_dir=$dir
+            return 0
+        fi
+        dir="$(dirname "$dir")"
+    done
+    return 1
+}
+
 __gradle-init-cache-dir() {
     cache_dir="$HOME/.gradle/completion"
     mkdir -p $cache_dir
@@ -10,17 +23,17 @@ __gradle-init-cache-dir() {
 __gradle-set-build-file() {
     # Look for default build script in the settings file (settings.gradle by default)
     # Otherwise, default is the file 'build.gradle' in the current directory.
-    gradle_build_file=build.gradle
-    if [[ -f settings.gradle ]]; then
-        local build_file_name=$(grep "^rootProject\.buildFileName" settings.gradle | \
+    gradle_build_file="$project_root_dir/build.gradle"
+    if [[ -f "$project_root_dir/settings.gradle" ]]; then
+        local build_file_name=$(grep "^rootProject\.buildFileName" "$project_root_dir/settings.gradle" | \
             sed -n -e "s/rootProject\.buildFileName = [\'\"]\(.*\)[\'\"]/\1/p")
-        gradle_build_file=${build_file_name:-build.gradle}
+        gradle_build_file="$project_root_dir/${build_file_name:-build.gradle}"
     fi
 }
 
 __gradle-set-cache-name() {
     # Cache name is constructed from the absolute path of the build file.
-    cache_name=$(echo $(pwd)/$gradle_build_file | sed -e 's/\//_/g')
+    cache_name=$(echo $gradle_build_file | sed -e 's/\//_/g')
 }
 
 __gradle-set-files-checksum() {
@@ -41,7 +54,7 @@ __gradle-generate-script-cache() {
 
     if [[ ! $(find $cache_dir/$cache_name -mmin -$cache_ttl_mins 2>/dev/null) ]]; then
         # Cache all Gradle scripts
-        local gradle_build_scripts=$(find . -type f -name "*.gradle" -o -name "*.gradle.kts" 2>/dev/null | egrep -v "$script_exclude_pattern")
+        local gradle_build_scripts=$(find $project_root_dir -type f -name "*.gradle" -o -name "*.gradle.kts" 2>/dev/null | egrep -v "$script_exclude_pattern")
         printf "%s\n" "${gradle_build_scripts[@]}" > $cache_dir/$cache_name
     fi
 }
@@ -126,25 +139,30 @@ __gradle-short-options() {
     COMPREPLY=( $(compgen -W "$args" -- "${COMP_WORDS[COMP_CWORD]}") )
 }
 
-__gradle-generate-tasks-cache() {
+__gradle-notify-tasks-cache-build() {
     # Notify user of cache rebuild
     echo -e " (Building completion cache. Please wait)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\c"
+    __gradle-generate-tasks-cache
+    # Remove "please wait" message by writing a bunch of spaces then moving back to the left
+    echo -e "                                         \b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\c"
+}
 
+__gradle-generate-tasks-cache() {
     __gradle-set-files-checksum
 
     # Use Gradle wrapper when it exists.
-    local gradle_cmd='gradle'
-    if [[ -x ./gradlew ]]; then
-        gradle_cmd='./gradlew'
+    local gradle_cmd="gradle"
+    if [[ -x "$project_root_dir/gradlew" ]]; then
+        gradle_cmd="$project_root_dir/gradlew"
     fi
 
     # Run gradle to retrieve possible tasks and cache.
     # Reuse Gradle Daemon if IDLE but don't start a new one.
     local gradle_tasks_output
     if [[ ! -z "$($gradle_cmd --status 2>/dev/null | grep IDLE)" ]]; then
-        gradle_tasks_output="$($gradle_cmd --daemon -q tasks --all)"
+        gradle_tasks_output="$($gradle_cmd -b $gradle_build_file --daemon -q tasks --all)"
     else
-        gradle_tasks_output="$($gradle_cmd --no-daemon -q tasks --all)"
+        gradle_tasks_output="$($gradle_cmd -b $gradle_build_file --no-daemon -q tasks --all)"
     fi
     local output_line
     local task_description
@@ -177,26 +195,31 @@ __gradle-generate-tasks-cache() {
 
     printf "%s\n" "${gradle_all_tasks[@]}" > $cache_dir/$gradle_files_checksum
     echo $gradle_files_checksum > $cache_dir/$cache_name.md5
-
-    # Remove "please wait" message by writing a bunch of spaces then moving back to the left
-    echo -e "                                         \b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\c"
 }
 
 __gradle-completion-init() {
-    local cache_dir cache_name gradle_build_file gradle_files_checksum
+    local cache_dir cache_name gradle_build_file gradle_files_checksum project_root_dir
+
+    local OLDIFS="$IFS"
+    local IFS=$'\n'
+
     __gradle-init-cache-dir
+    __gradle-set-project-root-dir
     __gradle-set-build-file
     if [[ -f $gradle_build_file ]]; then
         __gradle-set-cache-name
         __gradle-generate-script-cache
         __gradle-set-files-checksum
-        __gradle-generate-tasks-cache
+        __gradle-notify-tasks-cache-build
     fi
+
+    IFS="$OLDIFS"
+
     return 0
 }
 
 _gradle() {
-    local cache_dir cache_name gradle_build_file gradle_files_checksum
+    local cache_dir cache_name gradle_build_file gradle_files_checksum project_root_dir
     local cur=${COMP_WORDS[COMP_CWORD]}
     # Set bash internal field separator to '\n'
     # This allows us to provide descriptions for options and tasks
@@ -211,6 +234,7 @@ _gradle() {
         __gradle-short-options
     else
         __gradle-init-cache-dir
+        __gradle-set-project-root-dir
         __gradle-set-build-file
         if [[ -f $gradle_build_file ]]; then
             __gradle-set-cache-name
@@ -228,7 +252,7 @@ _gradle() {
                 fi
                 COMPREPLY=( $(compgen -W "${cached_tasks[*]}" -- "$cur") )
             else
-                __gradle-generate-tasks-cache
+                __gradle-notify-tasks-cache-build
             fi
 
             # Regenerate tasks cache in the background
