@@ -188,7 +188,8 @@ __gradle_subcommand() {
             ;;
         (wrapper)
             _arguments \
-                '--gradle-version[Set Gradle version for wrapper]' \
+                '--distribution-type=[Binary-only or all with docs and sources]:*:distribution type:(bin all)' \
+                '--gradle-version=[Set Gradle version for wrapper]' \
                 '--gradle-distribution-url[Set Gradle distribution URL]' && ret=0
             ;;
         (*)
