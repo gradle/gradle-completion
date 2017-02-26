@@ -26,6 +26,17 @@ echo "\nfpath=($HOME/.zsh/gradle-completion \$fpath)" >> ~/.zshrc
 
 Start a new terminal session. You may need to disable the `gradle` plugin for `oh-my-zsh`.
 
+#### (Optional) Manual Completion Cache Initialization
+Completion cache initialization happens the first time you invoke completion, 
+and usually takes a few seconds, depending on the size of your project. You can
+manually initialize the cache and avoid interrupting your development mojo by
+running:
+
+```bash
+cd path/to/your-project
+source ~/.zsh/gradle-completion/_gradle 1>&2 2>/dev/null; __gradle-completion-init
+```
+
 ## Installation for Bash 3.2+
 
 Download and place `gradle-completion.bash` in your `bash_completion.d` folder, usually `/etc/bash_completion.d`, `/usr/local/etc/bash_completion.d`, or `$HOME/bash_completion.d`:
@@ -40,6 +51,17 @@ source $HOME/bash_completion.d/gradle-completion.bash
 ```
 
 Start a new terminal session.
+
+#### (Optional) Manual Completion Cache Initialization
+Completion cache initialization happens the first time you invoke completion, 
+and usually takes a few seconds, depending on the size of your project. You can
+manually initialize the cache and avoid interrupting your development mojo by
+running:
+
+```bash
+cd path/to/your-project
+__gradle-completion-init
+```
 
 ## Additional Configuration
 
@@ -110,6 +132,9 @@ may be disabled. Enable it by adding the following to your `~/.zshrc` file:
 zstyle ':completion:*' use-cache on
 ```
 
+You can get a debug trace of zsh completion by typing `Ctrl-X ?` instead of hitting `[TAB]`. That is especially helpful
+when submitting bug reports.
+
 ## Acknowledgements
 Bash completion is inspired by [Nolan Lawson's Gradle tab completion for bash](https://gist.github.com/nolanlawson/8694399).
 
@@ -117,7 +142,7 @@ Zsh completion is an improved version of [zsh](https://github.com/zsh-users/zsh)
 
 Current improvements over built-in support:
  - Subproject tasks are completed
- - Gradle CLI options are current as of Gradle 3.3
+ - Gradle CLI options are current as of Gradle 3.4
  - Common Gradle properties are completed
  - Handles default build file as specified in settings.gradle
  - ~20x faster completion speed for medium to large projects
