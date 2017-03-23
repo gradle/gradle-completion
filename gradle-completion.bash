@@ -233,6 +233,13 @@ _gradle() {
     elif [[ ${cur} == -* ]]; then
         __gradle-short-options
     else
+        if [[ ${cur} == :* ]]; then
+            colonStripped=true
+	        cur=`echo "${cur}" | sed 's/^.//'`
+	    else
+	        colonStripped=false
+        fi
+
         __gradle-init-cache-dir
         __gradle-set-project-root-dir
         __gradle-set-build-file
@@ -250,7 +257,11 @@ _gradle() {
                 else
                     cached_tasks=( $(grep "^$cur" $cache_dir/$cached_checksum) )
                 fi
-                COMPREPLY=( $(compgen -W "${cached_tasks[*]}" -- "$cur") )
+                if ${colonStripped} ; then
+                    COMPREPLY=( $(compgen -P ":" -W "${cached_tasks[*]}" -- "$cur") )
+                else
+                    COMPREPLY=( $(compgen -W "${cached_tasks[*]}" -- "$cur") )
+                fi
             else
                 __gradle-notify-tasks-cache-build
             fi
