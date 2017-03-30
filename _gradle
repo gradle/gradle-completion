@@ -232,7 +232,7 @@ __gradle_subcommand() {
                 '--project-cache-dir[Specifies the project-specific cache directory.]:cache directory:_directories' \
                 '(-d --debug -w --warn -i --info)'{-q,--quiet}'[Log errors only.]' \
                 '--recompile-scripts[Force build script recompiling.]' \
-                '--refresh[Refresh the st-ate of resources of the type(s) specified.]:refresh policy:(dependencies)' \
+                '--refresh[Refresh the state of resources of the type(s) specified.]:refresh policy:(dependencies)' \
                 '--refresh-dependencies[Refresh the state of dependencies.]' \
                 '--rerun-tasks[Ignore previously cached task results.]' \
                 '(--no-scan)--scan[Create a build scan.]' \
