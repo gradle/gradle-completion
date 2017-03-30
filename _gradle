@@ -195,6 +195,7 @@ __gradle_subcommand() {
         (*)
             _arguments -C \
                 {-a,--no-rebuild}'[Do not rebuild project dependencies.]' \
+                '(--no-build-cache)--build-cache[Enable the Gradle build cache.]' \
                 {-b,--build-file}'[Specifies the build file.]:build script:_files -g \*.gradle' \
                 {-C,--cache}'[Specifies how compiled build scripts should be cached.]:cache policy:(on rebuild)' \
                 {-c,--settings-file}'[Specifies the settings file.]:settings file:_files -g \*.gradle' \
@@ -210,16 +211,17 @@ __gradle_subcommand() {
                 '-Dorg.gradle.parallel=[Set true to enable parallel project builds.]' \
                 '-Dorg.gradle.parallel.intra=[Set true to enable intra-project parallel builds.]' \
                 '-Dorg.gradle.workers.max=[Set the number of workers Gradle is allowed to use.]' \
-                '(-i --info -q --quiet)'{-d,--debug}'[Log in debug mode (includes normal stacktrace).]' \
+                '(-i --info -w --warn -q --quiet)'{-d,--debug}'[Log in debug mode (includes normal stacktrace).]' \
                 '(--no-daemon)--daemon[Uses the Gradle daemon to run the build. Starts the daemon if not running.]' \
                 '--foreground[Starts the Gradle daemon in the foreground.]' \
                 {-g,--gradle-user-home}'[Specifies the gradle user home directory.]:file:_directories' \
                 '--include-build[Includes the specified build in the composite.]:file:_directories' \
                 {-I,--init-script}'[Specifies an initialization script.]:init script:_files -g \*.gradle' \
-                '(-d --debug -q --quiet)'{-i,--info}'[Set log level to info.]' \
+                '(-d --debug -w --warn -q --quiet)'{-i,--info}'[Set log level to info.]' \
                 '--max-workers[Set the maximum number of concurrent workers that Gradle may use.]:number workers' \
                 {-m,--dry-run}'[Runs the builds with all task actions disabled.]' \
                 '--no-color[Do not use color in the console output. (Removed in Gradle 3.0)]' \
+                '(--build-cache)--no-build-cache[Do not use the Gradle build cache.]' \
                 '(--daemon)--no-daemon[Do not use the Gradle daemon to run the build.]' \
                 '(--scan)--no-scan[Do not create a build scan.]' \
                 '--offline[The build should operate without accessing network resources.]' \
@@ -228,9 +230,9 @@ __gradle_subcommand() {
                 '--parallel[Build projects in parallel. Gradle will attempt to determine the optimal number of executor threads to use.]' \
                 '--profile[Profiles build execution time and generates a report in the <build_dir>/reports/profile directory.]' \
                 '--project-cache-dir[Specifies the project-specific cache directory.]:cache directory:_directories' \
-                '(-d --debug -i --info)'{-q,--quiet}'[Log errors only.]' \
+                '(-d --debug -w --warn -i --info)'{-q,--quiet}'[Log errors only.]' \
                 '--recompile-scripts[Force build script recompiling.]' \
-                '--refresh[Refresh the state of resources of the type(s) specified.]:refresh policy:(dependencies)' \
+                '--refresh[Refresh the st-ate of resources of the type(s) specified.]:refresh policy:(dependencies)' \
                 '--refresh-dependencies[Refresh the state of dependencies.]' \
                 '--rerun-tasks[Ignore previously cached task results.]' \
                 '(--no-scan)--scan[Create a build scan.]' \
@@ -239,6 +241,7 @@ __gradle_subcommand() {
                 '--system-prop[system property (prop=val)]' \
                 {-t,--continuous}'[Enables continuous build. Gradle does not exit and will re-execute tasks when task file inputs change.]' \
                 {-u,--no-search-upward}"[Don't search in parent folders for a settings.gradle file.]" \
+                '(-d --debug -q --quiet -i --info)'{-w,--warn}'[Log warnings and errors only.]' \
                 {-x,--exclude-task}'[Specify a task to be excluded from execution.]' && ret=0
             ;;
     esac
@@ -255,6 +258,7 @@ _gradle() {
     _arguments -C \
         '(-)'{-\?,-h,--help}'[Shows a help message.]' \
         {-a,--no-rebuild}'[Do not rebuild project dependencies.]' \
+        '(--no-build-cache)--build-cache[Enable the Gradle build cache.]' \
         {-b,--build-file}'[Specifies the build file.]:build script:_files -g \*.gradle' \
         {-C,--cache}'[Specifies how compiled build scripts should be cached.]:cache policy:(on rebuild)' \
         {-c,--settings-file}'[Specifies the settings file.]:settings file:_files -g \*.gradle' \
@@ -270,17 +274,18 @@ _gradle() {
         '-Dorg.gradle.parallel=[Set true to enable parallel project builds.]' \
         '-Dorg.gradle.parallel.intra=[Set true to enable intra-project parallel builds.]' \
         '-Dorg.gradle.workers.max=[Set the number of workers Gradle is allowed to use.]' \
-        '(-i --info -q --quiet)'{-d,--debug}'[Log in debug mode (includes normal stacktrace).]' \
+        '(-i --info -w --warn -q --quiet)'{-d,--debug}'[Log in debug mode (includes normal stacktrace).]' \
         '(--no-daemon)--daemon[Uses the Gradle daemon to run the build. Starts the daemon if not running.]' \
         '--foreground[Starts the Gradle daemon in the foreground.]' \
         {-g,--gradle-user-home}'[Specifies the gradle user home directory.]:home directory:_directories' \
         '(-)--gui[Launches the Gradle GUI.]' \
         '--include-build[Includes the specified build in the composite.]:file:_directories' \
         {-I,--init-script}'[Specifies an initialization script.]:init script:_files -g \*.gradle' \
-        '(-d --debug -q --quiet)'{-i,--info}'[Set log level to info.]' \
+        '(-d --debug -w --warn -q --quiet)'{-i,--info}'[Set log level to info.]' \
         '--max-workers[Set the maximum number of concurrent workers that Gradle may use.]:number workers:-># processors' \
         {-m,--dry-run}'[Runs the builds with all task actions disabled.]' \
         '--no-color[Do not use color in the console output. (Removed in Gradle 3.0)]' \
+        '(--build-cache)--no-build-cache[Do not use the Gradle build cache.]' \
         '(--daemon)--no-daemon[Do not use the Gradle daemon to run the build.]' \
         '(--scan)--no-scan[Do not create a build scan.]' \
         '--offline[The build should operate without accessing network resources.]' \
@@ -289,7 +294,7 @@ _gradle() {
         '--parallel[Build projects in parallel. Gradle will attempt to determine the optimal number of executor threads to use.]' \
         '--profile[Profiles build execution time and generates a report in the <build_dir>/reports/profile directory.]' \
         '--project-cache-dir[Specifies the project-specific cache directory.]:cache directory:_directories' \
-        '(-d --debug -i --info)'{-q,--quiet}'[Log errors only.]' \
+        '(-d --debug -w --warn -i --info)'{-q,--quiet}'[Log errors only.]' \
         '--recompile-scripts[Force build script recompiling.]' \
         '--refresh[Refresh the state of resources of the type(s) specified.]:refresh policy:(dependencies)' \
         '--refresh-dependencies[Refresh the state of dependencies.]' \
@@ -303,6 +308,7 @@ _gradle() {
         {-t,--continuous}'[Enables continuous build. Gradle does not exit and will re-execute tasks when task file inputs change.]' \
         {-u,--no-search-upward}"[Don't search in parent folders for a settings.gradle file.]" \
         '(-)'{-v,--version}'[Print version info.]' \
+        '(-d --debug -q --quiet -i --info)'{-w,--warn}'[Log warnings and errors only.]' \
         {-x,--exclude-task}'[Specify a task to be excluded from execution.]' \
         '(-): :->task' \
         '(-)*:: :->option-or-argument' && ret=0
