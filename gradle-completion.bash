@@ -60,7 +60,8 @@ __gradle-generate-script-cache() {
 }
 
 __gradle-long-options() {
-    local args="--build-file            - Specifies the build file
+    local args="--build-cache           - Enables the Gradle build cache
+--build-file            - Specifies the build file
 --configure-on-demand   - Only relevant projects are configured
 --console               - Type of console output to generate (plain auto rich)
 --continue              - Continues task execution after a task failure
@@ -77,6 +78,7 @@ __gradle-long-options() {
 --info                  - Set log level to INFO
 --init-script           - Specifies an initialization script
 --max-workers           - Set the maximum number of workers that Gradle may use
+--no-build-cache        - Do not use the Gradle build cache
 --no-daemon             - Do not use the Gradle Daemon
 --no-rebuild            - Do not rebuild project dependencies
 --no-scan               - Do not create a build scan
@@ -97,7 +99,8 @@ __gradle-long-options() {
 --status                - Print Gradle Daemon status
 --stop                  - Stop all Gradle Daemons
 --system-prop           - Set a system property
---version               - Prints Gradle version info"
+--version               - Prints Gradle version info
+--warn                  - Log warnings and errors only"
     COMPREPLY=( $(compgen -W "$args" -- "${COMP_WORDS[COMP_CWORD]}") )
 }
 
@@ -131,6 +134,7 @@ __gradle-short-options() {
 -t                      - Continuous mode. Automatically re-run build after changes
 -u                      - Do not search in parent directories for a settings.gradle
 -v                      - Prints Gradle version info
+-w                      - Log warnings and errors only
 -x                      - Specify a task to be excluded
 -D                      - Set a system property
 -I                      - Specifies an initialization script
