@@ -291,8 +291,11 @@ wrapper              - Generates Gradle wrapper files."
     return 0
 }
 complete -F _gradle gradle
+complete -F _gradle gradle.bat
 complete -F _gradle gradlew
+complete -F _gradle gradlew.bat
 complete -F _gradle ./gradlew
+complete -F _gradle ./gradlew.bat
 
 if hash gw 2>/dev/null; then
     complete -F _gradle gw
