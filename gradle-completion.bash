@@ -294,6 +294,6 @@ complete -F _gradle gradle
 complete -F _gradle gradlew
 complete -F _gradle ./gradlew
 
-if hash gw 2>/dev/null; then
+if hash gw 2>/dev/null || alias gw >/dev/null 2>&1; then
     complete -F _gradle gw
 fi
