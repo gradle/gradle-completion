@@ -180,7 +180,7 @@ __gradle_subcommand() {
     case "$words[1]" in
         (init)
             _arguments \
-                '--type=[Project type to generate.]:*:project type:(basic groovy-library java-library pom scala-library)' && ret=0
+                '--type=[Project type to generate.]:*:project type:(basic groovy-application groovy-library java-library pom scala-library)' && ret=0
             ;;
         (tasks)
             _arguments \
@@ -208,6 +208,7 @@ __gradle_subcommand() {
                 '-Dorg.gradle.debug=[Set true to debug Gradle Client.]' \
                 '-Dorg.gradle.jvmargs=[Set JVM arguments.]' \
                 '-Dorg.gradle.java.home=[Set JDK home dir.]' \
+                '-Dorg.gradle.logging.level=[Set default Gradle log level.]:log level:(quiet warn lifecycle info debug)' \
                 '-Dorg.gradle.parallel=[Set true to enable parallel project builds.]' \
                 '-Dorg.gradle.parallel.intra=[Set true to enable intra-project parallel builds.]' \
                 '-Dorg.gradle.workers.max=[Set the number of workers Gradle is allowed to use.]' \
@@ -271,6 +272,7 @@ _gradle() {
         '-Dorg.gradle.debug=[Set true to debug Gradle Client.]' \
         '-Dorg.gradle.jvmargs=[Set JVM arguments.]' \
         '-Dorg.gradle.java.home=[Set JDK home dir.]' \
+        '-Dorg.gradle.logging.level=[Set default Gradle log level.]:log level:(quiet warn lifecycle info debug)' \
         '-Dorg.gradle.parallel=[Set true to enable parallel project builds.]' \
         '-Dorg.gradle.parallel.intra=[Set true to enable intra-project parallel builds.]' \
         '-Dorg.gradle.workers.max=[Set the number of workers Gradle is allowed to use.]' \

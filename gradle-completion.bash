@@ -111,6 +111,7 @@ __gradle-properties() {
 -Dorg.gradle.debug=               - Set true to debug Gradle Client
 -Dorg.gradle.jvmargs=             - Set JVM arguments
 -Dorg.gradle.java.home=           - Set JDK home dir
+-Dorg.gradle.logging.level=       - Set default Gradle log level (quiet warn lifecycle info debug)
 -Dorg.gradle.parallel=            - Set true to enable parallel project builds (incubating)
 -Dorg.gradle.parallel.intra=      - Set true to enable intra-project parallel builds (incubating)
 -Dorg.gradle.workers.max=         - Set the number of workers Gradle is allowed to use"
