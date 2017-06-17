@@ -203,13 +203,14 @@ __gradle_subcommand() {
                 '--console[Specifies which type of console output to generate.]:console output type:(plain auto rich)' \
                 '--continue[Continues task execution after a task failure.]' \
                 '-Dorg.gradle.cache.reserved.mb=[Reserve Gradle Daemon memory for operations.]' \
-                '-Dorg.gradle.daemon.debug=[Set true to debug Gradle Daemon.]' \
+                '-Dorg.gradle.caching=[Set true to enable Gradle build cache.]:enable build cache:(true false)' \
+                '-Dorg.gradle.daemon.debug=[Set true to debug Gradle Daemon.]:enable daemon debug:(true false)' \
                 '-Dorg.gradle.daemon.idletimeout=[Kill Gradle Daemon after # idle millis.]' \
                 '-Dorg.gradle.debug=[Set true to debug Gradle Client.]' \
                 '-Dorg.gradle.jvmargs=[Set JVM arguments.]' \
                 '-Dorg.gradle.java.home=[Set JDK home dir.]' \
                 '-Dorg.gradle.logging.level=[Set default Gradle log level.]:log level:(quiet warn lifecycle info debug)' \
-                '-Dorg.gradle.parallel=[Set true to enable parallel project builds.]' \
+                '-Dorg.gradle.parallel=[Set true to enable parallel project builds.]:enable parallel build:(true false)' \
                 '-Dorg.gradle.parallel.intra=[Set true to enable intra-project parallel builds.]' \
                 '-Dorg.gradle.workers.max=[Set the number of workers Gradle is allowed to use.]' \
                 '(-i --info -w --warn -q --quiet)'{-d,--debug}'[Log in debug mode (includes normal stacktrace).]' \
@@ -267,6 +268,7 @@ _gradle() {
         '--console[Specifies which type of console output to generate.]:console output type:(plain auto rich)' \
         '--continue[Continues task execution after a task failure.]' \
         '-Dorg.gradle.cache.reserved.mb=[Reserve Gradle Daemon memory for operations.]' \
+        '-Dorg.gradle.caching=[Set true to enable Gradle build cache.]' \
         '-Dorg.gradle.daemon.debug=[Set true to debug Gradle Daemon.]' \
         '-Dorg.gradle.daemon.idletimeout=[Kill Gradle Daemon after # idle millis.]' \
         '-Dorg.gradle.debug=[Set true to debug Gradle Client.]' \

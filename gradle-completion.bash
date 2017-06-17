@@ -106,6 +106,7 @@ __gradle-long-options() {
 
 __gradle-properties() {
     local args="-Dorg.gradle.cache.reserved.mb=   - Reserve Gradle Daemon memory for operations
+-Dorg.gradle.caching=             - Set true to enable Gradle build cache
 -Dorg.gradle.daemon.debug=        - Set true to debug Gradle Daemon
 -Dorg.gradle.daemon.idletimeout=  - Kill Gradle Daemon after # idle millis
 -Dorg.gradle.debug=               - Set true to debug Gradle Client
