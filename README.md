@@ -16,7 +16,7 @@ Here's a demo for the gradle project itself:
 
 Download and place `_gradle` on your `$fpath`. I recommend `$HOME/.zsh/gradle-completion`:
 ```
-git clone git://github.com/eriwen/gradle-completion ~/.zsh/gradle-completion
+git clone git://github.com/gradle/gradle-completion ~/.zsh/gradle-completion
 ```
 
 Add the following do your '.zshrc' file:
