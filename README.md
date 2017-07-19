@@ -10,7 +10,7 @@ This provides _fast_ tab completion for:
 It also handles custom default build files, so `rootProject.buildFileName = 'build.gradle.kts'` is supported.
 
 Here's a demo for the gradle project itself:
-![Completion demo](gradle-completion-short.gif)
+![Completion demo](gradle-completion-4.0.gif)
 
 ## Installation for Zsh 5.0+
 
