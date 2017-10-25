@@ -63,7 +63,7 @@ __gradle-long-options() {
     local args="--build-cache           - Enables the Gradle build cache
 --build-file            - Specifies the build file
 --configure-on-demand   - Only relevant projects are configured
---console               - Type of console output to generate (plain auto rich)
+--console=              - Type of console output to generate (plain auto rich verbose)
 --continue              - Continues task execution after a task failure
 --continuous            - Continuous mode. Automatically re-run build after changes
 --daemon                - Use the Gradle Daemon
@@ -79,7 +79,9 @@ __gradle-long-options() {
 --init-script           - Specifies an initialization script
 --max-workers           - Set the maximum number of workers that Gradle may use
 --no-build-cache        - Do not use the Gradle build cache
+--no-configure-on-demand  - Disables configuration on demand
 --no-daemon             - Do not use the Gradle Daemon
+--no-parallel           - Disables parallel execution to build projects
 --no-rebuild            - Do not rebuild project dependencies
 --no-scan               - Do not create a build scan
 --no-search-upwards     - Do not search in parent directories for a settings.gradle
@@ -107,6 +109,7 @@ __gradle-long-options() {
 __gradle-properties() {
     local args="-Dorg.gradle.cache.reserved.mb=   - Reserve Gradle Daemon memory for operations
 -Dorg.gradle.caching=             - Set true to enable Gradle build cache
+-Dorg.gradle.console=             - Set type of console output to generate (plain auto rich verbose)
 -Dorg.gradle.daemon.debug=        - Set true to debug Gradle Daemon
 -Dorg.gradle.daemon.idletimeout=  - Kill Gradle Daemon after # idle millis
 -Dorg.gradle.debug=               - Set true to debug Gradle Client

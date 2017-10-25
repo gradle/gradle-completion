@@ -199,11 +199,12 @@ __gradle_subcommand() {
                 {-b,--build-file}'[Specifies the build file.]:build script:_files -g \*.gradle' \
                 {-C,--cache}'[Specifies how compiled build scripts should be cached.]:cache policy:(on rebuild)' \
                 {-c,--settings-file}'[Specifies the settings file.]:settings file:_files -g \*.gradle' \
-                '--configure-on-demand[Only relevant projects are configured in this build run.]' \
-                '--console[Specifies which type of console output to generate.]:console output type:(plain auto rich)' \
+                '(--no-configure-on-demand)--configure-on-demand[Only relevant projects are configured in this build run.]' \
+                '--console=[Specifies which type of console output to generate.]:console output type:(plain auto rich verbose)' \
                 '--continue[Continues task execution after a task failure.]' \
                 '-Dorg.gradle.cache.reserved.mb=[Reserve Gradle Daemon memory for operations.]' \
                 '-Dorg.gradle.caching=[Set true to enable Gradle build cache.]:enable build cache:(true false)' \
+                '-Dorg.gradle.console=[Set type of console output to generate.]:console output type:(plain auto rich verbose)' \
                 '-Dorg.gradle.daemon.debug=[Set true to debug Gradle Daemon.]:enable daemon debug:(true false)' \
                 '-Dorg.gradle.daemon.idletimeout=[Kill Gradle Daemon after # idle millis.]' \
                 '-Dorg.gradle.debug=[Set true to debug Gradle Client.]' \
@@ -224,12 +225,14 @@ __gradle_subcommand() {
                 {-m,--dry-run}'[Runs the builds with all task actions disabled.]' \
                 '--no-color[Do not use color in the console output. (Removed in Gradle 3.0)]' \
                 '(--build-cache)--no-build-cache[Do not use the Gradle build cache.]' \
+                '(--configure-on-demand)--no-configure-on-demand[Disables configuration on demand.]' \
                 '(--daemon)--no-daemon[Do not use the Gradle daemon to run the build.]' \
+                '(--parallel)--no-parallel[Disables parallel execution to build projects.]' \
                 '(--scan)--no-scan[Do not create a build scan.]' \
                 '--offline[The build should operate without accessing network resources.]' \
                 \*{-P+,--project-prop}'[Set project property for the build script (e.g. -Pmyprop=myvalue).]:project property (prop=val):' \
                 {-p,--project-dir}'[Specifies the start directory for Gradle.]:start directory:_directories' \
-                '--parallel[Build projects in parallel. Gradle will attempt to determine the optimal number of executor threads to use.]' \
+                '(--no-parallel)--parallel[Build projects in parallel. Gradle will attempt to determine the optimal number of executor threads to use.]' \
                 '--profile[Profiles build execution time and generates a report in the <build_dir>/reports/profile directory.]' \
                 '--project-cache-dir[Specifies the project-specific cache directory.]:cache directory:_directories' \
                 '(-d --debug -w --warn -i --info)'{-q,--quiet}'[Log errors only.]' \
@@ -264,11 +267,12 @@ _gradle() {
         {-b,--build-file}'[Specifies the build file.]:build script:_files -g \*.gradle' \
         {-C,--cache}'[Specifies how compiled build scripts should be cached.]:cache policy:(on rebuild)' \
         {-c,--settings-file}'[Specifies the settings file.]:settings file:_files -g \*.gradle' \
-        '--configure-on-demand[Only relevant projects are configured in this build run.]' \
-        '--console[Specifies which type of console output to generate.]:console output type:(plain auto rich)' \
+        '(--no-configure-on-demand)--configure-on-demand[Only relevant projects are configured in this build run.]' \
+        '--console=[Specifies which type of console output to generate.]:console output type:(plain auto rich verbose)' \
         '--continue[Continues task execution after a task failure.]' \
         '-Dorg.gradle.cache.reserved.mb=[Reserve Gradle Daemon memory for operations.]' \
         '-Dorg.gradle.caching=[Set true to enable Gradle build cache.]' \
+        '-Dorg.gradle.console=[Set type of console output to generate.]:console output type:(plain auto rich verbose)' \
         '-Dorg.gradle.daemon.debug=[Set true to debug Gradle Daemon.]' \
         '-Dorg.gradle.daemon.idletimeout=[Kill Gradle Daemon after # idle millis.]' \
         '-Dorg.gradle.debug=[Set true to debug Gradle Client.]' \
@@ -290,12 +294,14 @@ _gradle() {
         {-m,--dry-run}'[Runs the builds with all task actions disabled.]' \
         '--no-color[Do not use color in the console output. (Removed in Gradle 3.0)]' \
         '(--build-cache)--no-build-cache[Do not use the Gradle build cache.]' \
+        '(--configure-on-demand)--no-configure-on-demand[Disables configuration on demand.]' \
         '(--daemon)--no-daemon[Do not use the Gradle daemon to run the build.]' \
+        '(--parallel)--no-parallel[Disables parallel execution to build projects.]' \
         '(--scan)--no-scan[Do not create a build scan.]' \
         '--offline[The build should operate without accessing network resources.]' \
         \*{-P+,--project-prop}'[Set project property for the build script (e.g. -Pmyprop=myvalue).]:project property (prop=val):' \
         {-p,--project-dir}'[Specifies the start directory for Gradle.]:start directory:_directories' \
-        '--parallel[Build projects in parallel. Gradle will attempt to determine the optimal number of executor threads to use.]' \
+        '(--no-parallel)--parallel[Build projects in parallel. Gradle will attempt to determine the optimal number of executor threads to use.]' \
         '--profile[Profiles build execution time and generates a report in the <build_dir>/reports/profile directory.]' \
         '--project-cache-dir[Specifies the project-specific cache directory.]:cache directory:_directories' \
         '(-d --debug -w --warn -i --info)'{-q,--quiet}'[Log errors only.]' \
