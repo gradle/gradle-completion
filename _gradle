@@ -178,6 +178,19 @@ __gradle_subcommand() {
     integer ret=1
 
     case "$words[1]" in
+        (dependencies)
+            _arguments \
+            '--configuration[The configuration to generate the report for.]' && ret=0
+            ;;
+        (dependencyInsight)
+            _arguments \
+            '--dependency[Shows the details of given dependency.]' \
+            '--configuration[Looks for the dependency in given configuration.]' && ret=0
+            ;;
+        (help)
+            _arguments \
+                '--task[The task to show help for.]' && ret=0
+            ;;
         (init)
             _arguments \
                 '--type=[Project type to generate.]:*:project type:(basic groovy-application groovy-library java-library pom scala-library)' && ret=0
