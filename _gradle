@@ -279,7 +279,7 @@ _gradle() {
         '(--no-build-cache)--build-cache[Enable the Gradle build cache.]' \
         {-b,--build-file}'[Specifies the build file.]:build script:_files -g \*.gradle' \
         {-C,--cache}'[Specifies how compiled build scripts should be cached.]:cache policy:(on rebuild)' \
-        {-c,--settings-file}'[Specifies the settings file.]:settings file:_files -g \*.gradle' \
+        {-c,--settings-file}'[Specifies the settings file.]:settings file:_files -g \*.gradle:->argument-expected' \
         '(--no-configure-on-demand)--configure-on-demand[Only relevant projects are configured in this build run.]' \
         '--console=[Specifies which type of console output to generate.]:console output type:(plain auto rich verbose)' \
         '--continue[Continues task execution after a task failure.]' \
@@ -298,12 +298,12 @@ _gradle() {
         '(-i --info -w --warn -q --quiet)'{-d,--debug}'[Log in debug mode (includes normal stacktrace).]' \
         '(--no-daemon)--daemon[Uses the Gradle daemon to run the build. Starts the daemon if not running.]' \
         '--foreground[Starts the Gradle daemon in the foreground.]' \
-        {-g,--gradle-user-home}'[Specifies the gradle user home directory.]:home directory:_directories' \
-        '(-)--gui[Launches the Gradle GUI.]' \
-        '--include-build[Includes the specified build in the composite.]:file:_directories' \
-        {-I,--init-script}'[Specifies an initialization script.]:init script:_files -g \*.gradle' \
+        {-g,--gradle-user-home}'[Specifies the gradle user home directory.]:home directory:_directories:->argument-expected' \
+        '(-)--gui[Launches the Gradle GUI. (Removed in Gradle 4.0)]' \
+        '--include-build[Includes the specified build in the composite.]:file:_directories:->argument-expected' \
+        {-I,--init-script}'[Specifies an initialization script.]:init script:_files -g \*.gradle:->argument-expected' \
         '(-d --debug -w --warn -q --quiet)'{-i,--info}'[Set log level to info.]' \
-        '--max-workers[Set the maximum number of concurrent workers that Gradle may use.]:number workers:-># processors' \
+        '--max-workers[Set the maximum number of concurrent workers that Gradle may use.]:number workers:->argument-expected' \
         {-m,--dry-run}'[Runs the builds with all task actions disabled.]' \
         '--no-color[Do not use color in the console output. (Removed in Gradle 3.0)]' \
         '(--build-cache)--no-build-cache[Do not use the Gradle build cache.]' \
@@ -312,11 +312,11 @@ _gradle() {
         '(--parallel)--no-parallel[Disables parallel execution to build projects.]' \
         '(--scan)--no-scan[Do not create a build scan.]' \
         '--offline[The build should operate without accessing network resources.]' \
-        \*{-P+,--project-prop}'[Set project property for the build script (e.g. -Pmyprop=myvalue).]:project property (prop=val):' \
-        {-p,--project-dir}'[Specifies the start directory for Gradle.]:start directory:_directories' \
+        \*{-P+,--project-prop}'[Set project property for the build script (e.g. -Pmyprop=myvalue).]:project property (prop=val):->argument-expected' \
+        {-p,--project-dir}'[Specifies the start directory for Gradle.]:start directory:_directories:->argument-expected' \
         '(--no-parallel)--parallel[Build projects in parallel. Gradle will attempt to determine the optimal number of executor threads to use.]' \
         '--profile[Profiles build execution time and generates a report in the <build_dir>/reports/profile directory.]' \
-        '--project-cache-dir[Specifies the project-specific cache directory.]:cache directory:_directories' \
+        '--project-cache-dir[Specifies the project-specific cache directory.]:cache directory:_directories:->argument-expected' \
         '(-d --debug -w --warn -i --info)'{-q,--quiet}'[Log errors only.]' \
         '--recompile-scripts[Force build script recompiling.]' \
         '--refresh[Refresh the state of resources of the type(s) specified.]:refresh policy:(dependencies)' \
@@ -333,18 +333,14 @@ _gradle() {
         '(-)'{-v,--version}'[Print version info.]' \
         '(-d --debug -q --quiet -i --info)'{-w,--warn}'[Log warnings and errors only.]' \
         {-x,--exclude-task}'[Specify a task to be excluded from execution.]' \
-        '(-): :->task' \
-        '(-)*:: :->option-or-argument' && ret=0
+        '(-)*:: :->task-or-option' && ret=0
 
-    case $state in
-        (task)
-            __gradle_tasks && ret=0
-            ;;
-        (option-or-argument)
-            curcontext=${curcontext%:*:*}:gradle-$words[1]:
-            __gradle_subcommand && ret=0
-            ;;
-    esac
+    if [[ $words[CURRENT] != -* && $state != "argument-expected" ]]; then
+        __gradle_tasks && ret=0
+    else
+        curcontext=${curcontext%:*:*}:gradle-$words[1]:
+        __gradle_subcommand && ret=0
+    fi
 
     return ret
 }
