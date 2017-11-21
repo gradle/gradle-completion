@@ -1,7 +1,3 @@
-# Bash breaks words on : by default. Subproject tasks have ':'
-# Avoid inaccurate completions for subproject tasks
-COMP_WORDBREAKS=${COMP_WORDBREAKS//:/}
-
 __gradle-set-project-root-dir() {
     local dir=$(pwd)
     project_root_dir=$(pwd)
@@ -60,6 +56,9 @@ __gradle-generate-script-cache() {
 }
 
 __gradle-long-options() {
+    local cur
+    _get_comp_words_by_ref -n : cur
+
     local args="--build-cache           - Enables the Gradle build cache
 --build-file            - Specifies the build file
 --configure-on-demand   - Only relevant projects are configured
@@ -103,10 +102,13 @@ __gradle-long-options() {
 --system-prop           - Set a system property
 --version               - Prints Gradle version info
 --warn                  - Log warnings and errors only"
-    COMPREPLY=( $(compgen -W "$args" -- "${COMP_WORDS[COMP_CWORD]}") )
+    COMPREPLY=( $(compgen -W "$args" -- "$cur") )
 }
 
 __gradle-properties() {
+    local cur
+    _get_comp_words_by_ref -n : cur
+
     local args="-Dorg.gradle.cache.reserved.mb=   - Reserve Gradle Daemon memory for operations
 -Dorg.gradle.caching=             - Set true to enable Gradle build cache
 -Dorg.gradle.console=             - Set type of console output to generate (plain auto rich verbose)
@@ -119,11 +121,14 @@ __gradle-properties() {
 -Dorg.gradle.parallel=            - Set true to enable parallel project builds (incubating)
 -Dorg.gradle.parallel.intra=      - Set true to enable intra-project parallel builds (incubating)
 -Dorg.gradle.workers.max=         - Set the number of workers Gradle is allowed to use"
-    COMPREPLY=( $(compgen -W "$args" -- "${COMP_WORDS[COMP_CWORD]}") )
+    COMPREPLY=( $(compgen -W "$args" -- "$cur}") )
     return 0
 }
 
 __gradle-short-options() {
+    local cur
+    _get_comp_words_by_ref -n : cur
+
     local args="-?                      - Shows a help message
 -a                      - Do not rebuild project dependencies
 -b                      - Specifies the build file
@@ -145,11 +150,13 @@ __gradle-short-options() {
 -I                      - Specifies an initialization script
 -P                      - Sets a project property of the root project
 -S                      - Print out the full (very verbose) stacktrace"
-    COMPREPLY=( $(compgen -W "$args" -- "${COMP_WORDS[COMP_CWORD]}") )
+    COMPREPLY=( $(compgen -W "$args" -- "$cur") )
 }
 
 __gradle-tasks() {
-    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local cur
+    _get_comp_words_by_ref -n : cur
+
     __gradle-init-cache-dir
     __gradle-set-project-root-dir
     __gradle-set-build-file
@@ -190,13 +197,14 @@ projects             - Displays the sub-projects of root project.
 properties           - Displays the properties of root project.
 tasks                - Displays the tasks runnable from root project.
 wrapper              - Generates Gradle wrapper files."
-        COMPREPLY=( $(compgen -W "$args" -- "${COMP_WORDS[COMP_CWORD]}") )
+        COMPREPLY=( $(compgen -W "$args" -- "$cur") )
     fi
 }
 
 __gradle-options-arguments() {
-    local cur="${COMP_WORDS[COMP_CWORD]}"
-    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local cur prev
+    _get_comp_words_by_ref -n : cur
+    _get_comp_words_by_ref -n : -p prev
 
     case "$prev" in
         -b|--build-file|-c|--settings-file|-I|--init-script)
@@ -296,8 +304,10 @@ __gradle-completion-init() {
 
 _gradle() {
     local cache_dir cache_name gradle_build_file gradle_files_checksum project_root_dir
-    local cur="${COMP_WORDS[COMP_CWORD]}"
-    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local cur prev
+    _get_comp_words_by_ref -n : cur
+    _get_comp_words_by_ref -n : -p prev
+
     # Set bash internal field separator to '\n'
     # This allows us to provide descriptions for options and tasks
     local OLDIFS="$IFS"

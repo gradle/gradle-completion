@@ -45,6 +45,8 @@ mkdir $HOME/bash_completion.d
 curl -LA gradle-completion https://edub.me/gradle-completion-bash -o $HOME/bash_completion.d/gradle-completion.bash
 ```
 
+Ensure `bash-completion` 1.2+ is installed using your favorite package manager or by following the [bash-completion installation instructions](https://github.com/scop/bash-completion/blob/master/README.md#installation).
+
 Add the following to your `.bash_profile` (macOS) or `.bashrc` (Linux) file:
 ```
 source $HOME/bash_completion.d/gradle-completion.bash
