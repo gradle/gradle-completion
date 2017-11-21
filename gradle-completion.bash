@@ -148,6 +148,70 @@ __gradle-short-options() {
     COMPREPLY=( $(compgen -W "$args" -- "${COMP_WORDS[COMP_CWORD]}") )
 }
 
+__gradle-tasks() {
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    __gradle-init-cache-dir
+    __gradle-set-project-root-dir
+    __gradle-set-build-file
+    if [[ -f $gradle_build_file ]]; then
+        __gradle-set-cache-name
+        __gradle-generate-script-cache
+        __gradle-set-files-checksum
+
+        # The cache key is md5 sum of all gradle scripts, so it's valid if it exists.
+        if [[ -f $cache_dir/$cache_name.md5 ]]; then
+            local cached_checksum="$(cat $cache_dir/$cache_name.md5)"
+            local -a cached_tasks
+            if [[ -z $cur ]]; then
+                cached_tasks=( $(cat $cache_dir/$cached_checksum) )
+            else
+                cached_tasks=( $(grep "^$cur" $cache_dir/$cached_checksum) )
+            fi
+            COMPREPLY=( $(compgen -W "${cached_tasks[*]}" -- "$cur") )
+        else
+            __gradle-notify-tasks-cache-build
+        fi
+
+        # Regenerate tasks cache in the background
+        if [[ $gradle_files_checksum != "$(cat $cache_dir/$cache_name.md5)" || ! -f $cache_dir/$gradle_files_checksum ]]; then
+            $(__gradle-generate-tasks-cache 1>&2 2>/dev/null &)
+        fi
+    else
+        # Default tasks available outside Gradle projects
+        local args="buildEnvironment     - Displays all buildscript dependencies declared in root project.
+components           - Displays the components produced by root project.
+dependencies         - Displays all dependencies declared in root project.
+dependencyInsight    - Displays the insight into a specific dependency in root project.
+dependentComponents  - Displays the dependent components of components in root project.
+help                 - Displays a help message.
+init                 - Initializes a new Gradle build.
+model                - Displays the configuration model of root project.
+projects             - Displays the sub-projects of root project.
+properties           - Displays the properties of root project.
+tasks                - Displays the tasks runnable from root project.
+wrapper              - Generates Gradle wrapper files."
+        COMPREPLY=( $(compgen -W "$args" -- "${COMP_WORDS[COMP_CWORD]}") )
+    fi
+}
+
+__gradle-options-arguments() {
+    case "${COMP_WORDS[COMP_CWORD-1]}" in
+        -b|--build-file|-c|--settings-file|-I|--init-script)
+            COMPREPLY=( $(compgen -f -A file -o filenames -X '!*.gradle*' ${cur}) )
+            return 0
+            ;;
+        -g|--gradle-user-home|--include-build|--project-cache-dir|--project-dir)
+            COMPREPLY=( $(compgen -d ${cur}) )
+            return 0
+            ;;
+        *)
+            __gradle-tasks
+            return 0
+            ;;
+    esac
+}
+
+
 __gradle-notify-tasks-cache-build() {
     # Notify user of cache rebuild
     echo -e " (Building completion cache. Please wait)\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\c"
@@ -229,7 +293,8 @@ __gradle-completion-init() {
 
 _gradle() {
     local cache_dir cache_name gradle_build_file gradle_files_checksum project_root_dir
-    local cur=${COMP_WORDS[COMP_CWORD]}
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
     # Set bash internal field separator to '\n'
     # This allows us to provide descriptions for options and tasks
     local OLDIFS="$IFS"
@@ -241,49 +306,10 @@ _gradle() {
         __gradle-properties
     elif [[ ${cur} == -* ]]; then
         __gradle-short-options
+    elif [[ ${prev} == -* ]]; then
+        __gradle-options-arguments
     else
-        __gradle-init-cache-dir
-        __gradle-set-project-root-dir
-        __gradle-set-build-file
-        if [[ -f $gradle_build_file ]]; then
-            __gradle-set-cache-name
-            __gradle-generate-script-cache
-            __gradle-set-files-checksum
-
-            # The cache key is md5 sum of all gradle scripts, so it's valid if it exists.
-            if [[ -f $cache_dir/$cache_name.md5 ]]; then
-                local cached_checksum="$(cat $cache_dir/$cache_name.md5)"
-                local -a cached_tasks
-                if [[ -z $cur ]]; then
-                    cached_tasks=( $(cat $cache_dir/$cached_checksum) )
-                else
-                    cached_tasks=( $(grep "^$cur" $cache_dir/$cached_checksum) )
-                fi
-                COMPREPLY=( $(compgen -W "${cached_tasks[*]}" -- "$cur") )
-            else
-                __gradle-notify-tasks-cache-build
-            fi
-
-            # Regenerate tasks cache in the background
-            if [[ $gradle_files_checksum != "$(cat $cache_dir/$cache_name.md5)" || ! -f $cache_dir/$gradle_files_checksum ]]; then
-                $(__gradle-generate-tasks-cache 1>&2 2>/dev/null &)
-            fi
-        else
-            # Default tasks available outside Gradle projects
-            local args="buildEnvironment     - Displays all buildscript dependencies declared in root project.
-components           - Displays the components produced by root project.
-dependencies         - Displays all dependencies declared in root project.
-dependencyInsight    - Displays the insight into a specific dependency in root project.
-dependentComponents  - Displays the dependent components of components in root project.
-help                 - Displays a help message.
-init                 - Initializes a new Gradle build.
-model                - Displays the configuration model of root project.
-projects             - Displays the sub-projects of root project.
-properties           - Displays the properties of root project.
-tasks                - Displays the tasks runnable from root project.
-wrapper              - Generates Gradle wrapper files."
-            COMPREPLY=( $(compgen -W "$args" -- "${COMP_WORDS[COMP_CWORD]}") )
-        fi
+        __gradle-tasks
     fi
 
     IFS="$OLDIFS"
