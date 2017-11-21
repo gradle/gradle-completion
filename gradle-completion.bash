@@ -51,7 +51,7 @@ __gradle-generate-script-cache() {
     if [[ ! $(find "$cache_dir/$cache_name" -mmin "-${cache_ttl_mins}" 2>/dev/null) ]]; then
         # Cache all Gradle scripts
         local gradle_build_scripts=$(find "$project_root_dir" -type f -name "*.gradle" -o -name "*.gradle.kts" 2>/dev/null | egrep -v "$script_exclude_pattern")
-        printf "%s\n" "${gradle_build_scripts[@]}" > "$cache_dir/$cache_name"
+        printf "%s\n" "${gradle_build_scripts[@]}" >| "$cache_dir/$cache_name"
     fi
 }
 
@@ -277,8 +277,8 @@ __gradle-generate-tasks-cache() {
         done
     fi
 
-    printf "%s\n" "${gradle_all_tasks[@]}" > "$cache_dir/$gradle_files_checksum"
-    echo "$gradle_files_checksum" > "$cache_dir/$cache_name.md5"
+    printf "%s\n" "${gradle_all_tasks[@]}" >| "$cache_dir/$gradle_files_checksum"
+    echo "$gradle_files_checksum" >| "$cache_dir/$cache_name.md5"
 }
 
 __gradle-completion-init() {
