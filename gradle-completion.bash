@@ -1,13 +1,13 @@
 # Bash breaks words on : by default. Subproject tasks have ':'
 # Avoid inaccurate completions for subproject tasks
-COMP_WORDBREAKS=$(echo "$COMP_WORDBREAKS" | sed -e 's/://g')
+COMP_WORDBREAKS=${COMP_WORDBREAKS//:/}
 
 __gradle-set-project-root-dir() {
-    local dir=`pwd`
-    project_root_dir=`pwd`
-    while [[ $dir != '/' ]]; do
+    local dir=$(pwd)
+    project_root_dir=$(pwd)
+    while [[ "$dir" != '/' ]]; do
         if [[ -f "$dir/settings.gradle" || -f "$dir/gradlew" ]]; then
-            project_root_dir=$dir
+            project_root_dir="$dir"
             return 0
         fi
         dir="$(dirname "$dir")"
@@ -17,7 +17,7 @@ __gradle-set-project-root-dir() {
 
 __gradle-init-cache-dir() {
     cache_dir="$HOME/.gradle/completion"
-    mkdir -p $cache_dir
+    mkdir -p "$cache_dir"
 }
 
 __gradle-set-build-file() {
@@ -33,7 +33,7 @@ __gradle-set-build-file() {
 
 __gradle-set-cache-name() {
     # Cache name is constructed from the absolute path of the build file.
-    cache_name=$(echo $gradle_build_file | sed -e 's/\//_/g')
+    cache_name="${gradle_build_file//\//_}"
 }
 
 __gradle-set-files-checksum() {
@@ -52,10 +52,10 @@ __gradle-generate-script-cache() {
     local cache_ttl_mins=${GRADLE_CACHE_TTL_MINUTES:-30240}
     local script_exclude_pattern=${GRADLE_COMPLETION_EXCLUDE_PATTERN:-"/(build|integTest|out)/"}
 
-    if [[ ! $(find $cache_dir/$cache_name -mmin -$cache_ttl_mins 2>/dev/null) ]]; then
+    if [[ ! $(find "$cache_dir/$cache_name" -mmin "-${cache_ttl_mins}" 2>/dev/null) ]]; then
         # Cache all Gradle scripts
-        local gradle_build_scripts=$(find $project_root_dir -type f -name "*.gradle" -o -name "*.gradle.kts" 2>/dev/null | egrep -v "$script_exclude_pattern")
-        printf "%s\n" "${gradle_build_scripts[@]}" > $cache_dir/$cache_name
+        local gradle_build_scripts=$(find "$project_root_dir" -type f -name "*.gradle" -o -name "*.gradle.kts" 2>/dev/null | egrep -v "$script_exclude_pattern")
+        printf "%s\n" "${gradle_build_scripts[@]}" > "$cache_dir/$cache_name"
     fi
 }
 
@@ -153,19 +153,19 @@ __gradle-tasks() {
     __gradle-init-cache-dir
     __gradle-set-project-root-dir
     __gradle-set-build-file
-    if [[ -f $gradle_build_file ]]; then
+    if [[ -f "$gradle_build_file" ]]; then
         __gradle-set-cache-name
         __gradle-generate-script-cache
         __gradle-set-files-checksum
 
         # The cache key is md5 sum of all gradle scripts, so it's valid if it exists.
-        if [[ -f $cache_dir/$cache_name.md5 ]]; then
-            local cached_checksum="$(cat $cache_dir/$cache_name.md5)"
+        if [[ -f "$cache_dir/$cache_name.md5" ]]; then
+            local cached_checksum="$(cat "$cache_dir/$cache_name.md5")"
             local -a cached_tasks
-            if [[ -z $cur ]]; then
-                cached_tasks=( $(cat $cache_dir/$cached_checksum) )
+            if [[ -z "$cur" ]]; then
+                cached_tasks=( $(cat "$cache_dir/$cached_checksum") )
             else
-                cached_tasks=( $(grep "^$cur" $cache_dir/$cached_checksum) )
+                cached_tasks=( $(grep "^$cur" "$cache_dir/$cached_checksum") )
             fi
             COMPREPLY=( $(compgen -W "${cached_tasks[*]}" -- "$cur") )
         else
@@ -173,7 +173,7 @@ __gradle-tasks() {
         fi
 
         # Regenerate tasks cache in the background
-        if [[ $gradle_files_checksum != "$(cat $cache_dir/$cache_name.md5)" || ! -f $cache_dir/$gradle_files_checksum ]]; then
+        if [[ "$gradle_files_checksum" != "$(cat "$cache_dir/$cache_name.md5")" || ! -f "$cache_dir/$gradle_files_checksum" ]]; then
             $(__gradle-generate-tasks-cache 1>&2 2>/dev/null &)
         fi
     else
@@ -195,13 +195,16 @@ wrapper              - Generates Gradle wrapper files."
 }
 
 __gradle-options-arguments() {
-    case "${COMP_WORDS[COMP_CWORD-1]}" in
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+
+    case "$prev" in
         -b|--build-file|-c|--settings-file|-I|--init-script)
-            COMPREPLY=( $(compgen -f -A file -o filenames -X '!*.gradle*' ${cur}) )
+            COMPREPLY=( $(compgen -f -A file -o filenames -X '!*.gradle*' "$cur") )
             return 0
             ;;
         -g|--gradle-user-home|--include-build|--project-cache-dir|--project-dir)
-            COMPREPLY=( $(compgen -d ${cur}) )
+            COMPREPLY=( $(compgen -d "$cur") )
             return 0
             ;;
         *)
@@ -232,23 +235,23 @@ __gradle-generate-tasks-cache() {
     # Run gradle to retrieve possible tasks and cache.
     # Reuse Gradle Daemon if IDLE but don't start a new one.
     local gradle_tasks_output
-    if [[ ! -z "$($gradle_cmd --status 2>/dev/null | grep IDLE)" ]]; then
-        gradle_tasks_output="$($gradle_cmd -b $gradle_build_file --daemon -q tasks --all)"
+    if [[ ! -z "$("$gradle_cmd" --status 2>/dev/null | grep IDLE)" ]]; then
+        gradle_tasks_output="$("$gradle_cmd" -b "$gradle_build_file" --daemon -q tasks --all)"
     else
-        gradle_tasks_output="$($gradle_cmd -b $gradle_build_file --no-daemon -q tasks --all)"
+        gradle_tasks_output="$("$gradle_cmd" -b "$gradle_build_file" --no-daemon -q tasks --all)"
     fi
     local output_line
     local task_description
     local -a gradle_all_tasks=()
     local -a root_tasks=()
     local -a subproject_tasks=()
-    for output_line in $gradle_tasks_output; do
-        if [[ $output_line =~ ^([[:lower:]][[:alnum:][:punct:]]*)([[:space:]]-[[:space:]]([[:print:]]*))? ]]; then
+    for output_line in ${gradle_tasks_output}; do
+        if [[ "$output_line" =~ ^([[:lower:]][[:alnum:][:punct:]]*)([[:space:]]-[[:space:]]([[:print:]]*))? ]]; then
             task_name="${BASH_REMATCH[1]}"
             task_description="${BASH_REMATCH[3]}"
             gradle_all_tasks+=( "$task_name  - $task_description" )
             # Completion for subproject tasks with ':' prefix
-            if [[ $task_name =~ ^([[:alnum:][:punct:]]+):([[:alnum:]]+) ]]; then
+            if [[ "$task_name" =~ ^([[:alnum:][:punct:]]+):([[:alnum:]]+) ]]; then
                 gradle_all_tasks+=( ":$task_name  - $task_description" )
                 subproject_tasks+=( "${BASH_REMATCH[2]}" )
             else
@@ -258,16 +261,16 @@ __gradle-generate-tasks-cache() {
     done
 
     # subproject tasks can be referenced implicitly from root project
-    if [[ $GRADLE_COMPLETION_UNQUALIFIED_TASKS == "true" ]]; then
+    if [[ "$GRADLE_COMPLETION_UNQUALIFIED_TASKS" == "true" ]]; then
         local -a implicit_tasks=()
         implicit_tasks=( $(comm -23 <(printf "%s\n" "${subproject_tasks[@]}" | sort) <(printf "%s\n" "${root_tasks[@]}" | sort)) )
         for task in $(printf "%s\n" "${implicit_tasks[@]}"); do
-            gradle_all_tasks+=( $task )
+            gradle_all_tasks+=( "$task" )
         done
     fi
 
-    printf "%s\n" "${gradle_all_tasks[@]}" > $cache_dir/$gradle_files_checksum
-    echo $gradle_files_checksum > $cache_dir/$cache_name.md5
+    printf "%s\n" "${gradle_all_tasks[@]}" > "$cache_dir/$gradle_files_checksum"
+    echo "$gradle_files_checksum" > "$cache_dir/$cache_name.md5"
 }
 
 __gradle-completion-init() {
@@ -279,7 +282,7 @@ __gradle-completion-init() {
     __gradle-init-cache-dir
     __gradle-set-project-root-dir
     __gradle-set-build-file
-    if [[ -f $gradle_build_file ]]; then
+    if [[ -f "$gradle_build_file" ]]; then
         __gradle-set-cache-name
         __gradle-generate-script-cache
         __gradle-set-files-checksum
