@@ -232,7 +232,7 @@ __gradle_subcommand() {
                 '--foreground[Starts the Gradle daemon in the foreground.]' \
                 {-g,--gradle-user-home}'[Specifies the gradle user home directory.]:file:_directories' \
                 '--include-build[Includes the specified build in the composite.]:file:_directories' \
-                {-I,--init-script}'[Specifies an initialization script.]:init script:_files -g \*.gradle' \
+                \*{-I,--init-script}'[Specifies an initialization script.]:init script:_files -g \*.gradle' \
                 '(-d --debug -w --warn -q --quiet)'{-i,--info}'[Set log level to info.]' \
                 '--max-workers[Set the maximum number of concurrent workers that Gradle may use.]:number workers' \
                 {-m,--dry-run}'[Runs the builds with all task actions disabled.]' \
@@ -301,7 +301,7 @@ _gradle() {
         {-g,--gradle-user-home}'[Specifies the gradle user home directory.]:home directory:_directories:->argument-expected' \
         '(-)--gui[Launches the Gradle GUI. (Removed in Gradle 4.0)]' \
         '--include-build[Includes the specified build in the composite.]:file:_directories:->argument-expected' \
-        {-I,--init-script}'[Specifies an initialization script.]:init script:_files -g \*.gradle:->argument-expected' \
+        \*{-I,--init-script}'[Specifies an initialization script.]:init script:_files -g \*.gradle:->argument-expected' \
         '(-d --debug -w --warn -q --quiet)'{-i,--info}'[Set log level to info.]' \
         '--max-workers[Set the maximum number of concurrent workers that Gradle may use.]:number workers:->argument-expected' \
         {-m,--dry-run}'[Runs the builds with all task actions disabled.]' \
