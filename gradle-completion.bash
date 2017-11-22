@@ -180,7 +180,7 @@ __gradle-tasks() {
         fi
 
         # Regenerate tasks cache in the background
-        if [[ "$gradle_files_checksum" != "$(cat "$cache_dir/$cache_name.md5")" || ! -f "$cache_dir/$gradle_files_checksum" ]]; then
+        if [[ "$gradle_files_checksum" != "$(cat "$cache_dir/$cache_name.md5")" || ! -f "$cache_dir/$gradle_files_checksum" || $(wc -c < $cache_dir/$gradle_files_checksum) -le 1 ]]; then
             $(__gradle-generate-tasks-cache 1>&2 2>/dev/null &)
         fi
     else
