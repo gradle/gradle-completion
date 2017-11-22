@@ -181,7 +181,7 @@ __gradle-tasks() {
 
         # Regenerate tasks cache in the background
         if [[ "$gradle_files_checksum" != "$(cat "$cache_dir/$cache_name.md5")" || ! -f "$cache_dir/$gradle_files_checksum" || $(wc -c < $cache_dir/$gradle_files_checksum) -le 1 ]]; then
-            $(__gradle-generate-tasks-cache 1>&2 2>/dev/null &)
+            $(__gradle-completion-init 1>&2 2>/dev/null &)
         fi
     else
         # Default tasks available outside Gradle projects
@@ -297,9 +297,20 @@ __gradle-completion-init() {
     __gradle-set-build-file
     if [[ -f "$gradle_build_file" ]]; then
         __gradle-set-cache-name
+
+        # Avoid generating cache multiple times in parallel
+        if [[ -f "$cache_dir/$cache_name.lock" && $(ps -p "$(cat $cache_dir/$cache_name.lock)") ]]; then
+            return 0
+        else
+            # FIXME: this contains the PID of the bash process. We want the currently executing process
+            echo $$ >| "$cache_dir/$cache_name.lock"
+        fi
+
         __gradle-generate-script-cache
         __gradle-set-files-checksum
         __gradle-notify-tasks-cache-build
+
+        rm "$cache_dir/$cache_name.lock"
     fi
 
     IFS="$OLDIFS"
