@@ -175,13 +175,14 @@ __gradle-tasks() {
                 cached_tasks=( $(grep "^$cur" "$cache_dir/$cached_checksum") )
             fi
             COMPREPLY=( $(compgen -W "${cached_tasks[*]}" -- "$cur") )
-        else
-            __gradle-notify-tasks-cache-build
-        fi
 
-        # Regenerate tasks cache in the background
-        if [[ "$gradle_files_checksum" != "$(cat "$cache_dir/$cache_name.md5")" || ! -f "$cache_dir/$gradle_files_checksum" ]]; then
+            # Re-generate tasks cache in the background
+            if [[ $gradle_files_checksum != "$(cat $cache_dir/$cache_name.md5)" || ! -f $cache_dir/$gradle_files_checksum ]]; then
+                $(__gradle-generate-tasks-cache 1>&2 2>/dev/null &)
+            fi
+        else
             $(__gradle-generate-tasks-cache 1>&2 2>/dev/null &)
+            return 0
         fi
     else
         # Default tasks available outside Gradle projects
