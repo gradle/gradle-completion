@@ -199,6 +199,11 @@ tasks                - Displays the tasks runnable from root project.
 wrapper              - Generates Gradle wrapper files."
         COMPREPLY=( $(compgen -W "$args" -- "$cur") )
     fi
+
+    # Avoid messing with colons in completion unless we're trying to complete a subproject task on Bash 3
+    if [[ "$1" == *:* && ${BASH_VERSINFO[0]} -ge 4 && -n "$(type -t __ltrim_colon_completions)" ]]; then
+        __ltrim_colon_completions "$cur"
+    fi
 }
 
 __gradle-options-arguments() {
