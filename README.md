@@ -9,10 +9,23 @@ This provides _fast_ tab completion for:
 
 It also handles custom default build files, so `rootProject.buildFileName = 'build.gradle.kts'` is supported.
 
+See instructions [for bash](https://github.com/gradle/gradle-completion/blob/master/README.md#installation-for-bash-32) or [for zsh](https://github.com/gradle/gradle-completion/blob/master/README.md#installation-for-zsh-50), then consider optional [additional configuration](https://github.com/gradle/gradle-completion/blob/master/README.md#additional-configuration).
+
 Here's a demo for the gradle project itself:
 ![Completion demo](gradle-completion-4.0.gif)
 
 ## Installation for Zsh 5.0+
+
+### Install via [Homebrew](https://brew.sh)
+
+```
+brew install gradle-completion
+
+# Ensure /usr/local/share/zsh/site-functions is on $fpath. You should get a result from the following
+echo $fpath | grep "/usr/local/share/zsh/site-functions"
+```
+
+### Install manually
 
 Download and place `_gradle` on your `$fpath`. I recommend `$HOME/.zsh/gradle-completion`:
 ```
@@ -38,6 +51,20 @@ source ~/.zsh/gradle-completion/_gradle 1>&2 2>/dev/null; __gradle-completion-in
 ```
 
 ## Installation for Bash 3.2+
+
+### Install via [Homebrew](https://brew.sh)
+
+```
+brew install bash-completion gradle-completion
+
+# Source completion scripts from bash-completion in your bash profile
+echo '[ -f $(brew --prefix)/etc/bash_completion ] && . $(brew --prefix)/etc/bash_completion' >> ~/.bash_profile
+
+# Load changes to bash profile
+source ~/.bash_profile
+```
+
+### Install manually
 
 Download and place `gradle-completion.bash` in your `bash_completion.d` folder, usually `/etc/bash_completion.d`, `/usr/local/etc/bash_completion.d`, or `$HOME/bash_completion.d`:
 ```
