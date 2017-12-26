@@ -22,7 +22,7 @@ __gradle-set-build-file() {
     gradle_build_file="$project_root_dir/build.gradle"
     if [[ -f "$project_root_dir/settings.gradle" ]]; then
         local build_file_name=$(grep "^rootProject\.buildFileName" "$project_root_dir/settings.gradle" | \
-            sed -n -e "s/rootProject\.buildFileName = [\'\"]\(.*\)[\'\"]/\1/p")
+            sed -n -e "s/rootProject\.buildFileName[[:space:]]*=[[:space:]]*[\'\"]\(.*\)[\'\"]/\1/p")
         gradle_build_file="$project_root_dir/${build_file_name:-build.gradle}"
     fi
 }
