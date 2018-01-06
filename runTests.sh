@@ -87,11 +87,21 @@ main() {
 callTestsInFile() {
   source $1
 
+  finishedTestCount=0
+  [[ ! $VERBOSE ]] && initDotLine
+
   for currFunc in $(compgen -A function); do
-    if [[ $currFunc == "test_"* ]]; then
-      callTest $currFunc
-    elif [[ $RUN_LARGE_TESTS && $currFunc == "testLarge_"* ]]; then
-      callTest $currFunc
+    local output
+    ((finishedTestCount+=1))
+    if [[ $currFunc == "test_"* || $RUN_LARGE_TESTS && $currFunc == "testLarge_"* ]]; then
+      [[ ! $VERBOSE ]] && updateDotLine
+
+      output=$(callTest $currFunc 2>&1)
+    fi
+
+    if [[ -n $output ]]; then
+      (( _PRINTED_LINE_COUNT+=$(echo -e "$output" | wc -l) ))
+      echo -e "$output"
     fi
   done
 
@@ -99,6 +109,19 @@ callTestsInFile() {
   # sub-shell so we can't set variables, we use the exit-code to return the
   # number of failing tests.
   exit $FAILING_TEST_COUNT
+}
+
+initDotLine() {
+  echo "" # start with a blank line to print the dots on
+  _PRINTED_LINE_COUNT=1 # Tracks how many lines have been printed since the dot-line, so we know where it is.
+}
+
+updateDotLine() {
+  tput cuu $_PRINTED_LINE_COUNT # move the cursor up to the dot-line
+  echo -ne "\r" # go to the start of the line
+  printf "%0.s." $(seq 0 $finishedTestCount) # print as may dots as tests that have run
+  tput cud $_PRINTED_LINE_COUNT # move the cursor back down.
+  echo -ne "\r" # go to the start of the line again
 }
 
 # Helper functions
@@ -127,6 +150,15 @@ callIfExists() {
   if [ $? == 0 ]; then
     $1
   fi
+}
+
+failUnexpected() {
+    maxSizeForMultiline=30
+    if [[ "${#1}" -gt $maxSizeForMultiline || ${#2} -gt $maxSizeForMultiline ]]; then
+      failFromStackDepth 3 "expected: '$1'\n    got:      '$2'"
+    else
+      failFromStackDepth 3 "expected: '$1', got: '$2'"
+    fi
 }
 
 # allows specifyng the call-stack depth at which the error was thrown
@@ -186,12 +218,13 @@ EOF
 
 assertEquals() {
   if [[ "$2" != "$1" ]]; then
-    maxSizeForMultiline=30
-    if [[ "${#1}" -gt $maxSizeForMultiline || ${#2} -gt $maxSizeForMultiline ]]; then
-      failFromStackDepth 2 "expected: '$1'\n    got:      '$2'"
-    else
-      failFromStackDepth 2 "expected: '$1', got: '$2'"
-    fi
+    failUnexpected "$1" "$2"
+  fi
+}
+
+assertMatches() {
+  if [[ "$2" != $1 ]]; then
+    failUnexpected "$1" "$2"
   fi
 }
 
