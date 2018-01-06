@@ -1,3 +1,7 @@
+__gradle-completion-print-timestamp() {
+    echo "$(($(gdate +'%s * 1000 + %-N / 1000000'))) - $1"
+}
+
 __gradle-set-project-root-dir() {
     local dir=$(pwd)
     project_root_dir=$(pwd)
