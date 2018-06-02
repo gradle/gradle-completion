@@ -210,6 +210,7 @@ __gradle_subcommand() {
             _arguments \
                 '--distribution-type=[Binary-only or all with docs and sources]:*:distribution type:(bin all)' \
                 '--gradle-version=[Set Gradle version for wrapper]' \
+                '--gradle-distribution-sha256-sum=[SHA-256 checksum]' \
                 '--gradle-distribution-url[Set Gradle distribution URL]' && ret=0
             ;;
         (*)
