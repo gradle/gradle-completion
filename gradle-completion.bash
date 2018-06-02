@@ -6,7 +6,7 @@ __gradle-set-project-root-dir() {
     local dir=$(pwd)
     project_root_dir=$(pwd)
     while [[ "$dir" != '/' ]]; do
-        if [[ -f "$dir/settings.gradle" || -f "$dir/gradlew" ]]; then
+        if [[ -f "$dir/settings.gradle" || -f "$dir/settings.gradle.kts" || -f "$dir/gradlew" ]]; then
             project_root_dir="$dir"
             return 0
         fi
@@ -20,14 +20,30 @@ __gradle-init-cache-dir() {
     mkdir -p "$cache_dir"
 }
 
+__gradle-set-settings-file() {
+    # In order of precedence: --settings-file=filename, settings.gradle, settings.gradle.kts
+
+    local default_gradle_settings_file="$project_root_dir/settings.gradle"
+    if [[ ! -f $default_gradle_settings_file ]]; then
+      default_gradle_settings_file="$project_root_dir/settings.gradle.kts"
+    fi
+    gradle_settings_file=$default_gradle_settings_file
+}
+
 __gradle-set-build-file() {
-    # Look for default build script in the settings file (settings.gradle by default)
-    # Otherwise, default is the file 'build.gradle' in the current directory.
-    gradle_build_file="$project_root_dir/build.gradle"
-    if [[ -f "$project_root_dir/settings.gradle" ]]; then
-        local build_file_name=$(grep "^rootProject\.buildFileName" "$project_root_dir/settings.gradle" | \
-            sed -n -e "s/rootProject\.buildFileName = [\'\"]\(.*\)[\'\"]/\1/p")
-        gradle_build_file="$project_root_dir/${build_file_name:-build.gradle}"
+    __gradle-set-settings-file
+    # In order of precedence: --build-file=filename, rootProject.buildFileName, build.gradle, build.gradle.kts
+
+    local default_gradle_build_file_name="build.gradle"
+    if [[ -f $gradle_settings_file ]]; then
+      local build_file_name=$(grep "^rootProject\.buildFileName" $gradle_settings_file | \
+          sed -n -e "s/rootProject\.buildFileName = [\'\"]\(.*\)[\'\"]/\1/p")
+      default_gradle_build_file_name="${build_file_name:-build.gradle}"
+    fi
+
+    gradle_build_file="$project_root_dir/$default_gradle_build_file_name"
+    if [[ ! -f $default_gradle_build_file ]]; then
+        gradle_build_file="$project_root_dir/build.gradle.kts"
     fi
 }
 
