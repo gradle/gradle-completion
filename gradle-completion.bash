@@ -120,8 +120,12 @@ __gradle-long-options() {
 --status                - Print Gradle Daemon status
 --stop                  - Stop all Gradle Daemons
 --system-prop           - Set a system property
+--update-locks          - Perform a partial update of the dependency lock
 --version               - Prints Gradle version info
---warn                  - Log warnings and errors only"
+--warn                  - Log warnings and errors only
+--warning-mode          - Set types of warnings to log (all summary none)
+--write-locks           - Persists dependency resolution for locked configurations"
+
     COMPREPLY=( $(compgen -W "$args" -- "$cur") )
 }
 
@@ -140,6 +144,7 @@ __gradle-properties() {
 -Dorg.gradle.logging.level=       - Set default Gradle log level (quiet warn lifecycle info debug)
 -Dorg.gradle.parallel=            - Set true to enable parallel project builds (incubating)
 -Dorg.gradle.parallel.intra=      - Set true to enable intra-project parallel builds (incubating)
+-Dorg.gradle.warning.mode=        - Set types of warnings to log (all summary none)
 -Dorg.gradle.workers.max=         - Set the number of workers Gradle is allowed to use"
     COMPREPLY=( $(compgen -W "$args" -- "$cur}") )
     return 0

@@ -248,7 +248,7 @@ __gradle_subcommand() {
                 '-Dorg.gradle.java.home=[Set JDK home dir.]' \
                 '-Dorg.gradle.logging.level=[Set default Gradle log level.]:log level:(quiet warn lifecycle info debug)' \
                 '-Dorg.gradle.parallel=[Set true to enable parallel project builds.]:enable parallel build:(true false)' \
-                '-Dorg.gradle.parallel.intra=[Set true to enable intra-project parallel builds.]' \
+                '-Dorg.gradle.warning.mode=[Set types of warnings to log.]:warning level:(all summary none)' \
                 '-Dorg.gradle.workers.max=[Set the number of workers Gradle is allowed to use.]' \
                 '(-i --info -w --warn -q --quiet)'{-d,--debug}'[Log in debug mode (includes normal stacktrace).]' \
                 '(--no-daemon)--daemon[Uses the Gradle daemon to run the build. Starts the daemon if not running.]' \
@@ -282,7 +282,10 @@ __gradle_subcommand() {
                 '--system-prop[system property (prop=val)]' \
                 {-t,--continuous}'[Enables continuous build. Gradle does not exit and will re-execute tasks when task file inputs change.]' \
                 {-u,--no-search-upward}"[Don't search in parent folders for a settings.gradle file.]" \
+                '(--write-locks)--update-locks[Perform a partial update of the dependency lock.]' \
                 '(-d --debug -q --quiet -i --info)'{-w,--warn}'[Log warnings and errors only.]' \
+                '--warning-mode=[Set types of warnings to log.]:warning mode:(all summary none)' \
+                '(--update-locks)--write-locks[Persists dependency resolution for locked configurations.]' \
                 {-x,--exclude-task}'[Specify a task to be excluded from execution.]' && ret=0
             ;;
     esac
@@ -315,8 +318,8 @@ _gradle() {
         '-Dorg.gradle.jvmargs=[Set JVM arguments.]' \
         '-Dorg.gradle.java.home=[Set JDK home dir.]' \
         '-Dorg.gradle.logging.level=[Set default Gradle log level.]:log level:(quiet warn lifecycle info debug)' \
-        '-Dorg.gradle.parallel=[Set true to enable parallel project builds.]' \
-        '-Dorg.gradle.parallel.intra=[Set true to enable intra-project parallel builds.]' \
+        '-Dorg.gradle.parallel=[Set true to enable parallel project builds.]:(true false)' \
+        '-Dorg.gradle.warning.mode=[Set types of warnings to log.]:warning level:(all summary none)' \
         '-Dorg.gradle.workers.max=[Set the number of workers Gradle is allowed to use.]' \
         '(-i --info -w --warn -q --quiet)'{-d,--debug}'[Log in debug mode (includes normal stacktrace).]' \
         '(--no-daemon)--daemon[Uses the Gradle daemon to run the build. Starts the daemon if not running.]' \
@@ -353,8 +356,11 @@ _gradle() {
         '--system-prop[system property (prop=val)]' \
         {-t,--continuous}'[Enables continuous build. Gradle does not exit and will re-execute tasks when task file inputs change.]' \
         {-u,--no-search-upward}"[Don't search in parent folders for a settings.gradle file.]" \
+        '(--write-locks)--update-locks[Perform a partial update of the dependency lock.]' \
         '(-)'{-v,--version}'[Print version info.]' \
         '(-d --debug -q --quiet -i --info)'{-w,--warn}'[Log warnings and errors only.]' \
+        '--warning-mode=[Set types of warnings to log.]:warning mode:(all summary none)' \
+        '(--update-locks)--write-locks[Persists dependency resolution for locked configurations.]' \
         {-x,--exclude-task}'[Specify a task to be excluded from execution.]' \
         '(-)*:: :->task-or-option' && ret=0
 
