@@ -55,7 +55,7 @@ source ~/.zsh/gradle-completion/_gradle 1>&2 2>/dev/null; __gradle-completion-in
 ### Install via [Homebrew](https://brew.sh)
 
 ```
-brew install bash-completion gradle-completion
+brew install gradle-completion
 
 # Source completion scripts from bash-completion in your bash profile
 echo '[ -f $(brew --prefix)/etc/bash_completion ] && . $(brew --prefix)/etc/bash_completion' >> ~/.bash_profile
@@ -72,7 +72,7 @@ mkdir $HOME/bash_completion.d
 curl -LA gradle-completion https://edub.me/gradle-completion-bash -o $HOME/bash_completion.d/gradle-completion.bash
 ```
 
-Ensure `bash-completion` 1.2+ is installed using your favorite package manager or by following the [bash-completion installation instructions](https://github.com/scop/bash-completion/blob/master/README.md#installation).
+NOTE: Ensure `bash-completion` 1.2+ is installed using your favorite package manager or by following the [bash-completion installation instructions](https://github.com/scop/bash-completion/blob/master/README.md#installation).
 
 Add the following to your `.bash_profile` (macOS) or `.bashrc` (Linux) file:
 ```
