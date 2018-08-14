@@ -42,7 +42,7 @@ __gradle-set-build-file() {
     fi
 
     gradle_build_file="$project_root_dir/$default_gradle_build_file_name"
-    if [[ ! -f $default_gradle_build_file ]]; then
+    if [[ ! -f $gradle_build_file ]]; then
         gradle_build_file="$project_root_dir/build.gradle.kts"
     fi
 }
