@@ -195,12 +195,12 @@ __gradle_subcommand() {
     case "$words[1]" in
         (dependencies)
             _arguments \
-            '--configuration[The configuration to generate the report for.]' && ret=0
+            '--configuration=[The configuration to generate the report for.]:*:dependency configuration:_gradle_dependency_configurations' && ret=0
             ;;
         (dependencyInsight)
             _arguments \
-            '--dependency[Shows the details of given dependency.]' \
-            '--configuration[Looks for the dependency in given configuration.]' && ret=0
+            '--dependency=[Shows the details of given dependency.]' \
+            '--configuration=[Looks for the dependency in given configuration.]:*:dependency configuration:_gradle_dependency_configurations' && ret=0
             ;;
         (help)
             _arguments \
@@ -291,6 +291,18 @@ __gradle_subcommand() {
     esac
 
     return ret
+}
+
+(( $+functions[_gradle_dependency_configurations] )) ||
+_gradle_dependency_configurations() {
+    local configurations
+    configurations=(
+        'compileClasspath'
+        'runtimeClasspath'
+        'testCompileClasspath'
+        'testRuntimeClasspath'
+    )
+    _describe -t 'dependency configurations' "dependency configuration" configurations
 }
 
 _gradle() {
