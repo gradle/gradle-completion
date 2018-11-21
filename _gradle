@@ -208,7 +208,11 @@ __gradle_subcommand() {
             ;;
         (init)
             _arguments \
-                '--type=[Project type to generate.]:*:project type:(basic groovy-application groovy-library java-library pom scala-library)' && ret=0
+                '--dsl=[DSL to be used in generated scripts.]:dsl:(groovy kotlin)' \
+                '--package=[Package for the generated source.]' \
+                '--project-name=[Name of the generated project.]' \
+                '--test-framework=[Test framework to be used.]:test framework:(junit kotlintest scalatest spock testng)' \
+                '--type=[Project type to generate.]:project type:(basic groovy-application groovy-library java-application java-library kotlin-application kotlin-library pom scala-library)' && ret=0
             ;;
         (tasks)
             _arguments \
@@ -319,6 +323,7 @@ _gradle() {
         '-Dorg.gradle.java.home=[Set JDK home dir.]' \
         '-Dorg.gradle.logging.level=[Set default Gradle log level.]:log level:(quiet warn lifecycle info debug)' \
         '-Dorg.gradle.parallel=[Set true to enable parallel project builds.]:(true false)' \
+        '-Dorg.gradle.priority=[Specifies the scheduling priority for the Gradle daemon and all processes launched by it.]:priority:(low normal)' \
         '-Dorg.gradle.warning.mode=[Set types of warnings to log.]:warning level:(all summary none)' \
         '-Dorg.gradle.workers.max=[Set the number of workers Gradle is allowed to use.]' \
         '(-i --info -w --warn -q --quiet)'{-d,--debug}'[Log in debug mode (includes normal stacktrace).]' \
@@ -341,6 +346,7 @@ _gradle() {
         \*{-P+,--project-prop}'[Set project property for the build script (e.g. -Pmyprop=myvalue).]:project property (prop=val):->argument-expected' \
         {-p,--project-dir}'[Specifies the start directory for Gradle.]:start directory:_directories:->argument-expected' \
         '(--no-parallel)--parallel[Build projects in parallel. Gradle will attempt to determine the optimal number of executor threads to use.]' \
+        '--priority=[Specifies the scheduling priority for the Gradle daemon and all processes launched by it.]:priority:(low normal)' \
         '--profile[Profiles build execution time and generates a report in the <build_dir>/reports/profile directory.]' \
         '--project-cache-dir[Specifies the project-specific cache directory.]:cache directory:_directories:->argument-expected' \
         '(-d --debug -w --warn -i --info)'{-q,--quiet}'[Log errors only.]' \
