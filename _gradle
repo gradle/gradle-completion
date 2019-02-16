@@ -298,9 +298,12 @@ _gradle_dependency_configurations() {
     local configurations
     configurations=(
         'compileClasspath'
+        'compileOnly'
         'runtimeClasspath'
+        'runtimeOnly'
         'testCompileClasspath'
         'testRuntimeClasspath'
+        'testRuntimeOnly'
     )
     _describe -t 'dependency configurations' "dependency configuration" configurations
 }
