@@ -94,9 +94,9 @@ __gradle-generate-tasks-cache() {
     # Reuse Gradle Daemon if IDLE but don't start a new one.
     local gradle_tasks_output
     if [[ ! -z "$($gradle_cmd --status 2>/dev/null | grep IDLE)" ]]; then
-        gradle_tasks_output="$($gradle_cmd --daemon --build-file $gradle_build_file -q tasks --all)"
+        gradle_tasks_output="$($gradle_cmd --daemon --build-file $gradle_build_file -q tasks --all 2>/dev/null)"
     else
-        gradle_tasks_output="$($gradle_cmd --no-daemon --build-file $gradle_build_file -q tasks --all)"
+        gradle_tasks_output="$($gradle_cmd --no-daemon --build-file $gradle_build_file -q tasks --all 2>/dev/null)"
     fi
     local gradle_all_tasks="" root_tasks="" subproject_tasks="" output_line
     local -a match
@@ -195,12 +195,12 @@ __gradle_subcommand() {
     case "$words[1]" in
         (dependencies)
             _arguments \
-            '--configuration=[The configuration to generate the report for.]:*:dependency configuration:_gradle_dependency_configurations' && ret=0
+                '--configuration=[The configuration to generate the report for.]:*:dependency configuration:_gradle_dependency_configurations' && ret=0
             ;;
         (dependencyInsight)
             _arguments \
-            '--dependency=[Shows the details of given dependency.]' \
-            '--configuration=[Looks for the dependency in given configuration.]:*:dependency configuration:_gradle_dependency_configurations' && ret=0
+                '--dependency=[Shows the details of given dependency.]' \
+                '--configuration=[Looks for the dependency in given configuration.]:*:dependency configuration:_gradle_dependency_configurations' && ret=0
             ;;
         (help)
             _arguments \
@@ -212,11 +212,12 @@ __gradle_subcommand() {
                 '--package=[Package for the generated source.]' \
                 '--project-name=[Name of the generated project.]' \
                 '--test-framework=[Test framework to be used.]:test framework:(junit kotlintest scalatest spock testng)' \
-                '--type=[Project type to generate.]:project type:(basic groovy-application groovy-library java-application java-library kotlin-application kotlin-library pom scala-library)' && ret=0
+                '--type=[Project type to generate.]:project type:(basic cpp-application cpp-library groovy-application groovy-library java-application java-library kotlin-application kotlin-library pom scala-library)' && ret=0
             ;;
         (tasks)
             _arguments \
-                '--all[List all tasks, including subproject tasks]' && ret=0
+                '--all[List all tasks, including subproject tasks.]' \
+                '--group=[Show tasks only from given task group.]' && ret=0
             ;;
         (test)
             _arguments -C \
@@ -230,7 +231,7 @@ __gradle_subcommand() {
                 '--distribution-type=[Binary-only or all with docs and sources]:*:distribution type:(bin all)' \
                 '--gradle-version=[Set Gradle version for wrapper]' \
                 '--gradle-distribution-sha256-sum=[SHA-256 checksum]' \
-                '--gradle-distribution-url[Set Gradle distribution URL]' && ret=0
+                '--gradle-distribution-url=[Set Gradle distribution URL]' && ret=0
             ;;
         (*)
             _arguments -C \
@@ -252,6 +253,7 @@ __gradle_subcommand() {
                 '-Dorg.gradle.java.home=[Set JDK home dir.]' \
                 '-Dorg.gradle.logging.level=[Set default Gradle log level.]:log level:(quiet warn lifecycle info debug)' \
                 '-Dorg.gradle.parallel=[Set true to enable parallel project builds.]:enable parallel build:(true false)' \
+                '-Dorg.gradle.priority=[Set priority for Gradle worker processes.]:priority:(low normal)' \
                 '-Dorg.gradle.warning.mode=[Set types of warnings to log.]:warning level:(all summary none)' \
                 '-Dorg.gradle.workers.max=[Set the number of workers Gradle is allowed to use.]' \
                 '(-i --info -w --warn -q --quiet)'{-d,--debug}'[Log in debug mode (includes normal stacktrace).]' \
@@ -274,6 +276,7 @@ __gradle_subcommand() {
                 {-p,--project-dir}'[Specifies the start directory for Gradle.]:start directory:_directories' \
                 '(--no-parallel)--parallel[Build projects in parallel. Gradle will attempt to determine the optimal number of executor threads to use.]' \
                 '--profile[Profiles build execution time and generates a report in the <build_dir>/reports/profile directory.]' \
+                '--priority[Set priority for Gradle worker processes.]:priority:(low normal)' \
                 '--project-cache-dir[Specifies the project-specific cache directory.]:cache directory:_directories' \
                 '(-d --debug -w --warn -i --info)'{-q,--quiet}'[Log errors only.]' \
                 '--recompile-scripts[Force build script recompiling.]' \
@@ -338,7 +341,7 @@ _gradle() {
         '-Dorg.gradle.java.home=[Set JDK home dir.]' \
         '-Dorg.gradle.logging.level=[Set default Gradle log level.]:log level:(quiet warn lifecycle info debug)' \
         '-Dorg.gradle.parallel=[Set true to enable parallel project builds.]:(true false)' \
-        '-Dorg.gradle.priority=[Specifies the scheduling priority for the Gradle daemon and all processes launched by it.]:priority:(low normal)' \
+        '-Dorg.gradle.priority=[Set priority for Gradle worker processes.]:priority:(low normal)' \
         '-Dorg.gradle.warning.mode=[Set types of warnings to log.]:warning level:(all summary none)' \
         '-Dorg.gradle.workers.max=[Set the number of workers Gradle is allowed to use.]' \
         '(-i --info -w --warn -q --quiet)'{-d,--debug}'[Log in debug mode (includes normal stacktrace).]' \
@@ -361,9 +364,9 @@ _gradle() {
         \*{-P+,--project-prop}'[Set project property for the build script (e.g. -Pmyprop=myvalue).]:project property (prop=val):->argument-expected' \
         {-p,--project-dir}'[Specifies the start directory for Gradle.]:start directory:_directories:->argument-expected' \
         '(--no-parallel)--parallel[Build projects in parallel. Gradle will attempt to determine the optimal number of executor threads to use.]' \
-        '--priority=[Specifies the scheduling priority for the Gradle daemon and all processes launched by it.]:priority:(low normal)' \
+        '--priority=[Set priority for Gradle worker processes.]:priority:(low normal)' \
         '--profile[Profiles build execution time and generates a report in the <build_dir>/reports/profile directory.]' \
-        '--project-cache-dir[Specifies the project-specific cache directory.]:cache directory:_directories:->argument-expected' \
+        '--project-cache-dir=[Specifies the project-specific cache directory.]:cache directory:_directories:->argument-expected' \
         '(-d --debug -w --warn -i --info)'{-q,--quiet}'[Log errors only.]' \
         '--recompile-scripts[Force build script recompiling.]' \
         '--refresh[Refresh the state of resources of the type(s) specified.]:refresh policy:(dependencies)' \
