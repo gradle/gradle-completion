@@ -69,7 +69,7 @@ __gradle-set-files-checksum() {
 __gradle-generate-script-cache() {
     # Invalidate cache after 3 weeks by default
     local cache_ttl_mins=${$(echo $GRADLE_CACHE_TTL_MINUTES):-30240}
-    local script_exclude_pattern=${$(echo $GRADLE_COMPLETION_EXCLUDE_PATTERN):-"/(build|integTest|out)/"}
+    local script_exclude_pattern=${$(echo $GRADLE_COMPLETION_EXCLUDE_PATTERN):-"/(.git|build|integTest|samples|templates|smokeTest|testFixtures|out)/"}
     if [[ ! $(find $cache_dir/$cache_name -mmin -$cache_ttl_mins 2>/dev/null) ]]; then
         zle -R "Generating Gradle build script cache"
         # Cache all Gradle scripts
