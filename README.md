@@ -58,7 +58,7 @@ source ~/.zsh/gradle-completion/_gradle 1>&2 2>/dev/null; __gradle-completion-in
 brew install gradle-completion
 
 # Source completion scripts from bash-completion in your bash profile
-echo '[ -f $(brew --prefix)/etc/bash_completion ] && . $(brew --prefix)/etc/bash_completion' >> ~/.bash_profile
+echo '[[ -r "/usr/local/etc/profile.d/bash_completion.sh" ]] && . "/usr/local/etc/profile.d/bash_completion.sh"' >> ~/.bash_profile
 
 # Load changes to bash profile
 source ~/.bash_profile
