@@ -147,7 +147,7 @@ __gradle-properties() {
 -Dorg.gradle.priority=            - Set priority for Gradle worker processes (low normal)
 -Dorg.gradle.warning.mode=        - Set types of warnings to log (all summary none)
 -Dorg.gradle.workers.max=         - Set the number of workers Gradle is allowed to use"
-    COMPREPLY=( $(compgen -W "$args" -- "$cur}") )
+    COMPREPLY=( $(compgen -W "$args" -- "$cur") )
     return 0
 }
 
