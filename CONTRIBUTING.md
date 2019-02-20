@@ -58,9 +58,9 @@ Ensure you have created a release tag on GitHub for `VERSION`.
 ```
 export GRADLE_COMPLETION_VERSION="1.4.1"
 wget "https://github.com/gradle/gradle-completion/archive/v${GRADLE_COMPLETION_VERSION}.tar.gz"
-cat "vgradle-completion-${GRADLE_COMPLETION_VERSION}.tar.gz" | shasum -a 256 | awk '{print $1}'
+cat "v${GRADLE_COMPLETION_VERSION}.tar.gz" | shasum -a 256 | awk '{print $1}'
 
-# Use brew tools to audit and create PR to homebrew/core
+# Use brew tools to audit and create PR to homebrew/core — don't forget to replace `VERSION` AND `SHA_256`!
 brew bump-formula-pr --url=https://github.com/gradle/gradle-completion/archive/v<VERSION>.tar.gz --sha256=<SHA_256> gradle-completion
 ```
 
