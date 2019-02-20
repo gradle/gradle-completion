@@ -161,8 +161,9 @@ may be disabled. Enable it by adding the following to your `~/.zshrc` file:
 zstyle ':completion:*' use-cache on
 ```
 
-You can get a debug trace of zsh completion by typing `Ctrl-X ?` instead of hitting `[TAB]`. That is especially helpful
-when submitting bug reports.
+## Contributing
+
+See the [contributing guide](CONTRIBUTING.md).
 
 ## Acknowledgements
 Bash completion is inspired by [Nolan Lawson's Gradle tab completion for bash](https://gist.github.com/nolanlawson/8694399).
@@ -171,7 +172,7 @@ Zsh completion is an improved version of [zsh](https://github.com/zsh-users/zsh)
 
 Current improvements over built-in support:
  - Subproject tasks are completed
- - Gradle CLI options are current as of Gradle 4.1
+ - Gradle CLI options are current as of Gradle 5.2
  - Common Gradle properties are completed
  - Handles default build file as specified in settings.gradle
  - ~20x faster completion speed for medium to large projects
