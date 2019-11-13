@@ -25,6 +25,18 @@ brew install gradle-completion
 echo $fpath | grep "/usr/local/share/zsh/site-functions"
 ```
 
+### Install as oh-my-zsh plugin
+
+Download and place the plugin and completion script into your [oh-my-zsh](https://ohmyz.sh/) plugins directory. 
+```
+git clone git://github.com/gradle/gradle-completion ~/.oh-my-zsh/plugins/gradle-completion
+```
+
+Add `gradle-completion` to the plugins array in your '.zshrc' file.
+```
+plugins+=(gradle-completion)
+```
+
 ### Install manually
 
 Download and place `_gradle` on your `$fpath`. I recommend `$HOME/.zsh/gradle-completion`:
