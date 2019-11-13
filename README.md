@@ -25,9 +25,9 @@ brew install gradle-completion
 echo $fpath | grep "/usr/local/share/zsh/site-functions"
 ```
 
-### Install as oh-my-zsh plugin
+### Install as [oh-my-zsh](https://ohmyz.sh/) plugin
 
-Download and place the plugin and completion script into your [oh-my-zsh](https://ohmyz.sh/) plugins directory. 
+Download and place the plugin and completion script into your oh-my-zsh plugins directory. 
 ```
 git clone git://github.com/gradle/gradle-completion ~/.oh-my-zsh/plugins/gradle-completion
 ```
