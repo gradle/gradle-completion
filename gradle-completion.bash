@@ -358,7 +358,8 @@ _gradle() {
 
     case "$prev" in
         -b|--build-file|-c|--settings-file|-I|--init-script|-g|--gradle-user-home|--include-build|--project-cache-dir|--project-dir)
-            compopt -o filenames
+            # compopt not available on bash 3.x
+            type compopt &>/dev/null && compopt -o filenames
             return 0
             ;;
         *)
