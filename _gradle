@@ -128,10 +128,19 @@ __gradle-generate-tasks-cache() {
     echo $gradle_files_checksum >| $cache_dir/$cache_name.md5
 }
 
+__gradle-source-project-overrides() {
+    if [[ -f "$project_root_dir/.gradle-completion/_gradle" ]]; then
+        # override default behaviours of this script
+        source "$project_root_dir"/.gradle-completion/_gradle
+    fi
+}
+
 __gradle-completion-init() {
     local cache_dir cache_name gradle_build_file gradle_files_checksum project_root_dir
-    __gradle-init-cache-dir
+
     __gradle-set-project-root-dir
+    __gradle-source-project-overrides
+    __gradle-init-cache-dir
     __gradle-set-build-file
     if [[ -f $gradle_build_file ]]; then
         __gradle-set-cache-name
@@ -143,10 +152,9 @@ __gradle-completion-init() {
 }
 
 __gradle_tasks() {
-    local cache_dir cache_name gradle_build_file gradle_files_checksum project_root_dir
+    local cache_dir cache_name gradle_build_file gradle_files_checksum
 
     __gradle-init-cache-dir
-    __gradle-set-project-root-dir
     __gradle-set-build-file
     if [[ -f $gradle_build_file ]]; then
         __gradle-set-cache-name
@@ -313,6 +321,7 @@ _gradle_dependency_configurations() {
 }
 
 _gradle() {
+    local project_root_dir
     local cur=${words[CURRENT]}
     local curcontext="$curcontext" state
     integer ret=1
@@ -384,6 +393,9 @@ _gradle() {
         '(--update-locks)--write-locks[Persists dependency resolution for locked configurations.]' \
         {-x,--exclude-task}'[Specify a task to be excluded from execution.]' \
         '(-)*:: :->task-or-option' && ret=0
+
+    __gradle-set-project-root-dir
+    __gradle-source-project-overrides
 
     if [[ $words[CURRENT] != -* && $state != "argument-expected" ]]; then
         __gradle_tasks && ret=0

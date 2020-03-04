@@ -155,6 +155,26 @@ export GRADLE_COMPLETION_UNQUALIFIED_TASKS="true"
 
 You may need to invalidate the cache using the cache config above or by executing `touch build.gradle`.
 
+
+#### Overriding default completion behoviour per project
+If you need to customize this tool for one of your projects, just create `.gradle-completion` directory in your project root.
+Then place there empty `gradle-completion.bash` (for bash) and/or `_gradle` (for zsh) and fill it with redefined original functions only. 
+Example content of `<path_to_your_gradle_project>/.gradle-completion/gradle-completion.bash`:
+
+```bash
+# Overrides default function that generates completion cache
+__gradle-generate-tasks-cache() {
+    __gradle-set-files-checksum
+
+    "${project_root_dir}"/gradlew initCompletionCache --completionCachePath="$cache_dir/$gradle_files_checksum" --no-scan 
+    echo "$gradle_files_checksum" >| "$cache_dir/$cache_name.md5"
+}
+
+```
+
+But do not hesitate to make PR to this repo to support more generic features straight away.
+
+
 ## Troubleshooting
 If zsh completion isn't working, first try checking your `$fpath` with `echo $fpath`.
 
