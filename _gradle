@@ -142,6 +142,51 @@ __gradle-completion-init() {
     return 0
 }
 
+# Instead of printing all tasks for all subprojects, print only subprojects names to limit number of entries shown on the screen
+# Once a single subproject is choosen - return its all available tasks.
+__gradle-trim-tasks-to-subprojects() {
+    if [[ "$1" =~ ^(.+:.*) ]]; then
+        # do nothing if a subproject is already choosen
+        cat
+    else
+        awk -F '[[:alnum:]_]:' '{
+            # Split entries into (subprojects names) AND (tasks accessible from root project)
+            if ($1 ~ /:/) {
+                # keep only subproject name (skip task name part)
+                c = split($1, arr, "\\\\:")
+
+                if (c == 3) {
+                    current = "\\:" arr[c-1] "\\:"
+                } else {
+                    current = arr[c-1] "\\:"
+                }
+                # keep uniq names (it assumes that the input to this funtion is already sorted)
+                if (m == 0 || current != module[m-1]) {
+                    module[m++] = current
+                }
+                module_task_line[mtl++] = $0
+            } else {
+                # otherwise store the whole line with description
+                root_task_line[rtl++] = $0
+            }
+        } END {
+            for(i=0; i<rtl; i++) {
+                print root_task_line[i]
+            }
+            if (m > 1) {
+                for(i=0; i<m; i++) {
+                    print module[i]
+                }
+            } else {
+                # at most 1 subproject is choosen, show possible tasks
+                for(i=0; i<mtl; i++) {
+                    print module_task_line[i]
+                }
+            }
+        }'
+    fi
+}
+
 __gradle_tasks() {
     local cache_dir cache_name gradle_build_file gradle_files_checksum project_root_dir
 
@@ -157,10 +202,12 @@ __gradle_tasks() {
         if [[ -f $cache_dir/$cache_name.md5 ]]; then
             local cached_checksum="$(cat $cache_dir/$cache_name.md5)"
             local -a cached_tasks
+
             if [[ -z $cur ]]; then
-                cached_tasks=(${(f)"$(cat $cache_dir/$cached_checksum)"})
+                cached_tasks=(${(f)"$(cat $cache_dir/$cached_checksum | __gradle-trim-tasks-to-subprojects "" )"})
             else
-                cached_tasks=(${(f)"$(grep "^${cur//:/\\\\:}" $cache_dir/$cached_checksum)"})
+                cur_esc="${cur//:/\\\\:}"
+                cached_tasks=(${(f)"$(grep "^${cur_esc}" $cache_dir/$cached_checksum | __gradle-trim-tasks-to-subprojects $cur)"})
             fi
             _describe 'all tasks' cached_tasks && ret=0
         else
