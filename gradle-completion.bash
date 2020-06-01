@@ -104,6 +104,7 @@ __gradle-long-options() {
 --no-rebuild            - Do not rebuild project dependencies
 --no-scan               - Do not create a build scan
 --no-search-upwards     - Do not search parent directories for a settings.gradle (removed)
+--no-watch-fs           - Do not watch the filesystem for changes
 --offline               - Build without accessing network resources
 --parallel              - Build projects in parallel
 --profile               - Profile build time and create report
@@ -125,6 +126,7 @@ __gradle-long-options() {
 --version               - Prints Gradle version info
 --warn                  - Log warnings and errors only
 --warning-mode          - Set types of warnings to log (all summary none)
+--watch-fs              - Gradle watches filesystem for incremental builds
 --write-locks           - Persists dependency resolution for locked configurations"
 
     COMPREPLY=( $(compgen -W "$args" -- "$cur") )
@@ -145,6 +147,7 @@ __gradle-properties() {
 -Dorg.gradle.logging.level=       - Set default Gradle log level (quiet warn lifecycle info debug)
 -Dorg.gradle.parallel=            - Set true to enable parallel project builds (incubating)
 -Dorg.gradle.priority=            - Set priority for Gradle worker processes (low normal)
+-Dorg.gradle.unsafe.watch-fs=     - Set true to enable Gradle file watcher
 -Dorg.gradle.warning.mode=        - Set types of warnings to log (all summary none)
 -Dorg.gradle.workers.max=         - Set the number of workers Gradle is allowed to use"
     COMPREPLY=( $(compgen -W "$args" -- "$cur") )

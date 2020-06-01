@@ -184,7 +184,7 @@ Zsh completion is an improved version of [zsh](https://github.com/zsh-users/zsh)
 
 Current improvements over built-in support:
  - Subproject tasks are completed
- - Gradle CLI options are current as of Gradle 5.2
+ - Gradle CLI options are current as of Gradle 6.4
  - Common Gradle properties are completed
  - Handles default build file as specified in settings.gradle
  - ~20x faster completion speed for medium to large projects

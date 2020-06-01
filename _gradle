@@ -254,6 +254,7 @@ __gradle_subcommand() {
                 '-Dorg.gradle.logging.level=[Set default Gradle log level.]:log level:(quiet warn lifecycle info debug)' \
                 '-Dorg.gradle.parallel=[Set true to enable parallel project builds.]:enable parallel build:(true false)' \
                 '-Dorg.gradle.priority=[Set priority for Gradle worker processes.]:priority:(low normal)' \
+                '-Dorg.gradle.unsafe.watch-fs=[Set true to enable Gradle file watcher.]:enable watcher:(true false)' \
                 '-Dorg.gradle.warning.mode=[Set types of warnings to log.]:warning level:(all summary none)' \
                 '-Dorg.gradle.workers.max=[Set the number of workers Gradle is allowed to use.]' \
                 '(-i --info -w --warn -q --quiet)'{-d,--debug}'[Log in debug mode (includes normal stacktrace).]' \
@@ -292,6 +293,7 @@ __gradle_subcommand() {
                 '(--write-locks)--update-locks[Perform a partial update of the dependency lock.]' \
                 '(-d --debug -q --quiet -i --info)'{-w,--warn}'[Log warnings and errors only.]' \
                 '--warning-mode=[Set types of warnings to log.]:warning mode:(all summary none)' \
+                '(--watch-fs)--no-watch-fs[Gradle watches filesystem for incremental builds.]' \
                 '(--update-locks)--write-locks[Persists dependency resolution for locked configurations.]' \
                 {-x,--exclude-task}'[Specify a task to be excluded from execution.]' && ret=0
             ;;
@@ -339,6 +341,7 @@ _gradle() {
         '-Dorg.gradle.logging.level=[Set default Gradle log level.]:log level:(quiet warn lifecycle info debug)' \
         '-Dorg.gradle.parallel=[Set true to enable parallel project builds.]:(true false)' \
         '-Dorg.gradle.priority=[Set priority for Gradle worker processes.]:priority:(low normal)' \
+        '-Dorg.gradle.unsafe.watch-fs=[Set true to enable Gradle file watcher.]:enable watcher:(true false)' \
         '-Dorg.gradle.warning.mode=[Set types of warnings to log.]:warning level:(all summary none)' \
         '-Dorg.gradle.workers.max=[Set the number of workers Gradle is allowed to use.]' \
         '(-i --info -w --warn -q --quiet)'{-d,--debug}'[Log in debug mode (includes normal stacktrace).]' \
@@ -382,6 +385,7 @@ _gradle() {
         '(-d --debug -q --quiet -i --info)'{-w,--warn}'[Log warnings and errors only.]' \
         '--warning-mode=[Set types of warnings to log.]:warning mode:(all summary none)' \
         '(--update-locks)--write-locks[Persists dependency resolution for locked configurations.]' \
+        '(--watch-fs)--no-watch-fs[Gradle watches filesystem for incremental builds.]' \
         {-x,--exclude-task}'[Specify a task to be excluded from execution.]' \
         '(-)*:: :->task-or-option' && ret=0
 
