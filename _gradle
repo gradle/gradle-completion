@@ -158,7 +158,7 @@ __gradle_tasks() {
             local cached_checksum="$(cat $cache_dir/$cache_name.md5)"
             local -a cached_tasks
             if [[ -z $cur ]]; then
-                cached_tasks=(${(f)"$(cat $cache_dir/$cached_checksum)"})
+                cached_tasks=(${(f)"$(grep -v "^\\\:" $cache_dir/$cached_checksum)"})
             else
                 cached_tasks=(${(f)"$(grep "^${cur//:/\\\\:}" $cache_dir/$cached_checksum)"})
             fi
