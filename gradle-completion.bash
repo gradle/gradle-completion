@@ -276,9 +276,9 @@ __gradle-generate-tasks-cache() {
     # Reuse Gradle Daemon if IDLE but don't start a new one.
     local gradle_tasks_output
     if [[ ! -z "$("$gradle_cmd" --status 2>/dev/null | grep IDLE)" ]]; then
-        gradle_tasks_output="$("$gradle_cmd" -b "$gradle_build_file" --daemon --console=plain -q tasks --all)"
+        gradle_tasks_output="$("$gradle_cmd" -b "$gradle_build_file" --daemon --no-scan --console=plain -q tasks --all)"
     else
-        gradle_tasks_output="$("$gradle_cmd" -b "$gradle_build_file" --no-daemon --console=plain -q tasks --all)"
+        gradle_tasks_output="$("$gradle_cmd" -b "$gradle_build_file" --no-daemon --no-scan --console=plain -q tasks --all)"
     fi
     local output_line
     local task_description
