@@ -81,6 +81,8 @@ __gradle-long-options() {
 
     local args="--build-cache           - Enables the Gradle build cache
 --build-file            - Specifies the build file
+--configuration-cache   - Enables the configuration cache. Gradle will try to reuse the build configuration from previous builds. [incubating]
+--configuration-cache-problems - Configures how the configuration cache handles problems (fail or warn). Defaults to fail. [incubating]
 --configure-on-demand   - Only relevant projects are configured
 --console               - Type of console output to generate (plain auto rich verbose)
 --continue              - Continues task execution after a task failure
@@ -98,6 +100,7 @@ __gradle-long-options() {
 --init-script           - Specifies an initialization script
 --max-workers           - Set the maximum number of workers that Gradle may use
 --no-build-cache        - Do not use the Gradle build cache
+--no-configuration-cache  - the configuration cache. [incubating]
 --no-configure-on-demand  - Disables configuration on demand
 --no-daemon             - Do not use the Gradle Daemon
 --no-parallel           - Disables parallel execution to build projects
@@ -147,6 +150,7 @@ __gradle-properties() {
 -Dorg.gradle.logging.level=       - Set default Gradle log level (quiet warn lifecycle info debug)
 -Dorg.gradle.parallel=            - Set true to enable parallel project builds (incubating)
 -Dorg.gradle.priority=            - Set priority for Gradle worker processes (low normal)
+-Dorg.gradle.unsafe.configuration-cache= - Set true to enable Gradle Configuration Cache
 -Dorg.gradle.unsafe.watch-fs=     - Set true to enable Gradle file watcher
 -Dorg.gradle.warning.mode=        - Set types of warnings to log (all summary none)
 -Dorg.gradle.workers.max=         - Set the number of workers Gradle is allowed to use"
