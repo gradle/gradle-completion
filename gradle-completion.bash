@@ -100,7 +100,7 @@ __gradle-long-options() {
 --init-script           - Specifies an initialization script
 --max-workers           - Set the maximum number of workers that Gradle may use
 --no-build-cache        - Do not use the Gradle build cache
---no-configuration-cache  - the configuration cache. [incubating]
+--no-configuration-cache  - Disables the configuration cache. [incubating]
 --no-configure-on-demand  - Disables configuration on demand
 --no-daemon             - Do not use the Gradle Daemon
 --no-parallel           - Disables parallel execution to build projects
