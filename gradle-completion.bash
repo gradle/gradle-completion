@@ -150,7 +150,6 @@ __gradle-properties() {
 -Dorg.gradle.logging.level=       - Set default Gradle log level (quiet warn lifecycle info debug)
 -Dorg.gradle.parallel=            - Set true to enable parallel project builds (incubating)
 -Dorg.gradle.priority=            - Set priority for Gradle worker processes (low normal)
--Dorg.gradle.unsafe.configuration-cache= - Set true to enable Gradle Configuration Cache
 -Dorg.gradle.unsafe.watch-fs=     - Set true to enable Gradle file watcher
 -Dorg.gradle.warning.mode=        - Set types of warnings to log (all summary none)
 -Dorg.gradle.workers.max=         - Set the number of workers Gradle is allowed to use"
