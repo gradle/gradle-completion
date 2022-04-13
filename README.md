@@ -29,7 +29,7 @@ echo $fpath | grep "/usr/local/share/zsh/site-functions"
 
 Download and place the plugin and completion script into your oh-my-zsh plugins directory. 
 ```
-git clone git://github.com/gradle/gradle-completion ~/.oh-my-zsh/plugins/gradle-completion
+git clone https://github.com/gradle/gradle-completion ~/.oh-my-zsh/plugins/gradle-completion
 ```
 
 Add `gradle-completion` to the plugins array in your '.zshrc' file.
@@ -41,7 +41,7 @@ plugins+=(gradle-completion)
 
 Download and place `_gradle` on your `$fpath`. I recommend `$HOME/.zsh/gradle-completion`:
 ```
-git clone git://github.com/gradle/gradle-completion ~/.zsh/gradle-completion
+git clone https://github.com/gradle/gradle-completion ~/.zsh/gradle-completion
 ```
 
 Add the following do your '.zshrc' file:
