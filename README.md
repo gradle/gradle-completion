@@ -37,6 +37,13 @@ Add `gradle-completion` to the plugins array in your '.zshrc' file.
 plugins+=(gradle-completion)
 ```
 
+### Install using [Fig](https://fig.io/)
+
+Install `gradle-completion` with [Fig](https://fig.io) in just one click.
+
+<a href="https://fig.io/plugins/other/gradle-completion_gradle" target="_blank"><img src="https://fig.io/badges/install-with-fig.svg" /></a>
+
+
 ### Install manually
 
 Download and place `_gradle` on your `$fpath`. I recommend `$HOME/.zsh/gradle-completion`:
