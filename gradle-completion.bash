@@ -1,3 +1,11 @@
+_gradle-compreply-clean() {
+    # Remove description ("[:space:]" and after) if only one possibility
+    if [[ ${#COMPREPLY[*]} -eq 1 ]]; then
+        COMPREPLY=( ${COMPREPLY[0]%%  *} )
+    fi
+
+}
+
 __gradle-completion-print-timestamp() {
     echo "$(($(gdate +'%s * 1000 + %-N / 1000000'))) - $1"
 }
@@ -133,6 +141,7 @@ __gradle-long-options() {
 --write-locks           - Persists dependency resolution for locked configurations"
 
     COMPREPLY=( $(compgen -W "$args" -- "$cur") )
+    _gradle-compreply-clean
 }
 
 __gradle-properties() {
@@ -154,6 +163,7 @@ __gradle-properties() {
 -Dorg.gradle.warning.mode=        - Set types of warnings to log (all summary none)
 -Dorg.gradle.workers.max=         - Set the number of workers Gradle is allowed to use"
     COMPREPLY=( $(compgen -W "$args" -- "$cur") )
+    _gradle-compreply-clean
     return 0
 }
 
@@ -183,6 +193,7 @@ __gradle-short-options() {
 -P                      - Sets a project property of the root project
 -S                      - Print out the full (very verbose) stacktrace"
     COMPREPLY=( $(compgen -W "$args" -- "$cur") )
+    _gradle-compreply-clean
 }
 
 __gradle-tasks() {
@@ -207,6 +218,7 @@ __gradle-tasks() {
                 cached_tasks=( $(grep "^$cur" "$cache_dir/$cached_checksum") )
             fi
             COMPREPLY=( $(compgen -W "${cached_tasks[*]}" -- "$cur") )
+            _gradle-compreply-clean
         else
             __gradle-notify-tasks-cache-build
         fi
@@ -230,6 +242,7 @@ properties           - Displays the properties of root project.
 tasks                - Displays the tasks runnable from root project.
 wrapper              - Generates Gradle wrapper files."
         COMPREPLY=( $(compgen -W "$args" -- "$cur") )
+        _gradle-compreply-clean
     fi
 
     # Prevent colons from messing up completion
@@ -362,13 +375,9 @@ _gradle() {
 
     IFS="$OLDIFS"
 
-    # Remove description ("[:space:]" and after) if only one possibility
-    if [[ ${#COMPREPLY[*]} -eq 1 ]]; then
-        COMPREPLY=( ${COMPREPLY[0]%%  *} )
-    fi
-
     return 0
 }
+
 complete -F _gradle gradle
 complete -F _gradle gradle.bat
 complete -F _gradle gradlew
