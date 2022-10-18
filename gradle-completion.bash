@@ -244,10 +244,12 @@ __gradle-options-arguments() {
     case "$prev" in
         -b|--build-file|-c|--settings-file|-I|--init-script)
             COMPREPLY=( $(compgen -f -A file -o filenames -X '!*.gradle*' "$cur") )
+            type compopt &>/dev/null && compopt -o filenames
             return 0
             ;;
         -g|--gradle-user-home|--include-build|--project-cache-dir|--project-dir)
             COMPREPLY=( $(compgen -d "$cur") )
+            type compopt &>/dev/null && compopt -o filenames
             return 0
             ;;
         *)
