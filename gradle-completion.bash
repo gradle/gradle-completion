@@ -139,21 +139,22 @@ __gradle-properties() {
     local cur
     _get_comp_words_by_ref -n : cur
 
-    local args="-Dorg.gradle.cache.reserved.mb=   - Reserve Gradle Daemon memory for operations
--Dorg.gradle.caching=             - Set true to enable Gradle build cache
--Dorg.gradle.console=             - Set type of console output to generate (plain auto rich verbose)
--Dorg.gradle.daemon.debug=        - Set true to debug Gradle Daemon
--Dorg.gradle.daemon.idletimeout=  - Kill Gradle Daemon after # idle millis
--Dorg.gradle.debug=               - Set true to debug Gradle Client
--Dorg.gradle.jvmargs=             - Set JVM arguments
--Dorg.gradle.java.home=           - Set JDK home dir
--Dorg.gradle.logging.level=       - Set default Gradle log level (quiet warn lifecycle info debug)
--Dorg.gradle.parallel=            - Set true to enable parallel project builds (incubating)
--Dorg.gradle.priority=            - Set priority for Gradle worker processes (low normal)
--Dorg.gradle.unsafe.watch-fs=     - Set true to enable Gradle file watcher
--Dorg.gradle.warning.mode=        - Set types of warnings to log (all summary none)
--Dorg.gradle.workers.max=         - Set the number of workers Gradle is allowed to use"
+    local args="org.gradle.cache.reserved.mb=   - Reserve Gradle Daemon memory for operations
+org.gradle.caching=             - Set true to enable Gradle build cache
+org.gradle.console=             - Set type of console output to generate (plain auto rich verbose)
+org.gradle.daemon.debug=        - Set true to debug Gradle Daemon
+org.gradle.daemon.idletimeout=  - Kill Gradle Daemon after # idle millis
+org.gradle.debug=               - Set true to debug Gradle Client
+org.gradle.jvmargs=             - Set JVM arguments
+org.gradle.java.home=           - Set JDK home dir
+org.gradle.logging.level=       - Set default Gradle log level (quiet warn lifecycle info debug)
+org.gradle.parallel=            - Set true to enable parallel project builds (incubating)
+org.gradle.priority=            - Set priority for Gradle worker processes (low normal)
+org.gradle.unsafe.watch-fs=     - Set true to enable Gradle file watcher
+org.gradle.warning.mode=        - Set types of warnings to log (all summary none)
+org.gradle.workers.max=         - Set the number of workers Gradle is allowed to use"
     COMPREPLY=( $(compgen -W "$args" -- "$cur") )
+    type compopt &>/dev/null && compopt -o nospace
     return 0
 }
 
@@ -248,6 +249,10 @@ __gradle-options-arguments() {
             ;;
         -g|--gradle-user-home|--include-build|--project-cache-dir|--project-dir)
             COMPREPLY=( $(compgen -d "$cur") )
+            return 0
+            ;;
+        -D|--system-prop)
+            __gradle-properties
             return 0
             ;;
         *)
@@ -350,8 +355,6 @@ _gradle() {
 
     if [[ ${cur} == --* ]]; then
         __gradle-long-options
-    elif [[ ${cur} == -D* ]]; then
-        __gradle-properties
     elif [[ ${cur} == -* ]]; then
         __gradle-short-options
     elif [[ ${prev} == -* ]]; then
