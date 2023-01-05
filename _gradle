@@ -231,7 +231,8 @@ __gradle_subcommand() {
                 '--distribution-type=[Binary-only or all with docs and sources]:*:distribution type:(bin all)' \
                 '--gradle-version=[Set Gradle version for wrapper]' \
                 '--gradle-distribution-sha256-sum=[SHA-256 checksum]' \
-                '--gradle-distribution-url=[Set Gradle distribution URL]' && ret=0
+                '--gradle-distribution-url=[Set Gradle distribution URL]' \
+                '--network-timeout=[Set network timeout for downloading wrapper files]' && ret=0
             ;;
         (*)
             _arguments -C \
@@ -286,10 +287,12 @@ __gradle_subcommand() {
                 '--recompile-scripts[Force build script recompiling.]' \
                 '--refresh[Refresh the state of resources of the type(s) specified.]:refresh policy:(dependencies)' \
                 '--refresh-dependencies[Refresh the state of dependencies.]' \
+                '--rerun[Run the task even if it is up-to-date.]' \
                 '--rerun-tasks[Ignore previously cached task results.]' \
                 '(--no-scan)--scan[Create a build scan.]' \
                 '(-S --full-stacktrace)'{-s,--stacktrace}'[Print out the stacktrace for all exceptions.]' \
                 '(-s --stacktrace)'{-S,--full-stacktrace}'[Print out the full (very verbose) stacktrace for all exceptions.]' \
+                {-V,--show-version}'[Print version info and then continue executing tasks.]' \
                 '--system-prop[system property (prop=val)]' \
                 {-t,--continuous}'[Enables continuous build. Gradle does not exit and will re-execute tasks when task file inputs change.]' \
                 {-u,--no-search-upward}"[Don't search in parent folders for a settings.gradle file.]" \
@@ -387,7 +390,8 @@ _gradle() {
         {-t,--continuous}'[Enables continuous build. Gradle does not exit and will re-execute tasks when task file inputs change.]' \
         {-u,--no-search-upward}"[Don't search in parent folders for a settings.gradle file.]" \
         '(--write-locks)--update-locks[Perform a partial update of the dependency lock.]' \
-        '(-)'{-v,--version}'[Print version info.]' \
+        '(-)'{-v,--version}'[Print version info and exit.]' \
+        {-V,--show-version}'[Print version info and then continue executing tasks.]' \
         '(-d --debug -q --quiet -i --info)'{-w,--warn}'[Log warnings and errors only.]' \
         '--warning-mode=[Set types of warnings to log.]:warning mode:(all summary none)' \
         '(--update-locks)--write-locks[Persists dependency resolution for locked configurations.]' \
