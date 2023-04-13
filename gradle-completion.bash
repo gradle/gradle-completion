@@ -192,7 +192,7 @@ __gradle-tasks() {
     __gradle-init-cache-dir
     __gradle-set-project-root-dir
     __gradle-set-build-file
-    if [[ -f "$gradle_build_file" ]]; then
+    if [[ -f "$gradle_build_file" || -f "$gradle_settings_file" ]]; then
         __gradle-set-cache-name
         __gradle-generate-script-cache
         __gradle-set-files-checksum
@@ -278,10 +278,17 @@ __gradle-generate-tasks-cache() {
     # Run gradle to retrieve possible tasks and cache.
     # Reuse Gradle Daemon if IDLE but don't start a new one.
     local gradle_tasks_output
-    if [[ ! -z "$("$gradle_cmd" --status 2>/dev/null | grep IDLE)" ]]; then
-        gradle_tasks_output="$("$gradle_cmd" -b "$gradle_build_file" --daemon --no-scan --console=plain -q tasks --all)"
+    if [[  -f "$gradle_build_file" ]]; then 
+        gradle_build_project_opt="-b"
+        gradle_build_project_path="$gradle_build_file"
     else
-        gradle_tasks_output="$("$gradle_cmd" -b "$gradle_build_file" --no-daemon --no-scan --console=plain -q tasks --all)"
+        gradle_build_project_opt="-p"
+        gradle_build_project_path="$(dirname "$gradle_build_file")"
+    fi
+    if [[ ! -z "$("$gradle_cmd" --status 2>/dev/null | grep IDLE)" ]]; then
+        gradle_tasks_output="$("$gradle_cmd" $gradle_build_project_opt "$gradle_build_project_path" --daemon --no-scan --console=plain -q tasks --all)"
+    else
+        gradle_tasks_output="$("$gradle_cmd" $gradle_build_project_opt "$gradle_build_project_path" --no-daemon --no-scan --console=plain -q tasks --all)"
     fi
     local output_line
     local task_description
@@ -376,6 +383,6 @@ complete -F _gradle gradlew.bat
 complete -F _gradle ./gradlew
 complete -F _gradle ./gradlew.bat
 
-if hash gw 2>/dev/null || alias gw >/dev/null 2>&1; then
+if hash gw 2>/dev/null et| alias gw >/dev/null 2>&1; then
     complete -F _gradle gw
 fi
