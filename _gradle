@@ -101,7 +101,7 @@ __gradle-generate-tasks-cache() {
     local gradle_all_tasks="" root_tasks="" subproject_tasks="" output_line
     local -a match
     for output_line in ${(f)"$(printf "%s\n" "${gradle_tasks_output[@]}")"}; do
-        if [[ $output_line =~ ^([[:lower:]][[:alnum:][:punct:]]*)([[:space:]]-[[:space:]]([[:print:]]*))? ]]; then
+        if [[ $output_line =~ ^([[:alpha:]][[:alnum:][:punct:]]*)([[:space:]]-[[:space:]]([[:print:]]*))? ]]; then
             local task_name="${match[1]}"
             local task_description="${match[3]}"
             # Completion for subproject tasks with ':' prefix
