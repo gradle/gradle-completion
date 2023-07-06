@@ -289,7 +289,7 @@ __gradle-generate-tasks-cache() {
     local -a root_tasks=()
     local -a subproject_tasks=()
     for output_line in ${gradle_tasks_output}; do
-        if [[ "$output_line" =~ ^([[:lower:]][[:alnum:][:punct:]]*)([[:space:]]-[[:space:]]([[:print:]]*))? ]]; then
+        if [[ "$output_line" =~ ^([[:alpha:]][[:alnum:][:punct:]]*)([[:space:]]-[[:space:]]([[:print:]]*))? ]]; then
             task_name="${BASH_REMATCH[1]}"
             task_description="${BASH_REMATCH[3]}"
             gradle_all_tasks+=( "$task_name  - $task_description" )
