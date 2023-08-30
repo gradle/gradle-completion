@@ -199,8 +199,10 @@ __gradle_subcommand() {
             ;;
         (dependencyInsight)
             _arguments \
+                '--all-variants[Show all variants of each dependency]' \
+                '--configuration=[Looks for the dependency in given configuration.]:dependency configuration:_gradle_dependency_configurations' \
                 '--dependency=[Shows the details of given dependency.]' \
-                '--configuration=[Looks for the dependency in given configuration.]:dependency configuration:_gradle_dependency_configurations' && ret=0
+                '--single-path[At most 1 path to each dependency]' && ret=0
             ;;
         (help)
             _arguments \
