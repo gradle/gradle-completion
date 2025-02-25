@@ -286,6 +286,7 @@ __gradle_subcommand() {
                 '--recompile-scripts[Force build script recompiling.]' \
                 '--refresh[Refresh the state of resources of the type(s) specified.]:refresh policy:(dependencies)' \
                 '--refresh-dependencies[Refresh the state of dependencies.]' \
+                '--rerun[Causes the particular task to be rerun even if up-to-date.]' \
                 '--rerun-tasks[Ignore previously cached task results.]' \
                 '(--no-scan)--scan[Create a build scan.]' \
                 '(-S --full-stacktrace)'{-s,--stacktrace}'[Print out the stacktrace for all exceptions.]' \
