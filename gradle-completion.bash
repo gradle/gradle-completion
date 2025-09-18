@@ -84,7 +84,7 @@ __gradle-long-options() {
 --configuration-cache   - Enables the configuration cache. Gradle will try to reuse the build configuration from previous builds. [incubating]
 --configuration-cache-problems - Configures how the configuration cache handles problems (fail or warn). Defaults to fail. [incubating]
 --configure-on-demand   - Only relevant projects are configured
---console               - Type of console output to generate (plain auto rich verbose)
+--console               - Type of console output to generate (plain auto colored rich verbose)
 --continue              - Continues task execution after a task failure
 --continuous            - Continuous mode. Automatically re-run build after changes
 --daemon                - Use the Gradle Daemon
@@ -125,6 +125,7 @@ __gradle-long-options() {
 --status                - Print Gradle Daemon status
 --stop                  - Stop all Gradle Daemons
 --system-prop           - Set a system property
+--task-graph            - Print task graph instead of executing tasks
 --update-locks          - Perform a partial update of the dependency lock
 --version               - Prints Gradle version info
 --warn                  - Log warnings and errors only
@@ -141,7 +142,7 @@ __gradle-properties() {
 
     local args="-Dorg.gradle.cache.reserved.mb=   - Reserve Gradle Daemon memory for operations
 -Dorg.gradle.caching=             - Set true to enable Gradle build cache
--Dorg.gradle.console=             - Set type of console output to generate (plain auto rich verbose)
+-Dorg.gradle.console=             - Set type of console output to generate (plain auto colored rich verbose)
 -Dorg.gradle.daemon.debug=        - Set true to debug Gradle Daemon
 -Dorg.gradle.daemon.idletimeout=  - Kill Gradle Daemon after # idle millis
 -Dorg.gradle.debug=               - Set true to debug Gradle Client
