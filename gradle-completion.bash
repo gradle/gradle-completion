@@ -21,7 +21,7 @@ __gradle-init-cache-dir() {
 }
 
 __gradle-set-settings-file() {
-    # In order of precedence: --settings-file=filename, settings.gradle, settings.gradle.kts
+    # In order of precedence: settings.gradle, settings.gradle.kts
 
     local default_gradle_settings_file="$project_root_dir/settings.gradle"
     if [[ ! -f $default_gradle_settings_file ]]; then
@@ -32,7 +32,7 @@ __gradle-set-settings-file() {
 
 __gradle-set-build-file() {
     __gradle-set-settings-file
-    # In order of precedence: --build-file=filename, rootProject.buildFileName, build.gradle, build.gradle.kts
+    # In order of precedence: rootProject.buildFileName, build.gradle, build.gradle.kts
 
     local default_gradle_build_file_name="build.gradle"
     if [[ -f $gradle_settings_file ]]; then
@@ -80,7 +80,6 @@ __gradle-long-options() {
     _get_comp_words_by_ref -n : cur
 
     local args="--build-cache           - Enables the Gradle build cache
---build-file            - Specifies the build file
 --configuration-cache   - Enables the configuration cache. Gradle will try to reuse the build configuration from previous builds. [incubating]
 --configuration-cache-problems - Configures how the configuration cache handles problems (fail or warn). Defaults to fail. [incubating]
 --configure-on-demand   - Only relevant projects are configured
@@ -120,7 +119,6 @@ __gradle-long-options() {
 --refresh-dependencies  - Refresh the state of dependencies
 --rerun-tasks           - Specifies that any task optimization is ignored
 --scan                  - Create a build scan
---settings-file         - Specifies the settings file
 --stacktrace            - Print out the stacktrace also for user exceptions
 --status                - Print Gradle Daemon status
 --stop                  - Stop all Gradle Daemons
@@ -163,8 +161,6 @@ __gradle-short-options() {
 
     local args="-?                      - Shows a help message
 -a                      - Do not rebuild project dependencies
--b                      - Specifies the build file
--c                      - Specifies the settings file
 -d                      - Log at the debug level
 -g                      - Specifies the Gradle user home directory
 -h                      - Shows a help message
@@ -242,7 +238,7 @@ __gradle-options-arguments() {
     _get_comp_words_by_ref -n : -p prev
 
     case "$prev" in
-        -b|--build-file|-c|--settings-file|-I|--init-script)
+        -I|--init-script)
             COMPREPLY=( $(compgen -f -A file -o filenames -X '!*.gradle*' "$cur") )
             return 0
             ;;
@@ -279,9 +275,9 @@ __gradle-generate-tasks-cache() {
     # Reuse Gradle Daemon if IDLE but don't start a new one.
     local gradle_tasks_output
     if [[ ! -z "$("$gradle_cmd" --status 2>/dev/null | grep IDLE)" ]]; then
-        gradle_tasks_output="$("$gradle_cmd" -b "$gradle_build_file" --daemon --no-scan --console=plain -q tasks --all)"
+        gradle_tasks_output="$("$gradle_cmd" --daemon --no-scan --console=plain -q tasks --all)"
     else
-        gradle_tasks_output="$("$gradle_cmd" -b "$gradle_build_file" --no-daemon --no-scan --console=plain -q tasks --all)"
+        gradle_tasks_output="$("$gradle_cmd" --no-daemon --no-scan --console=plain -q tasks --all)"
     fi
     local output_line
     local task_description
