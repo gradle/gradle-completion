@@ -1,6 +1,7 @@
 import org.gradle.initialization.BuildLayoutParametersBuildOptions
 import org.gradle.initialization.ParallelismBuildOptions
 import org.gradle.initialization.StartParameterBuildOptions
+import org.gradle.internal.buildoption.AbstractBuildOption
 import org.gradle.internal.buildoption.BooleanCommandLineOptionConfiguration
 import org.gradle.internal.buildoption.BuildOption
 import org.gradle.internal.buildoption.CommandLineOptionConfiguration
@@ -14,7 +15,7 @@ import java.lang.reflect.Field
 data class CliOption(
     val longOption: String,
     val shortOption: String? = null,
-    val description: String,
+    val description: String? = null,
     val incubating: Boolean = false,
     val mutuallyExclusiveWith: MutableList<String> = mutableListOf<String>(),
 )
@@ -104,18 +105,38 @@ tasks.register("generateCompletionScripts") {
                         configurations.filter { it != optionDetails }.forEach { cliO ->
                             enabledOption.addMutexOption(cliO)
                         }
-
                         opts
                     } else {
                         listOf()
                     }
                 }
-            }
+            }.toMutableList()
         println("Successfully extracted ${allCliOptions.size} CLI options from Gradle API.")
 
-        val allPropertyNames = allOptions.mapNotNull {
-            it.property
-        }
+        val allPropertyNames = allOptions
+            .filter { it.property != null && !it.property?.contains(".internal.")!! }
+            .mapNotNull { option ->
+                val field = findDeclaredField(option, "commandLineOptionConfigurations")
+                val configurations = field?.get(option) as List<*>
+                val cliConfigs = configurations.map { it as CommandLineOptionConfiguration }
+
+                option.property?.let { propName ->
+
+                    val longOption = "D$propName="
+                    if (option is AbstractBuildOption<*, *>) {
+                        CliOption(
+                            longOption = longOption, description = if (cliConfigs.size == 1) {
+                                cliConfigs.first().description?: ""
+                            } else {
+                                ""
+                            }
+                        )
+                    } else {
+                        CliOption(longOption = longOption)
+                    }
+                }
+            }
+
 
         // STEP 2: Format the extracted options into Bash and Zsh specific strings.
         val bashLongOpts = generateBashLongOpts(allCliOptions)
@@ -127,9 +148,14 @@ tasks.register("generateCompletionScripts") {
         println("\n--- GENERATED BASH SHORT OPTIONS OUTPUT ---")
         println(bashShortOpts)
 
+        allCliOptions += allPropertyNames
         println("\n--- GENERATED ZSH OUTPUT ---")
         val zshLongOpts = generateZshLongOpts(allCliOptions)
         println(zshLongOpts)
+
+        val properties = generatePropertiesOpts(allPropertyNames)
+        println("\n--- GENERATED PROPERTIES OUTPUT ---")
+        println(properties)
 
         println("\nGeneration complete. Copy the output into your completion script files.")
     }
@@ -141,7 +167,7 @@ fun generateBashLongOpts(options: List<CliOption>): String {
     options.forEach {
         val incubatingText = if (it.incubating) " [incubating]" else ""
         val paddedOption = "--${it.longOption}".padEnd(30)
-        builder.appendLine("    ${paddedOption}-${it.description.lineSequence().first()} $incubatingText")
+        builder.appendLine("    ${paddedOption} - ${it.description?.lineSequence()?.first()} $incubatingText")
     }
     builder.appendLine("\"\"")
     return builder.toString()
@@ -153,7 +179,7 @@ fun getBashShortOpts(options: List<CliOption>): String {
     options.sortedBy { it.shortOption }.filter { it.shortOption != null }.forEach {
         val incubatingText = if (it.incubating) " [incubating]" else ""
         val paddedOption = "-${it.shortOption}".padEnd(30)
-        builder.appendLine("    ${paddedOption}-${it.description.lineSequence().first()} $incubatingText")
+        builder.appendLine("    ${paddedOption} - ${it.description?.lineSequence()?.first()} $incubatingText")
     }
     builder.appendLine("\"\"")
     return builder.toString()
@@ -168,7 +194,7 @@ fun generateZshLongOpts(options: List<CliOption>): String {
             ""
         }
         val incubatingText = if (option.incubating) " [incubating]" else ""
-        val description = option.description.lineSequence().first().replace("[", "(").replace("]", ")")
+        val description = option.description?.lineSequence()?.first()?.replace("[", "(")?.replace("]", ")")
 
         val shortOptStr = option.shortOption?.let { "{-$it,--${option.longOption}}" } ?: "--${option.longOption}"
 
@@ -177,7 +203,12 @@ fun generateZshLongOpts(options: List<CliOption>): String {
     return builder.toString()
 }
 
-// Make this the default task for convenience
-//tasks.named("default") {
-//    dependsOn("generateCompletionScripts")
-//}
+fun generatePropertiesOpts(allPropertyNames: List<CliOption>): String {
+    val builder = StringBuilder()
+    allPropertyNames.forEach {
+        val paddingOption = "${it.longOption.padEnd(30)}="
+        builder.appendLine("${paddingOption} -${it.description?.lineSequence()?.first() ?: ""}")
+    }
+
+    return builder.toString()
+}
