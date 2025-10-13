@@ -30,25 +30,12 @@ jobs:
       - name: Create release tarball with generated scripts
         run: |
           VERSION=${GITHUB_REF#refs/tags/v}
-          # Remove generated files from .gitignore temporarily for the tarball
-          sed -i '/gradle-completion.bash/d' .gitignore
-          sed -i '/_gradle/d' .gitignore
           # Create tarball including generated scripts
           tar -czf gradle-completion-${VERSION}.tar.gz \
-            --exclude='.git' \
-            --exclude='.gradle' \
-            --exclude='build' \
-            --exclude='.github' \
             --transform "s,^,gradle-completion-${VERSION}/," \
             gradle-completion.bash \
+            gradle-completion.plugin.zsh \
             _gradle \
-            gradle-completion.bash.template \
-            _gradle.template \
-            build.gradle.kts \
-            gradlew \
-            gradlew.bat \
-            gradle/ \
-            settings.gradle.kts \
             README.md \
             LICENSE
 
