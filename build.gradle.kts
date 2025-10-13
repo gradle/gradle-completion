@@ -5,7 +5,10 @@ import org.gradle.internal.buildoption.AbstractBuildOption
 import org.gradle.internal.buildoption.BooleanCommandLineOptionConfiguration
 import org.gradle.internal.buildoption.BuildOption
 import org.gradle.internal.buildoption.CommandLineOptionConfiguration
+import org.gradle.internal.buildoption.EnumBuildOption
+import org.gradle.internal.buildoption.IntegerBuildOption
 import org.gradle.internal.buildoption.ListBuildOption
+import org.gradle.internal.buildoption.StringBuildOption
 import org.gradle.internal.logging.LoggingConfigurationBuildOptions
 import org.gradle.launcher.cli.converter.WelcomeMessageBuildOptions
 import org.gradle.launcher.daemon.configuration.DaemonBuildOptions
@@ -20,7 +23,9 @@ data class CliOption(
     val description: String? = null,
     val incubating: Boolean = false,
     val multipleOccurrencePossible: Boolean = false,
-    val mutuallyExclusiveWith: MutableList<String> = mutableListOf<String>(),
+    val argumentExpected: Boolean = false,
+    val mutuallyExclusiveWith: MutableList<String> = mutableListOf(),
+    val possibleValues: List<String> = listOf()
 )
 
 fun findDeclaredField(obj: Any, fieldName: String): Field? {
@@ -88,12 +93,25 @@ tasks.register("generateCompletionScripts") {
                 configurations.flatMap { optionDetails ->
                     val opts = mutableListOf<CliOption>()
                     if (optionDetails.longOption != null) {
+                        // Extract possible values for EnumBuildOption
+                        val possibleValues = if (option is EnumBuildOption<*, *>) {
+                            val valuesField = findDeclaredField(option, "possibleValues")
+                            @Suppress("UNCHECKED_CAST")
+                            (valuesField?.get(option) as? List<Object>)?.map{ it.toString() } ?: listOf()
+                        } else {
+                            listOf()
+                        }
+
                         val enabledOption = CliOption(
                             twoDashOption = optionDetails.longOption,
                             oneDashOption = optionDetails.shortOption,
-                            description = optionDetails.description.replace("\"", "'"),
+                            description = optionDetails.description.replace("\"", "'"), // Escape quotes
                             incubating = optionDetails.isIncubating,
-                            multipleOccurrencePossible = option is ListBuildOption<*>  // Now option is in scope
+                            multipleOccurrencePossible = option is ListBuildOption<*>,
+                            argumentExpected = option is StringBuildOption ||
+                                    option is IntegerBuildOption ||
+                                    option is EnumBuildOption<*, *>,
+                            possibleValues = possibleValues
                         )
                         opts += enabledOption
                         if (optionDetails is BooleanCommandLineOptionConfiguration) {
@@ -101,7 +119,8 @@ tasks.register("generateCompletionScripts") {
                                 twoDashOption = "no-${optionDetails.longOption}",
                                 oneDashOption = null,
                                 description = optionDetails.disabledDescription,
-                                incubating = optionDetails.isIncubating
+                                incubating = optionDetails.isIncubating,
+                                argumentExpected = false
                             )
 
                             disabledOption.addMutexOption(enabledOption)
@@ -124,7 +143,8 @@ tasks.register("generateCompletionScripts") {
         allCliOptions += CliOption(
             twoDashOption = "help",
             oneDashOption = "h",
-            description = "Shows a help message."
+            description = "Shows a help message.",
+            argumentExpected = false
         )
 
         val allPropertyNames = allOptions
@@ -139,14 +159,19 @@ tasks.register("generateCompletionScripts") {
                     val shortOption = "D$propName="
                     if (option is AbstractBuildOption<*, *>) {
                         CliOption(
-                            oneDashOption = shortOption, description = if (cliConfigs.size == 1) {
+                            oneDashOption = shortOption,
+                            description = if (cliConfigs.size == 1) {
                                 cliConfigs.first().description ?: ""
                             } else {
                                 ""
-                            }
+                            },
+                            argumentExpected = true
                         )
                     } else {
-                        CliOption(oneDashOption = shortOption)
+                        CliOption(
+                            oneDashOption = shortOption,
+                            argumentExpected = true
+                        )
                     }
                 }
             }
@@ -156,7 +181,8 @@ tasks.register("generateCompletionScripts") {
         val bashLongOpts = generateBashLongOpts(allCliOptions)
         val bashShortOpts = getBashShortOpts(allCliOptions)
         allCliOptions += allPropertyNames
-        val zshLongOpts = generateZshOpts(allCliOptions)
+        val zshMainOpts = generateZshMainOpts(allCliOptions)
+        val zshSubcommandOpts = generateZshSubcommandOpts(allCliOptions)
         val properties = generatePropertiesOpts(allPropertyNames)
 
         // STEP 3: Read templates and substitute placeholders
@@ -169,7 +195,8 @@ tasks.register("generateCompletionScripts") {
             .replace("{{GENERATED_GRADLE_PROPERTIES}}", properties.trimEnd())
 
         val zshCompletionScript = zshTemplate
-            .replace("{{GENERATED_ZSH_OPTIONS}}", zshLongOpts)
+            .replace("{{GENERATED_ZSH_MAIN_OPTIONS}}", zshMainOpts)
+            .replace("{{GENERATED_ZSH_SUBCOMMAND_OPTIONS}}", zshSubcommandOpts)
 
         // STEP 4: Write generated files
         file("gradle-completion.bash").writeText(bashCompletionScript)
@@ -202,9 +229,9 @@ fun getBashShortOpts(options: List<CliOption>): String {
     return builder.toString()
 }
 
-fun generateZshOpts(options: List<CliOption>): String {
+fun generateZshMainOpts(options: List<CliOption>): String {
     val builder = StringBuilder()
-    options.sortedBy { it.twoDashOption }.forEach { option ->
+    options.sortedBy { it.twoDashOption ?: it.oneDashOption }.forEach { option ->
         val multiplePrefix = if (option.multipleOccurrencePossible) "\\*" else ""
         val mutex = if (option.mutuallyExclusiveWith.isNotEmpty()) {
             "(${option.mutuallyExclusiveWith.joinToString(",")})"
@@ -221,10 +248,69 @@ fun generateZshOpts(options: List<CliOption>): String {
         if (option.twoDashOption != null) {
             optBuilder.add("--${option.twoDashOption}")
         }
-        val optStr = optBuilder.joinToString(",", prefix = "{", postfix = "}")
+        val optStr = if (optBuilder.size > 1) {
+            optBuilder.joinToString(",", prefix = "{", postfix = "}")
+        } else {
+            optBuilder.firstOrNull() ?: ""
+        }
 
-        builder.appendLine("        '$multiplePrefix$mutex$optStr'[${description}${incubatingText}]' \\\\")
+        val argumentPart = if (option.argumentExpected) {
+            if (option.possibleValues.isNotEmpty()) {
+                "::(${option.possibleValues.joinToString(" ")}):->argument-expected"
+            } else {
+                ":->argument-expected"
+            }
+        } else {
+            ""
+        }
+
+        builder.appendLine("        '$multiplePrefix$mutex$optStr'[${description}${incubatingText}]$argumentPart' \\\\")
     }
+    return builder.toString()
+}
+
+fun generateZshSubcommandOpts(options: List<CliOption>): String {
+    val builder = StringBuilder()
+    // Filter out standalone options (help, version, status, stop, gui)
+    val standaloneOptions = setOf("help", "h", "version", "v", "status", "stop", "gui")
+    options
+        .filter { option ->
+            option.twoDashOption !in standaloneOptions &&
+                    option.oneDashOption !in standaloneOptions
+        }
+        .sortedBy { it.twoDashOption ?: it.oneDashOption }
+        .forEach { option ->
+            val multiplePrefix = if (option.multipleOccurrencePossible) "\\*" else ""
+            val mutex = if (option.mutuallyExclusiveWith.isNotEmpty()) {
+                "(${option.mutuallyExclusiveWith.joinToString(",")})"
+            } else {
+                ""
+            }
+            val incubatingText = if (option.incubating) " [incubating]" else ""
+            val description = option.description?.lineSequence()?.first()?.replace("[", "(")?.replace("]", ")")
+
+            val optBuilder = mutableListOf<String>()
+            if (option.oneDashOption != null) {
+                optBuilder.add("-${option.oneDashOption}")
+            }
+            if (option.twoDashOption != null) {
+                optBuilder.add("--${option.twoDashOption}")
+            }
+            val optStr = if (optBuilder.size > 1) {
+                optBuilder.joinToString(",", prefix = "{", postfix = "}")
+            } else {
+                optBuilder.firstOrNull() ?: ""
+            }
+
+            // No :->argument-expected for subcommand options, but include possible values
+            val argumentPart = if (option.possibleValues.isNotEmpty()) {
+                "::(${option.possibleValues.joinToString(" ")})"
+            } else {
+                ""
+            }
+
+            builder.appendLine("                '$multiplePrefix$mutex$optStr'[${description}${incubatingText}]$argumentPart' \\\\")
+        }
     return builder.toString()
 }
 
@@ -232,8 +318,8 @@ fun generatePropertiesOpts(allPropertyNames: List<CliOption>): String {
     val builder = StringBuilder()
     allPropertyNames.forEach {
         val paddingOption = "-${it.oneDashOption!!.padEnd(40)}"
-        builder.appendLine("${paddingOption} - ${it.description?.lineSequence()?.first() ?: ""}")
-                                                   //^ we need the dash for the bash completion to work
+        builder.appendLine("$paddingOption - ${it.description?.lineSequence()?.first() ?: ""}")
+        //^ we need the dash for the bash completion to work
     }
 
     return builder.toString()
