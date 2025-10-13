@@ -13,8 +13,8 @@ if [ -z "$1" ]; then
 fi
 
 VERSION="$1"
-FILENAME="v${VERSION}.tar.gz"
-URL="https://github.com/gradle/gradle-completion/archive/${FILENAME}"
+FILENAME="gradle-completion-${VERSION}.tar.gz"
+URL="https://github.com/gradle/gradle-completion/releases/download/v${VERSION}/${FILENAME}"
 
 echo "==> Preparing to bump formula to version ${VERSION}"
 

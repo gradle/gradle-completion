@@ -186,6 +186,46 @@ zstyle ':completion:*' use-cache on
 
 See the [contributing guide](CONTRIBUTING.md).
 
+## For Maintainers: Releasing
+
+This project uses template-based generation for completion scripts. The actual `gradle-completion.bash` and `_gradle` files are generated from templates during the release process and are **not committed to git** (they're in `.gitignore`).
+
+### Release Process
+
+1. **Create and push a tag:**
+   ```bash
+   git tag v1.x.x
+   git push origin v1.x.x
+   ```
+
+2. **GitHub Actions automatically:**
+   - Checks out the code at the tag
+   - Sets up Java 17 and Gradle
+   - Runs `./gradlew generateCompletionScripts` to generate completion files from templates
+   - Creates a release tarball (`gradle-completion-1.x.x.tar.gz`) containing:
+     - Generated completion scripts (`gradle-completion.bash`, `_gradle`)
+     - Template files (`gradle-completion.bash.template`, `_gradle.template`)
+     - Build configuration and other necessary files
+   - Creates a GitHub release and uploads the tarball as a release asset
+
+3. **Update Homebrew formula:**
+   ```bash
+   ./bump-version.sh 1.x.x
+   ```
+   This script downloads the release asset tarball from GitHub, calculates its SHA256, and creates a Homebrew bump PR.
+
+   **Important:** The script uses the release asset URL (`releases/download/v1.x.x/gradle-completion-1.x.x.tar.gz`), not the automatic source archive, because the generated completion scripts are only available in the release asset.
+
+### Regenerating Completion Scripts Locally
+
+To regenerate completion scripts from templates during development:
+
+```bash
+./gradlew generateCompletionScripts
+```
+
+This will update `gradle-completion.bash` and `_gradle` based on the current Gradle version's CLI options. These generated files are in `.gitignore` and should not be committed to git.
+
 ## Acknowledgements
 Bash completion is inspired by [Nolan Lawson's Gradle tab completion for bash](https://gist.github.com/nolanlawson/8694399).
 
