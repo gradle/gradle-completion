@@ -74,6 +74,16 @@ fun CliOption.addMutexOption(other: CommandLineOptionConfiguration): Unit {
     }
 }
 
+fun getPossibleValues(option: BuildOption<*>): List<String> {
+    return if (option is EnumBuildOption<*, *>) {
+        val valuesField = findDeclaredField(option, "possibleValues")
+        @Suppress("UNCHECKED_CAST")
+        (valuesField?.get(option) as? List<Any>)?.map { it.toString().lowercase() } ?: listOf()
+    } else {
+        listOf()
+    }
+}
+
 tasks.register("generateCompletionScripts") {
     doLast {
         println("Starting generation of completion scripts...")
@@ -94,13 +104,7 @@ tasks.register("generateCompletionScripts") {
                     val opts = mutableListOf<CliOption>()
                     if (optionDetails.longOption != null) {
                         // Extract possible values for EnumBuildOption
-                        val possibleValues = if (option is EnumBuildOption<*, *>) {
-                            val valuesField = findDeclaredField(option, "possibleValues")
-                            @Suppress("UNCHECKED_CAST")
-                            (valuesField?.get(option) as? List<Object>)?.map{ it.toString() } ?: listOf()
-                        } else {
-                            listOf()
-                        }
+                        val possibleValues = getPossibleValues(option)
 
                         val enabledOption = CliOption(
                             twoDashOption = optionDetails.longOption,
@@ -143,8 +147,13 @@ tasks.register("generateCompletionScripts") {
         allCliOptions += CliOption(
             twoDashOption = "help",
             oneDashOption = "h",
-            description = "Shows a help message.",
-            argumentExpected = false
+            description = "Shows a help message."
+        )
+
+        allCliOptions += CliOption(
+            twoDashOption = "version",
+            oneDashOption = "v",
+            description = "Shows the version info."
         )
 
         val allPropertyNames = allOptions
@@ -155,6 +164,8 @@ tasks.register("generateCompletionScripts") {
                 val cliConfigs = configurations.map { it as CommandLineOptionConfiguration }
 
                 option.property?.let { propName ->
+                    // Extract possible values for EnumBuildOption properties
+                    val possibleValues = getPossibleValues(option)
 
                     val shortOption = "D$propName="
                     if (option is AbstractBuildOption<*, *>) {
@@ -165,12 +176,14 @@ tasks.register("generateCompletionScripts") {
                             } else {
                                 ""
                             },
-                            argumentExpected = true
+                            argumentExpected = true,
+                            possibleValues = possibleValues
                         )
                     } else {
                         CliOption(
                             oneDashOption = shortOption,
-                            argumentExpected = true
+                            argumentExpected = true,
+                            possibleValues = possibleValues
                         )
                     }
                 }
@@ -251,12 +264,15 @@ fun generateZshMainOpts(options: List<CliOption>): String {
         val optStr = if (optBuilder.size > 1) {
             optBuilder.joinToString(",", prefix = "{", postfix = "}")
         } else {
-            optBuilder.firstOrNull() ?: ""
+            "{${optBuilder.firstOrNull()}}" ?: ""
         }
 
         val argumentPart = if (option.argumentExpected) {
             if (option.possibleValues.isNotEmpty()) {
-                "::(${option.possibleValues.joinToString(" ")}):->argument-expected"
+                // Create a label from the option name
+                val label = (option.twoDashOption ?: option.oneDashOption?.removePrefix("D")?.removeSuffix("="))
+                    ?.replace("-", " ") ?: "value"
+                ":$label:(${option.possibleValues.joinToString(" ")}):->argument-expected"
             } else {
                 ":->argument-expected"
             }
@@ -304,7 +320,10 @@ fun generateZshSubcommandOpts(options: List<CliOption>): String {
 
             // No :->argument-expected for subcommand options, but include possible values
             val argumentPart = if (option.possibleValues.isNotEmpty()) {
-                "::(${option.possibleValues.joinToString(" ")})"
+                // Create a label from the option name
+                val label = (option.twoDashOption ?: option.oneDashOption?.removePrefix("D")?.removeSuffix("="))
+                    ?.replace("-", " ") ?: "value"
+                ":$label:(${option.possibleValues.joinToString(" ")})"
             } else {
                 ""
             }
