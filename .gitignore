@@ -1,2 +1,6 @@
 .gradle/
 build/
+
+# Generated completion scripts (generated from templates)
+gradle-completion.bash
+_gradle
