@@ -74,6 +74,11 @@ fun CliOption.addMutexOption(other: CommandLineOptionConfiguration): Unit {
     }
 }
 
+fun CliOption.getMultiplePrefix(): String {
+    return if (multipleOccurrencePossible) "\\*" else ""
+}
+
+
 fun getPossibleValues(option: BuildOption<*>): List<String> {
     return if (option is EnumBuildOption<*, *>) {
         val valuesField = findDeclaredField(option, "possibleValues")
@@ -82,6 +87,37 @@ fun getPossibleValues(option: BuildOption<*>): List<String> {
     } else {
         listOf()
     }
+}
+
+fun formatOptionStr(oneDashOption: String?, twoDashOption: String?): String {
+    val optBuilder = mutableListOf<String>()
+    if (oneDashOption != null) {
+        optBuilder.add("-$oneDashOption")
+    }
+    if (twoDashOption != null) {
+        optBuilder.add("--$twoDashOption")
+    }
+    return if (optBuilder.size > 1) {
+        optBuilder.joinToString(",", prefix = "{", postfix = "}")
+    } else {
+        "{${optBuilder.firstOrNull()}}" ?: ""
+    }
+}
+
+fun generateArgumentPart(
+    option: CliOption,
+    includeArgumentExpected: Boolean
+): String {
+    if (!option.argumentExpected) return ""
+
+    if (option.possibleValues.isEmpty()) {
+        return if (includeArgumentExpected) ":->argument-expected" else ""
+    }
+    // Create a label from the option name
+    val label = (option.twoDashOption ?: option.oneDashOption?.removePrefix("D")?.removeSuffix("="))
+        ?.replace("-", " ") ?: "value"
+    val suffix = if (includeArgumentExpected) ":->argument-expected" else ""
+    return ":$label:(${option.possibleValues.joinToString(" ")})$suffix"
 }
 
 tasks.register("generateCompletionScripts") {
@@ -103,9 +139,6 @@ tasks.register("generateCompletionScripts") {
                 configurations.flatMap { optionDetails ->
                     val opts = mutableListOf<CliOption>()
                     if (optionDetails.longOption != null) {
-                        // Extract possible values for EnumBuildOption
-                        val possibleValues = getPossibleValues(option)
-
                         val enabledOption = CliOption(
                             twoDashOption = optionDetails.longOption,
                             oneDashOption = optionDetails.shortOption,
@@ -115,7 +148,7 @@ tasks.register("generateCompletionScripts") {
                             argumentExpected = option is StringBuildOption ||
                                     option is IntegerBuildOption ||
                                     option is EnumBuildOption<*, *>,
-                            possibleValues = possibleValues
+                            possibleValues = getPossibleValues(option)
                         )
                         opts += enabledOption
                         if (optionDetails is BooleanCommandLineOptionConfiguration) {
@@ -164,28 +197,17 @@ tasks.register("generateCompletionScripts") {
                 val cliConfigs = configurations.map { it as CommandLineOptionConfiguration }
 
                 option.property?.let { propName ->
-                    // Extract possible values for EnumBuildOption properties
-                    val possibleValues = getPossibleValues(option)
-
                     val shortOption = "D$propName="
-                    if (option is AbstractBuildOption<*, *>) {
-                        CliOption(
-                            oneDashOption = shortOption,
-                            description = if (cliConfigs.size == 1) {
-                                cliConfigs.first().description ?: ""
-                            } else {
-                                ""
-                            },
-                            argumentExpected = true,
-                            possibleValues = possibleValues
-                        )
-                    } else {
-                        CliOption(
-                            oneDashOption = shortOption,
-                            argumentExpected = true,
-                            possibleValues = possibleValues
-                        )
-                    }
+                    CliOption(
+                        oneDashOption = shortOption,
+                        description = if (option is AbstractBuildOption<*, *> && cliConfigs.size == 1) {
+                            cliConfigs.first().description ?: ""
+                        } else {
+                            ""
+                        },
+                        argumentExpected = true,
+                        possibleValues = getPossibleValues(option)
+                    )
                 }
             }
 
@@ -242,47 +264,33 @@ fun getBashShortOpts(options: List<CliOption>): String {
     return builder.toString()
 }
 
+
+fun CliOption.getDescription(): String {
+    return description?.lineSequence()?.first()?.replace("[", "(")?.replace("]", ")") ?: ""
+}
+
 fun generateZshMainOpts(options: List<CliOption>): String {
     val builder = StringBuilder()
     options.sortedBy { it.twoDashOption ?: it.oneDashOption }.forEach { option ->
-        val multiplePrefix = if (option.multipleOccurrencePossible) "\\*" else ""
-        val mutex = if (option.mutuallyExclusiveWith.isNotEmpty()) {
-            "(${option.mutuallyExclusiveWith.joinToString(",")})"
-        } else {
-            ""
-        }
+        val multiplePrefix = option.getMultiplePrefix()
+        val mutex = option.getMutexOptions()
         val incubatingText = if (option.incubating) " [incubating]" else ""
-        val description = option.description?.lineSequence()?.first()?.replace("[", "(")?.replace("]", ")")
-
-        val optBuilder = mutableListOf<String>()
-        if (option.oneDashOption != null) {
-            optBuilder.add("-${option.oneDashOption}")
-        }
-        if (option.twoDashOption != null) {
-            optBuilder.add("--${option.twoDashOption}")
-        }
-        val optStr = if (optBuilder.size > 1) {
-            optBuilder.joinToString(",", prefix = "{", postfix = "}")
-        } else {
-            "{${optBuilder.firstOrNull()}}" ?: ""
-        }
-
-        val argumentPart = if (option.argumentExpected) {
-            if (option.possibleValues.isNotEmpty()) {
-                // Create a label from the option name
-                val label = (option.twoDashOption ?: option.oneDashOption?.removePrefix("D")?.removeSuffix("="))
-                    ?.replace("-", " ") ?: "value"
-                ":$label:(${option.possibleValues.joinToString(" ")}):->argument-expected"
-            } else {
-                ":->argument-expected"
-            }
-        } else {
-            ""
-        }
+        val description = option.getDescription()
+        val optStr = formatOptionStr(option.oneDashOption, option.twoDashOption)
+        val argumentPart = generateArgumentPart(option, includeArgumentExpected = true)
 
         builder.appendLine("        '$multiplePrefix$mutex$optStr'[${description}${incubatingText}]$argumentPart' \\\\")
     }
     return builder.toString()
+}
+
+fun CliOption.getMutexOptions(): String {
+    return if (mutuallyExclusiveWith.isNotEmpty()) {
+        "(${mutuallyExclusiveWith.joinToString(",")})"
+    } else {
+        ""
+    }
+
 }
 
 fun generateZshSubcommandOpts(options: List<CliOption>): String {
@@ -296,37 +304,12 @@ fun generateZshSubcommandOpts(options: List<CliOption>): String {
         }
         .sortedBy { it.twoDashOption ?: it.oneDashOption }
         .forEach { option ->
-            val multiplePrefix = if (option.multipleOccurrencePossible) "\\*" else ""
-            val mutex = if (option.mutuallyExclusiveWith.isNotEmpty()) {
-                "(${option.mutuallyExclusiveWith.joinToString(",")})"
-            } else {
-                ""
-            }
+            val multiplePrefix = option.getMultiplePrefix()
+            val mutex = option.getMutexOptions()
             val incubatingText = if (option.incubating) " [incubating]" else ""
-            val description = option.description?.lineSequence()?.first()?.replace("[", "(")?.replace("]", ")")
-
-            val optBuilder = mutableListOf<String>()
-            if (option.oneDashOption != null) {
-                optBuilder.add("-${option.oneDashOption}")
-            }
-            if (option.twoDashOption != null) {
-                optBuilder.add("--${option.twoDashOption}")
-            }
-            val optStr = if (optBuilder.size > 1) {
-                optBuilder.joinToString(",", prefix = "{", postfix = "}")
-            } else {
-                optBuilder.firstOrNull() ?: ""
-            }
-
-            // No :->argument-expected for subcommand options, but include possible values
-            val argumentPart = if (option.possibleValues.isNotEmpty()) {
-                // Create a label from the option name
-                val label = (option.twoDashOption ?: option.oneDashOption?.removePrefix("D")?.removeSuffix("="))
-                    ?.replace("-", " ") ?: "value"
-                ":$label:(${option.possibleValues.joinToString(" ")})"
-            } else {
-                ""
-            }
+            val description = option.getDescription()
+            val optStr = formatOptionStr(option.oneDashOption, option.twoDashOption)
+            val argumentPart = generateArgumentPart(option, includeArgumentExpected = false)
 
             builder.appendLine("                '$multiplePrefix$mutex$optStr'[${description}${incubatingText}]$argumentPart' \\\\")
         }
