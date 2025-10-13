@@ -1,0 +1,61 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*' # Trigger on tags like v1.0.0
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Needed to create releases
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Generate completion scripts
+        run: ./gradlew generateCompletionScripts
+
+      - name: Create release tarball with generated scripts
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          # Remove generated files from .gitignore temporarily for the tarball
+          sed -i '/gradle-completion.bash/d' .gitignore
+          sed -i '/_gradle/d' .gitignore
+          # Create tarball including generated scripts
+          tar -czf gradle-completion-${VERSION}.tar.gz \
+            --exclude='.git' \
+            --exclude='.gradle' \
+            --exclude='build' \
+            --exclude='.github' \
+            --transform "s,^,gradle-completion-${VERSION}/," \
+            gradle-completion.bash \
+            _gradle \
+            gradle-completion.bash.template \
+            _gradle.template \
+            build.gradle.kts \
+            gradlew \
+            gradlew.bat \
+            gradle/ \
+            settings.gradle.kts \
+            README.md \
+            LICENSE
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+          files: |
+            gradle-completion-*.tar.gz
