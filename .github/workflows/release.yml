@@ -1,0 +1,30 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*' # Trigger on tags like v1.0.0
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Needed to create releases
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          # This will automatically generate release notes from your PRs
+          generate_release_notes: true
+          # The GITHUB_TOKEN is automatically provided by GitHub
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+          # If you had build artifacts (e.g., zip files, binaries) to upload,
+          # you would add a 'files' section here. For this project, it's not needed.
+          # files: |
+          #   my-artifact.zip
+          #   my-other-asset.jar
