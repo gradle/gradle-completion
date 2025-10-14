@@ -12,21 +12,70 @@ Contributors must follow the Code of Conduct outlined at [https://gradle.org/con
 
 ### Development setup
 
-You can test local changes to `gradle-completion.bash` by executing 
+**Important:** This project uses template-based generation for completion scripts. The actual `gradle-completion.bash` and `_gradle` files are generated from templates and are **not committed to git** (they're in `.gitignore`).
 
-```bash
-source path/to/gradle-completion.bash
-``` 
+#### Setting up for local development
 
-and then using completion as normal.
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/gradle/gradle-completion
+   cd gradle-completion
+   ```
 
-For ZSH, set your `fpath` to point to the cloned git repository
+2. **Generate completion scripts:**
+   
+   The completion scripts are generated based on the current Gradle version's CLI options:
+   ```bash
+   ./gradlew generateCompletionScripts
+   ```
+   
+   This creates:
+   - `gradle-completion.bash` - Bash completion script (generated from template)
+   - `_gradle` - Zsh completion script (generated from template)
 
-```bash
-export fpath=($HOME/src/your_user/gradle-completion \$fpath)
-```
+3. **Test your changes:**
 
-Then execute `unfunction _gradle && autoload -U _gradle` to reload the gradle completion function, after which you can try completion as normal.
+   **For Bash**, source the generated script:
+   ```bash
+   source path/to/gradle-completion.bash
+   ```
+   
+   **For Zsh**, set your `fpath` to point to the cloned repository:
+   ```bash
+   export fpath=($HOME/path/to/gradle-completion $fpath)
+   ```
+   
+   Then reload the gradle completion function:
+   ```bash
+   unfunction _gradle && autoload -U _gradle
+   ```
+
+4. **Regenerate after changes:**
+   
+   Whenever you modify:
+   - `build.gradle.kts` (the generation script)
+   - `gradle-completion.bash.template`
+   - `_gradle.template`
+   
+   You need to regenerate the completion scripts:
+   ```bash
+   ./gradlew generateCompletionScripts
+   ```
+
+#### What gets generated vs. what's in git
+
+**In git (templates and configuration):**
+- `build.gradle.kts` - Script that extracts CLI options from Gradle's API
+- `gradle-completion.bash.template` - Bash completion template
+- `_gradle.template` - Zsh completion template
+- `gradle-completion.plugin.zsh` - Oh-my-zsh plugin file (static)
+
+**Generated (not in git):**
+- `gradle-completion.bash` - Final Bash completion script
+- `_gradle` - Final Zsh completion script
+
+**Why this approach?**
+Gradle's CLI options change between versions. By generating completions from Gradle's internal API, we ensure they stay up-to-date automatically.
 
 ### Debugging
 

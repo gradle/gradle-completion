@@ -27,26 +27,34 @@ echo $fpath | grep "/usr/local/share/zsh/site-functions"
 
 ### Install as [oh-my-zsh](https://ohmyz.sh/) plugin
 
-Download and place the plugin and completion script into your oh-my-zsh plugins directory. 
-```
-git clone https://github.com/gradle/gradle-completion ~/.oh-my-zsh/plugins/gradle-completion
+Download the latest release tarball and extract it into your oh-my-zsh plugins directory:
+
+```bash
+VERSION=1.4.4  # Replace with the latest version from https://github.com/gradle/gradle-completion/releases
+curl -L https://github.com/gradle/gradle-completion/releases/download/v${VERSION}/gradle-completion-${VERSION}.tar.gz | tar xz -C ~/.oh-my-zsh/plugins/
 ```
 
-Add `gradle-completion` to the plugins array in your '.zshrc' file.
-```
+Add `gradle-completion` to the plugins array in your '.zshrc' file:
+```bash
 plugins+=(gradle-completion)
 ```
 
+Start a new terminal session.
+
 ### Install manually
 
-Download and place `_gradle` on your `$fpath`. I recommend `$HOME/.zsh/gradle-completion`:
-```
-git clone https://github.com/gradle/gradle-completion ~/.zsh/gradle-completion
+Download the latest release tarball and extract it to your preferred location:
+
+```bash
+VERSION=1.4.4  # Replace with the latest version from https://github.com/gradle/gradle-completion/releases
+mkdir -p ~/.zsh
+curl -L https://github.com/gradle/gradle-completion/releases/download/v${VERSION}/gradle-completion-${VERSION}.tar.gz | tar xz -C ~/.zsh/
 ```
 
-Add the following do your '.zshrc' file:
-```
-echo "\nfpath=($HOME/.zsh/gradle-completion \$fpath)" >> ~/.zshrc
+Add the following to your '.zshrc' file:
+```bash
+fpath=(~/.zsh/gradle-completion-${VERSION} $fpath)
+autoload -Uz compinit && compinit
 ```
 
 Start a new terminal session. You may need to disable the `gradle` plugin for `oh-my-zsh`.
@@ -59,7 +67,10 @@ running:
 
 ```bash
 cd path/to/your-project
-source ~/.zsh/gradle-completion/_gradle 1>&2 2>/dev/null; __gradle-completion-init
+# For oh-my-zsh installation:
+source ~/.oh-my-zsh/plugins/gradle-completion-VERSION/_gradle 1>&2 2>/dev/null; __gradle-completion-init
+# OR for manual installation:
+source ~/.zsh/gradle-completion-VERSION/_gradle 1>&2 2>/dev/null; __gradle-completion-init
 ```
 
 ## Installation for Bash 3.2+
@@ -185,6 +196,8 @@ zstyle ':completion:*' use-cache on
 ## Contributing
 
 See the [contributing guide](CONTRIBUTING.md).
+
+**Note for contributors:** The completion scripts (`gradle-completion.bash` and `_gradle`) are generated from templates and are not committed to git (they're in `.gitignore`). Run `./gradlew generateCompletionScripts` to regenerate them locally during development. For installation, users should download release tarballs which include the pre-generated completion scripts.
 
 ## For Maintainers: Releasing
 
