@@ -1,6 +1,11 @@
 # Configuration for the DCO bot
 # https://github.com/probot/dco
 
-# Require all commits to be signed off EXCEPT for organization members
+# Require all commits to be signed off EXCEPT for organization members and bots
 require:
   members: false  # Organization members don't need to sign off
+
+# Allow specific users/bots to bypass DCO
+allowlist:
+  - "github-actions[bot]"
+  - "dependabot[bot]"
