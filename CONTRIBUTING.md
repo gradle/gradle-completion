@@ -2,6 +2,8 @@
 
 In order for your contributions to be accepted, you must [sign off](https://git-scm.com/docs/git-commit#git-commit---signoff) your Git commits to indicate that you agree to the terms of [Developer Certificate of Origin](https://developercertificate.org/).
 
+**Note:** Members of the Gradle organization are exempt from this requirement.
+
 ## Follow the Code of Conduct
 
 In order to foster a more inclusive community, Gradle has adopted the [Contributor Covenant](https://www.contributor-covenant.org/version/1/4/code-of-conduct/).
@@ -129,6 +131,8 @@ After you submit your pull request, a Gradle core developer will review it. It i
 If you need to check on CI status as an external contributor, login as a guest.
 
 ### Signing Off Commits After Submitting a Pull Request
+
+**Note:** This applies to external contributors only. Gradle organization members are exempt from DCO sign-off requirements.
 
 Pull requests are automatically verified that all commit messages contain the Signed-off-by line with an email address that matches the commit author. In case you didn't sign off your commits before creating a pull request, you can still fix that to confirm that you agree to the terms of [Developer Certificate of Origin](https://developercertificate.org/).
 
