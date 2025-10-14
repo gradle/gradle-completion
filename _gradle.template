@@ -19,18 +19,18 @@ __gradle-init-cache-dir() {
 }
 
 __gradle-set-settings-file() {
-    # In order of precedence: --settings-file=filename, settings.gradle, settings.gradle.kts
+    # In order of precedence: settings.gradle, settings.gradle.kts
 
     local default_gradle_settings_file="$project_root_dir/settings.gradle"
     if [[ ! -f $default_gradle_settings_file ]]; then
       default_gradle_settings_file="$project_root_dir/settings.gradle.kts"
     fi
-    gradle_settings_file=${${(v)opt_args[(i)-c|--settings-file]}:-$default_gradle_settings_file}
+    gradle_settings_file=$default_gradle_settings_file
 }
 
 __gradle-set-build-file() {
     __gradle-set-settings-file
-    # In order of precedence: --build-file=filename, rootProject.buildFileName, build.gradle, build.gradle.kts
+    # In order of precedence: rootProject.buildFileName, build.gradle, build.gradle.kts
 
     local default_gradle_build_file_name="build.gradle"
     if [[ -r $gradle_settings_file ]]; then
@@ -45,8 +45,7 @@ __gradle-set-build-file() {
         default_gradle_build_file="$project_root_dir/build.gradle.kts"
     fi
 
-    # If a build file is specified after '-b' or '--build-file', use this file.
-    gradle_build_file=${${(v)opt_args[(i)-b|--build-file]}:-$default_gradle_build_file}
+    gradle_build_file=$default_gradle_build_file
 }
 
 __gradle-set-cache-name() {
@@ -94,10 +93,11 @@ __gradle-generate-tasks-cache() {
     # Reuse Gradle Daemon if IDLE but don't start a new one.
     local gradle_tasks_output
     if [[ ! -z "$($gradle_cmd --status 2>/dev/null | grep IDLE)" ]]; then
-        gradle_tasks_output="$($gradle_cmd --daemon --no-scan --build-file $gradle_build_file --console=plain -q tasks --all 2>/dev/null)"
+        gradle_tasks_output="$(cd "$project_root_dir" && "$gradle_cmd" --daemon --no-scan --console=plain -q tasks --all 2>/dev/null)"
     else
-        gradle_tasks_output="$($gradle_cmd --no-daemon --no-scan --build-file $gradle_build_file --console=plain -q tasks --all 2>/dev/null)"
+        gradle_tasks_output="$(cd "$project_root_dir" && "$gradle_cmd" --no-daemon --no-scan --console=plain -q tasks --all 2>/dev/null)"
     fi
+
     local gradle_all_tasks="" root_tasks="" subproject_tasks="" output_line
     local -a match
     for output_line in ${(f)"$(printf "%s\n" "${gradle_tasks_output[@]}")"}; do

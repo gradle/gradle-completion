@@ -21,7 +21,7 @@ __gradle-init-cache-dir() {
 }
 
 __gradle-set-settings-file() {
-    # In order of precedence: --settings-file=filename, settings.gradle, settings.gradle.kts
+    # In order of precedence: settings.gradle, settings.gradle.kts
 
     local default_gradle_settings_file="$project_root_dir/settings.gradle"
     if [[ ! -f $default_gradle_settings_file ]]; then
@@ -32,7 +32,7 @@ __gradle-set-settings-file() {
 
 __gradle-set-build-file() {
     __gradle-set-settings-file
-    # In order of precedence: --build-file=filename, rootProject.buildFileName, build.gradle, build.gradle.kts
+    # In order of precedence: rootProject.buildFileName, build.gradle, build.gradle.kts
 
     local default_gradle_build_file_name="build.gradle"
     if [[ -f $gradle_settings_file ]]; then
@@ -283,7 +283,7 @@ __gradle-options-arguments() {
     _get_comp_words_by_ref -n : -p prev
 
     case "$prev" in
-        -b|--build-file|-c|--settings-file|-I|--init-script)
+        -I|--init-script)
             COMPREPLY=( $(compgen -f -A file -o filenames -X '!*.gradle*' "$cur") )
             return 0
             ;;
@@ -320,9 +320,9 @@ __gradle-generate-tasks-cache() {
     # Reuse Gradle Daemon if IDLE but don't start a new one.
     local gradle_tasks_output
     if [[ ! -z "$("$gradle_cmd" --status 2>/dev/null | grep IDLE)" ]]; then
-        gradle_tasks_output="$("$gradle_cmd" -b "$gradle_build_file" --daemon --no-scan --console=plain -q tasks --all)"
+        gradle_tasks_output="$(cd "$project_root_dir" && "$gradle_cmd" --daemon --no-scan --console=plain -q tasks --all)"
     else
-        gradle_tasks_output="$("$gradle_cmd" -b "$gradle_build_file" --no-daemon --no-scan --console=plain -q tasks --all)"
+        gradle_tasks_output="$(cd "$project_root_dir" && "$gradle_cmd" --no-daemon --no-scan --console=plain -q tasks --all)"
     fi
     local output_line
     local task_description
