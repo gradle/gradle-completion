@@ -361,7 +361,7 @@ tasks.register("generateCompletionScripts") {
 
 fun generateBashLongOpts(options: List<CliOption>): String = options.filter { it.twoDashOption != null }
     .sortedBy { it.twoDashOption }
-    .joinToString("\n    ") {
+    .joinToString("\n") {
         val incubatingText = if (it.incubating) " [incubating]" else ""
         val paddedOption = "--${it.twoDashOption}".padEnd(30)
         "$paddedOption - ${it.description?.lineSequence()?.first()} $incubatingText"
@@ -369,7 +369,7 @@ fun generateBashLongOpts(options: List<CliOption>): String = options.filter { it
 
 fun getBashShortOpts(options: List<CliOption>): String = options.filter { it.oneDashOption != null }
     .sortedBy { it.oneDashOption?.lowercase(Locale.getDefault()) }
-    .joinToString("\n    ") {
+    .joinToString("\n") {
         val incubatingText = if (it.incubating) " [incubating]" else ""
         val paddedOption = "-${it.oneDashOption}".padEnd(30)
         "$paddedOption - ${it.description?.lineSequence()?.first()} $incubatingText"

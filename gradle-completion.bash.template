@@ -79,9 +79,7 @@ __gradle-long-options() {
     local cur
     _get_comp_words_by_ref -n : cur
 
-    local args="\
-    {{GENERATED_BASH_LONG_OPTIONS}}\
-"
+    local args="{{GENERATED_BASH_LONG_OPTIONS}}"
 
     COMPREPLY=( $(compgen -W "$args" -- "$cur") )
 }
@@ -90,9 +88,7 @@ __gradle-properties() {
     local cur
     _get_comp_words_by_ref -n : cur
 
-    local args="\
-{{GENERATED_GRADLE_PROPERTIES}}\
-"
+    local args="{{GENERATED_GRADLE_PROPERTIES}}"
     COMPREPLY=( $(compgen -W "$args" -- "$cur") )
     return 0
 }
@@ -102,7 +98,7 @@ __gradle-short-options() {
     _get_comp_words_by_ref -n : cur
 
     local args="\
-    {{GENERATED_BASH_SHORT_OPTIONS}}\
+{{GENERATED_BASH_SHORT_OPTIONS}}\
 "
     COMPREPLY=( $(compgen -W "$args" -- "$cur") )
 }
@@ -286,7 +282,7 @@ _gradle() {
 
     # Remove description ("[:space:]" and after) if only one possibility
     if [[ ${#COMPREPLY[*]} -eq 1 ]]; then
-        COMPREPLY=( ${COMPREPLY[0]%%  *} )
+        COMPREPLY=( ${COMPREPLY[0]%% *} )
     fi
 
     return 0
