@@ -80,7 +80,7 @@ __gradle-long-options() {
     _get_comp_words_by_ref -n : cur
 
     local args="\
-{{GENERATED_BASH_LONG_OPTIONS}}\
+    {{GENERATED_BASH_LONG_OPTIONS}}\
 "
 
     COMPREPLY=( $(compgen -W "$args" -- "$cur") )
@@ -102,7 +102,7 @@ __gradle-short-options() {
     _get_comp_words_by_ref -n : cur
 
     local args="\
-{{GENERATED_BASH_SHORT_OPTIONS}}\
+    {{GENERATED_BASH_SHORT_OPTIONS}}\
 "
     COMPREPLY=( $(compgen -W "$args" -- "$cur") )
 }

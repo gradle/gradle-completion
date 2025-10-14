@@ -177,7 +177,7 @@ fun getFilePatternForProperty(propertyName: String): String? {
     return FILE_OPTIONS[propertyName]
 }
 
-fun formatOptionStr(oneDashOption: String?, twoDashOption: String?): String {
+fun CliOption.formatOptionStr(): String {
     val optBuilder = mutableListOf<String>()
     if (oneDashOption != null) {
         optBuilder.add("-$oneDashOption")
@@ -186,43 +186,44 @@ fun formatOptionStr(oneDashOption: String?, twoDashOption: String?): String {
         optBuilder.add("--$twoDashOption")
     }
     return if (optBuilder.size > 1) {
+        // Multiple options: use braces {-a,--long}
         optBuilder.joinToString(",", prefix = "{", postfix = "}")
     } else {
-        "{${optBuilder.firstOrNull()}}" ?: ""
+        // Single option: no braces needed
+        optBuilder.firstOrNull() ?: ""
     }
 }
 
-fun generateArgumentPart(
-    option: CliOption,
+fun CliOption.generateArgumentPart(
     includeArgumentExpected: Boolean
 ): String {
-    if (!option.argumentExpected) return ""
+    if (!argumentExpected) return ""
 
     // Handle file options with patterns
-    if (option.filePattern != null) {
-        val label = (option.twoDashOption ?: option.oneDashOption?.removePrefix("D")?.removeSuffix("="))
+    if (filePattern != null) {
+        val label = (twoDashOption ?: oneDashOption?.removePrefix("D")?.removeSuffix("="))
             ?.replace("-", " ") ?: "file"
         val suffix = if (includeArgumentExpected) ":->argument-expected" else ""
-        return ":$label:_files -g \\${option.filePattern}$suffix"
+        return ":$label:_files -g \\${filePattern}$suffix"
     }
 
     // Handle directory options
-    if (option.isDirectory) {
-        val label = (option.twoDashOption ?: option.oneDashOption?.removePrefix("D")?.removeSuffix("="))
+    if (isDirectory) {
+        val label = (twoDashOption ?: oneDashOption?.removePrefix("D")?.removeSuffix("="))
             ?.replace("-", " ") ?: "directory"
         val suffix = if (includeArgumentExpected) ":->argument-expected" else ""
         return ":$label:_directories$suffix"
     }
 
-    if (option.possibleValues.isEmpty()) {
+    if (possibleValues.isEmpty()) {
         return if (includeArgumentExpected) ":->argument-expected" else ""
     }
 
     // Create a label from the option name
-    val label = (option.twoDashOption ?: option.oneDashOption?.removePrefix("D")?.removeSuffix("="))
+    val label = (twoDashOption ?: oneDashOption?.removePrefix("D")?.removeSuffix("="))
         ?.replace("-", " ") ?: "value"
     val suffix = if (includeArgumentExpected) ":->argument-expected" else ""
-    return ":$label:(${option.possibleValues.joinToString(" ")})$suffix"
+    return ":$label:(${possibleValues.joinToString(" ")})$suffix"
 }
 
 tasks.register("generateCompletionScripts") {
@@ -358,44 +359,55 @@ tasks.register("generateCompletionScripts") {
     }
 }
 
-fun generateBashLongOpts(options: List<CliOption>): String {
-    val builder = StringBuilder()
-    options.filter { it.twoDashOption != null }.sortedBy { it.twoDashOption }.forEach {
+fun generateBashLongOpts(options: List<CliOption>): String = options.filter { it.twoDashOption != null }
+    .sortedBy { it.twoDashOption }
+    .joinToString("\n    ") {
         val incubatingText = if (it.incubating) " [incubating]" else ""
         val paddedOption = "--${it.twoDashOption}".padEnd(30)
-        builder.appendLine("    $paddedOption - ${it.description?.lineSequence()?.first()} $incubatingText")
+        "$paddedOption - ${it.description?.lineSequence()?.first()} $incubatingText"
     }
-    return builder.toString()
-}
 
-fun getBashShortOpts(options: List<CliOption>): String {
-    val builder = StringBuilder()
-    options.filter { it.oneDashOption != null }.sortedBy { it.oneDashOption?.lowercase(Locale.getDefault()) }.forEach {
+fun getBashShortOpts(options: List<CliOption>): String = options.filter { it.oneDashOption != null }
+    .sortedBy { it.oneDashOption?.lowercase(Locale.getDefault()) }
+    .joinToString("\n    ") {
         val incubatingText = if (it.incubating) " [incubating]" else ""
         val paddedOption = "-${it.oneDashOption}".padEnd(30)
-        builder.appendLine("    $paddedOption - ${it.description?.lineSequence()?.first()} $incubatingText")
+        "$paddedOption - ${it.description?.lineSequence()?.first()} $incubatingText"
     }
-    return builder.toString()
-}
 
+fun CliOption.getOptionLine(includeArgumentExpected: Boolean): String {
+    val multiplePrefix = getMultiplePrefix()
+    val mutex = getMutexOptions()
+    val incubatingText = if (incubating) " (incubating)" else ""
+    val description = getDescription()
+    val optStr = formatOptionStr()
+    val argumentPart = generateArgumentPart(includeArgumentExpected = includeArgumentExpected)
+
+    val commonPostfix = "[${description}${incubatingText}]${argumentPart}"
+    val commonPrefix = "${multiplePrefix}${mutex}"
+
+    // Determine what goes outside quotes (multiplePrefix, mutex, and/or braces)
+    return when {
+        // Has braces but no mutex: braces go outside quotes (along with multiplePrefix)
+        optStr.contains("{") -> {
+            "${commonPrefix}${optStr}'$commonPostfix'"
+        }
+        // Everything else: all inside quotes
+        else -> {
+            "${commonPrefix}'${optStr}$commonPostfix'"
+        }
+    }
+}
 
 fun CliOption.getDescription(): String {
     return description?.lineSequence()?.first()?.replace("[", "(")?.replace("]", ")") ?: ""
 }
 
 fun generateZshMainOpts(options: List<CliOption>): String {
-    val builder = StringBuilder()
-    options.sortedBy { it.twoDashOption ?: it.oneDashOption }.forEach { option ->
-        val multiplePrefix = option.getMultiplePrefix()
-        val mutex = option.getMutexOptions()
-        val incubatingText = if (option.incubating) " [incubating]" else ""
-        val description = option.getDescription()
-        val optStr = formatOptionStr(option.oneDashOption, option.twoDashOption)
-        val argumentPart = generateArgumentPart(option, includeArgumentExpected = true)
-
-        builder.appendLine("        '$multiplePrefix$mutex$optStr'[${description}${incubatingText}]$argumentPart' \\\\")
-    }
-    return builder.toString()
+    return options.sortedBy { it.twoDashOption ?: it.oneDashOption }
+        .joinToString(" \\\n        ") { option ->
+            option.getOptionLine(includeArgumentExpected = true)
+        }
 }
 
 fun CliOption.getMutexOptions(): String {
@@ -404,39 +416,25 @@ fun CliOption.getMutexOptions(): String {
     } else {
         ""
     }
-
 }
 
 fun generateZshSubcommandOpts(options: List<CliOption>): String {
-    val builder = StringBuilder()
     // Filter out standalone options (help, version, status, stop, gui)
     val standaloneOptions = setOf("help", "h", "version", "v", "status", "stop", "gui")
-    options
+    return options
         .filter { option ->
             option.twoDashOption !in standaloneOptions &&
                     option.oneDashOption !in standaloneOptions
         }
         .sortedBy { it.twoDashOption ?: it.oneDashOption }
-        .forEach { option ->
-            val multiplePrefix = option.getMultiplePrefix()
-            val mutex = option.getMutexOptions()
-            val incubatingText = if (option.incubating) " [incubating]" else ""
-            val description = option.getDescription()
-            val optStr = formatOptionStr(option.oneDashOption, option.twoDashOption)
-            val argumentPart = generateArgumentPart(option, includeArgumentExpected = false)
-
-            builder.appendLine("                '$multiplePrefix$mutex$optStr'[${description}${incubatingText}]$argumentPart' \\\\")
+        .joinToString(" \\\n                ") { option ->
+            option.getOptionLine(includeArgumentExpected = false)
         }
-    return builder.toString()
 }
 
 fun generatePropertiesOpts(allPropertyNames: List<CliOption>): String {
-    val builder = StringBuilder()
-    allPropertyNames.forEach {
+    return allPropertyNames.joinToString("\n") {
         val paddingOption = "-${it.oneDashOption!!.padEnd(40)}"
-        builder.appendLine("$paddingOption - ${it.description?.lineSequence()?.first() ?: ""}")
-        //^ we need the dash for the bash completion to work
+        "$paddingOption - ${it.description?.lineSequence()?.first() ?: ""}"
     }
-
-    return builder.toString()
 }
