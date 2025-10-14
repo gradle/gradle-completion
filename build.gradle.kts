@@ -25,7 +25,59 @@ data class CliOption(
     val multipleOccurrencePossible: Boolean = false,
     val argumentExpected: Boolean = false,
     val mutuallyExclusiveWith: MutableList<String> = mutableListOf(),
-    val possibleValues: List<String> = listOf()
+    val possibleValues: List<String> = listOf(),
+    val isDirectory: Boolean = false,
+    val filePattern: String? = null  // e.g., "*.gradle" or "*.{gradle,kts}"
+)
+
+
+// Hardcoded possible values for specific options
+// For --option use the long option name
+// For -D properties use the property name (without "D" prefix)
+val CACHING_VALUES = listOf("true", "false")
+val CC_CACHE_PROBLEMS = listOf("fail", "warn")
+val CONSOLE_TYPES = listOf("plain", "auto", "rich", "verbose")
+val HARDCODED_POSSIBLE_VALUES = mapOf(
+    "refresh" to listOf("dependencies"),
+    "org.gradle.caching" to CACHING_VALUES,
+    "build-cache" to CACHING_VALUES,
+    "org.gradle.daemon.debug" to listOf("true", "false"),
+    "org.gradle.debug" to listOf("true", "false"),
+    "org.gradle.parallel" to listOf("true", "false"),
+    "org.gradle.vfs.watch" to listOf("true", "false"),
+    "org.gradle.priority" to listOf("normal", "low"),
+    "org.gradle.console" to CONSOLE_TYPES,
+    "console" to CONSOLE_TYPES,
+    "org.gradle.logging.level" to listOf("quiet", "warn", "info", "debug"),
+    "configuration-cache-problems" to CC_CACHE_PROBLEMS,
+    "org.gradle.configuration-cache.problems" to CC_CACHE_PROBLEMS,
+    "warning-mode" to listOf("all", "summary", "none"),
+    "org.gradle.welcome" to listOf("once", "never")
+)
+
+// Options that expect directory paths
+// For --option use the long option name
+// For -D properties use the property name (without "D" prefix)
+val DIRECTORY_OPTIONS = setOf(
+    "gradle.user.home",
+    "org.gradle.configuration-cache.heap-dump-dir",
+    "org.gradle.daemon.registry.base",
+    "org.gradle.java.installations.idea-jdks-directory",
+    "org.gradle.java.installations.paths",
+    "org.gradle.projectcachedir",
+    "gradle-user-home",
+    "org.gradle.java.home",
+    "project-cache-dir",
+    "project-dir",
+    "include-build"
+)
+
+// Options that expect file paths with specific patterns
+// For --option use the long option name
+// For -D properties use the property name (without "D" prefix)
+// Value is the glob pattern for _files (e.g., "*.gradle" or "*.{gradle,kts}")
+val FILE_OPTIONS = mapOf(
+    "init-script" to "*.gradle(|.kts)"
 )
 
 fun findDeclaredField(obj: Any, fieldName: String): Field? {
@@ -79,7 +131,13 @@ fun CliOption.getMultiplePrefix(): String {
 }
 
 
-fun getPossibleValues(option: BuildOption<*>): List<String> {
+fun getPossibleValues(option: BuildOption<*>, longOptionName: String?): List<String> {
+    // Check hardcoded values first based on the long option name
+    longOptionName?.let { optName ->
+        HARDCODED_POSSIBLE_VALUES[optName]?.let { return it }
+    }
+
+    // Otherwise extract from EnumBuildOption
     return if (option is EnumBuildOption<*, *>) {
         val valuesField = findDeclaredField(option, "possibleValues")
         @Suppress("UNCHECKED_CAST")
@@ -87,6 +145,36 @@ fun getPossibleValues(option: BuildOption<*>): List<String> {
     } else {
         listOf()
     }
+}
+
+fun isDirectoryOption(longOptionName: String?): Boolean {
+    return longOptionName?.let { it in DIRECTORY_OPTIONS } ?: false
+}
+
+fun getFilePattern(longOptionName: String?): String? {
+    return longOptionName?.let { FILE_OPTIONS[it] }
+}
+
+fun getPossibleValuesForProperty(option: BuildOption<*>, propertyName: String): List<String> {
+    // Check hardcoded values first based on the property name
+    HARDCODED_POSSIBLE_VALUES[propertyName]?.let { return it }
+
+    // Otherwise extract from EnumBuildOption
+    return if (option is EnumBuildOption<*, *>) {
+        val valuesField = findDeclaredField(option, "possibleValues")
+        @Suppress("UNCHECKED_CAST")
+        (valuesField?.get(option) as? List<Any>)?.map { it.toString().lowercase() } ?: listOf()
+    } else {
+        listOf()
+    }
+}
+
+fun isDirectoryProperty(propertyName: String): Boolean {
+    return propertyName in DIRECTORY_OPTIONS
+}
+
+fun getFilePatternForProperty(propertyName: String): String? {
+    return FILE_OPTIONS[propertyName]
 }
 
 fun formatOptionStr(oneDashOption: String?, twoDashOption: String?): String {
@@ -110,9 +198,26 @@ fun generateArgumentPart(
 ): String {
     if (!option.argumentExpected) return ""
 
+    // Handle file options with patterns
+    if (option.filePattern != null) {
+        val label = (option.twoDashOption ?: option.oneDashOption?.removePrefix("D")?.removeSuffix("="))
+            ?.replace("-", " ") ?: "file"
+        val suffix = if (includeArgumentExpected) ":->argument-expected" else ""
+        return ":$label:_files -g \\${option.filePattern}$suffix"
+    }
+
+    // Handle directory options
+    if (option.isDirectory) {
+        val label = (option.twoDashOption ?: option.oneDashOption?.removePrefix("D")?.removeSuffix("="))
+            ?.replace("-", " ") ?: "directory"
+        val suffix = if (includeArgumentExpected) ":->argument-expected" else ""
+        return ":$label:_directories$suffix"
+    }
+
     if (option.possibleValues.isEmpty()) {
         return if (includeArgumentExpected) ":->argument-expected" else ""
     }
+
     // Create a label from the option name
     val label = (option.twoDashOption ?: option.oneDashOption?.removePrefix("D")?.removeSuffix("="))
         ?.replace("-", " ") ?: "value"
@@ -139,6 +244,9 @@ tasks.register("generateCompletionScripts") {
                 configurations.flatMap { optionDetails ->
                     val opts = mutableListOf<CliOption>()
                     if (optionDetails.longOption != null) {
+                        val filePattern = getFilePattern(optionDetails.longOption)
+                        val isDirectory = isDirectoryOption(optionDetails.longOption)
+
                         val enabledOption = CliOption(
                             twoDashOption = optionDetails.longOption,
                             oneDashOption = optionDetails.shortOption,
@@ -147,8 +255,12 @@ tasks.register("generateCompletionScripts") {
                             multipleOccurrencePossible = option is ListBuildOption<*>,
                             argumentExpected = option is StringBuildOption ||
                                     option is IntegerBuildOption ||
-                                    option is EnumBuildOption<*, *>,
-                            possibleValues = getPossibleValues(option)
+                                    option is EnumBuildOption<*, *> ||
+                                    isDirectory ||
+                                    filePattern != null,
+                            possibleValues = getPossibleValues(option, optionDetails.longOption),
+                            isDirectory = isDirectory,
+                            filePattern = filePattern
                         )
                         opts += enabledOption
                         if (optionDetails is BooleanCommandLineOptionConfiguration) {
@@ -206,7 +318,9 @@ tasks.register("generateCompletionScripts") {
                             ""
                         },
                         argumentExpected = true,
-                        possibleValues = getPossibleValues(option)
+                        possibleValues = getPossibleValuesForProperty(option, propName),
+                        isDirectory = isDirectoryProperty(propName),
+                        filePattern = getFilePatternForProperty(propName)
                     )
                 }
             }
