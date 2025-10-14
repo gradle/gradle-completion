@@ -235,7 +235,7 @@ __gradle_subcommand() {
             ;;
         (*)
             _arguments -C \
-                '{-Dgradle.user.home=}'[Specifies the Gradle user home directory. Defaults to ~/.gradle]:gradle.user.home:_directories' \\
+                                '{-Dgradle.user.home=}'[Specifies the Gradle user home directory. Defaults to ~/.gradle]:gradle.user.home:_directories' \\
                 '{-Dorg.gradle.caching.debug=}'[]' \\
                 '{-Dorg.gradle.caching=}'[Enables the Gradle build cache. Gradle will try to reuse outputs from previous builds.]:org.gradle.caching:(true false)' \\
                 '{-Dorg.gradle.configuration-cache.entries-per-key=}'[]' \\
@@ -264,7 +264,7 @@ __gradle_subcommand() {
                 '{-Dorg.gradle.debug.suspend=}'[]' \\
                 '{-Dorg.gradle.debug=}'[]:org.gradle.debug:(true false)' \\
                 '{-Dorg.gradle.dependency.verification=}'[Configures the dependency verification mode. Values are 'strict', 'lenient' or 'off'.]:org.gradle.dependency.verification:(strict lenient off)' \\
-                '{-Dorg.gradle.java.home=}'[]' \\
+                '{-Dorg.gradle.java.home=}'[]:org.gradle.java.home:_directories' \\
                 '{-Dorg.gradle.java.installations.auto-detect=}'[]' \\
                 '{-Dorg.gradle.java.installations.auto-download=}'[]' \\
                 '{-Dorg.gradle.java.installations.fromEnv=}'[]' \\
@@ -390,7 +390,7 @@ _gradle() {
         '{-Dorg.gradle.debug.suspend=}'[]:->argument-expected' \\
         '{-Dorg.gradle.debug=}'[]:org.gradle.debug:(true false):->argument-expected' \\
         '{-Dorg.gradle.dependency.verification=}'[Configures the dependency verification mode. Values are 'strict', 'lenient' or 'off'.]:org.gradle.dependency.verification:(strict lenient off):->argument-expected' \\
-        '{-Dorg.gradle.java.home=}'[]:->argument-expected' \\
+        '{-Dorg.gradle.java.home=}'[]:org.gradle.java.home:_directories:->argument-expected' \\
         '{-Dorg.gradle.java.installations.auto-detect=}'[]:->argument-expected' \\
         '{-Dorg.gradle.java.installations.auto-download=}'[]:->argument-expected' \\
         '{-Dorg.gradle.java.installations.fromEnv=}'[]:->argument-expected' \\
