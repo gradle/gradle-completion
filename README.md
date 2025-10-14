@@ -89,15 +89,10 @@ This script depends on the `bash-completion` framework, which is not installed o
     brew install gradle-completion
     ```
 
-3.  **Configure your `.bash_profile`**. The `bash-completion` framework must be sourced in your profile. When you installed it, Homebrew provided the exact line to add. It will look similar to this:
+3.  **Configure your `.bash_profile`**. The `bash-completion` framework must be sourced in your profile. When you installed it, Homebrew provided the exact line to add. Add this to your `~/.bash_profile`:
     ```bash
-    # For Apple Silicon Macs (M1/M2)
-    echo '[[ -r "/opt/homebrew/etc/profile.d/bash_completion.sh" ]] && . "/opt/homebrew/etc/profile.d/bash_completion.sh"' >> ~/.bash_profile
-
-    # For Intel Macs
-    echo '[[ -r "/usr/local/etc/profile.d/bash_completion.sh" ]] && . "/usr/local/etc/profile.d/bash_completion.sh"' >> ~/.bash_profile
+    echo '[[ -r "\$(brew --prefix)/etc/profile.d/bash_completion.sh" ]] && . "\$(brew --prefix)/etc/profile.d/bash_completion.sh"' >> ~/.bash_profile
     ```
-    Add the correct line for your system to your `~/.bash_profile`. **Do not source the `gradle-completion` script directly.** The main framework will find it automatically.
 
 4.  **Start a new terminal session** or run `source ~/.bash_profile`.
 
