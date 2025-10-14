@@ -110,7 +110,7 @@ fun collectAllBuildOptions(): List<BuildOption<*>> {
     ).flatMap { it.allOptions }
 }
 
-fun CliOption.addMutexOption(other: CliOption): Unit {
+fun CliOption.addMutexOption(other: CliOption) {
     if (other.twoDashOption != null) {
         mutuallyExclusiveWith += "--${other.twoDashOption}"
     }
@@ -119,7 +119,7 @@ fun CliOption.addMutexOption(other: CliOption): Unit {
     }
 }
 
-fun CliOption.addMutexOption(other: CommandLineOptionConfiguration): Unit {
+fun CliOption.addMutexOption(other: CommandLineOptionConfiguration) {
     mutuallyExclusiveWith += "--${other.longOption}"
     if (other.shortOption != null) {
         mutuallyExclusiveWith += "-${other.shortOption}"
@@ -138,13 +138,7 @@ fun getPossibleValues(option: BuildOption<*>, longOptionName: String?): List<Str
     }
 
     // Otherwise extract from EnumBuildOption
-    return if (option is EnumBuildOption<*, *>) {
-        val valuesField = findDeclaredField(option, "possibleValues")
-        @Suppress("UNCHECKED_CAST")
-        (valuesField?.get(option) as? List<Any>)?.map { it.toString().lowercase() } ?: listOf()
-    } else {
-        listOf()
-    }
+    return getPossibleValuesList(option)
 }
 
 fun isDirectoryOption(longOptionName: String?): Boolean {
@@ -155,11 +149,7 @@ fun getFilePattern(longOptionName: String?): String? {
     return longOptionName?.let { FILE_OPTIONS[it] }
 }
 
-fun getPossibleValuesForProperty(option: BuildOption<*>, propertyName: String): List<String> {
-    // Check hardcoded values first based on the property name
-    HARDCODED_POSSIBLE_VALUES[propertyName]?.let { return it }
-
-    // Otherwise extract from EnumBuildOption
+fun getPossibleValuesList(option: BuildOption<*>): List<String> {
     return if (option is EnumBuildOption<*, *>) {
         val valuesField = findDeclaredField(option, "possibleValues")
         @Suppress("UNCHECKED_CAST")
@@ -167,6 +157,14 @@ fun getPossibleValuesForProperty(option: BuildOption<*>, propertyName: String): 
     } else {
         listOf()
     }
+}
+
+fun getPossibleValuesForProperty(option: BuildOption<*>, propertyName: String): List<String> {
+    // Check hardcoded values first based on the property name
+    HARDCODED_POSSIBLE_VALUES[propertyName]?.let { return it }
+
+    // Otherwise extract from EnumBuildOption
+    return getPossibleValuesList(option)
 }
 
 fun isDirectoryProperty(propertyName: String): Boolean {
