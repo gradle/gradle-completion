@@ -5,3 +5,7 @@ plugins {
 repositories {
     mavenCentral()
 }
+
+tasks.validatePlugins {
+    enableStricterValidation = true
+}

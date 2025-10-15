@@ -1,7 +1,11 @@
 import org.gradle.api.DefaultTask
+import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.initialization.BuildLayoutParametersBuildOptions
 import org.gradle.initialization.ParallelismBuildOptions
 import org.gradle.initialization.StartParameterBuildOptions
@@ -17,7 +21,6 @@ import org.gradle.internal.logging.LoggingConfigurationBuildOptions
 import org.gradle.launcher.cli.converter.WelcomeMessageBuildOptions
 import org.gradle.launcher.daemon.configuration.DaemonBuildOptions
 import org.gradle.launcher.daemon.toolchain.ToolchainBuildOptions
-import java.io.File
 import java.lang.reflect.Field
 import java.util.Locale
 
@@ -26,20 +29,25 @@ import java.util.Locale
  * 
  * This task extracts all CLI options from Gradle's internal API and generates
  * completion data that can be used in shell completion files.
+ *
+ * This works for Gradle 9.2.0. As it is dependent on the internal API, it might break with future Gradle versions.
  */
+@CacheableTask
 abstract class GenerateCompletionScriptsTask : DefaultTask() {
 
-    @InputFile
-    val bashTemplate: File = project.file("gradle-completion.bash.template")
+    @get:InputFile
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val bashTemplate: RegularFileProperty
 
-    @InputFile
-    val zshTemplate: File = project.file("_gradle.template")
+    @get:InputFile
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val zshTemplate: RegularFileProperty
 
-    @OutputFile
-    val bashOutputFile: File = project.file("gradle-completion.bash")
+    @get:OutputFile
+    abstract val bashOutputFile: RegularFileProperty
 
-    @OutputFile
-    val zshOutputFile: File = project.file("_gradle")
+    @get:OutputFile
+    abstract val zshOutputFile: RegularFileProperty
 
     init {
         group = "build"
@@ -72,22 +80,22 @@ abstract class GenerateCompletionScriptsTask : DefaultTask() {
         val properties = generatePropertiesOpts(allPropertyNames)
 
         // STEP 3: Read templates and substitute placeholders
-        val bashCompletionScript = bashTemplate.readText()
+        val bashCompletionScript = bashTemplate.asFile.get().readText()
             .replace("{{GENERATED_BASH_LONG_OPTIONS}}", bashLongOpts.trimEnd())
             .replace("{{GENERATED_BASH_SHORT_OPTIONS}}", bashShortOpts.trimEnd())
             .replace("{{GENERATED_GRADLE_PROPERTIES}}", properties.trimEnd())
 
-        val zshCompletionScript = zshTemplate.readText()
+        val zshCompletionScript = zshTemplate.asFile.get().readText()
             .replace("{{GENERATED_ZSH_MAIN_OPTIONS}}", zshMainOpts)
             .replace("{{GENERATED_ZSH_SUBCOMMAND_OPTIONS}}", zshSubcommandOpts)
 
         // STEP 4: Write generated files
-        bashOutputFile.writeText(bashCompletionScript)
-        zshOutputFile.writeText(zshCompletionScript)
+        bashOutputFile.asFile.get().writeText(bashCompletionScript)
+        zshOutputFile.asFile.get().writeText(zshCompletionScript)
 
         logger.lifecycle("Generated completion scripts:")
-        logger.lifecycle("  - ${bashOutputFile.name}")
-        logger.lifecycle("  - ${zshOutputFile.name}")
+        logger.lifecycle("  - ${bashOutputFile.asFile.get().name}")
+        logger.lifecycle("  - ${zshOutputFile.asFile.get().name}")
         logger.lifecycle("\nGeneration complete!")
     }
 
