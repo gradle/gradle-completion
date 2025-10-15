@@ -27,26 +27,34 @@ echo $fpath | grep "/usr/local/share/zsh/site-functions"
 
 ### Install as [oh-my-zsh](https://ohmyz.sh/) plugin
 
-Download and place the plugin and completion script into your oh-my-zsh plugins directory. 
-```
-git clone https://github.com/gradle/gradle-completion ~/.oh-my-zsh/plugins/gradle-completion
+Download the latest release tarball and extract it into your oh-my-zsh plugins directory:
+
+```bash
+VERSION=1.4.4  # Replace with the latest version from https://github.com/gradle/gradle-completion/releases
+curl -L https://github.com/gradle/gradle-completion/releases/download/v${VERSION}/gradle-completion-${VERSION}.tar.gz | tar xz -C ~/.oh-my-zsh/plugins/
 ```
 
-Add `gradle-completion` to the plugins array in your '.zshrc' file.
-```
+Add `gradle-completion` to the plugins array in your '.zshrc' file:
+```bash
 plugins+=(gradle-completion)
 ```
 
+Start a new terminal session.
+
 ### Install manually
 
-Download and place `_gradle` on your `$fpath`. I recommend `$HOME/.zsh/gradle-completion`:
-```
-git clone https://github.com/gradle/gradle-completion ~/.zsh/gradle-completion
+Download the latest release tarball and extract it to your preferred location:
+
+```bash
+VERSION=1.4.4  # Replace with the latest version from https://github.com/gradle/gradle-completion/releases
+mkdir -p ~/.zsh
+curl -L https://github.com/gradle/gradle-completion/releases/download/v${VERSION}/gradle-completion-${VERSION}.tar.gz | tar xz -C ~/.zsh/
 ```
 
-Add the following do your '.zshrc' file:
-```
-echo "\nfpath=($HOME/.zsh/gradle-completion \$fpath)" >> ~/.zshrc
+Add the following to your '.zshrc' file:
+```bash
+fpath=(~/.zsh/gradle-completion-${VERSION} $fpath)
+autoload -Uz compinit && compinit
 ```
 
 Start a new terminal session. You may need to disable the `gradle` plugin for `oh-my-zsh`.
@@ -59,39 +67,46 @@ running:
 
 ```bash
 cd path/to/your-project
-source ~/.zsh/gradle-completion/_gradle 1>&2 2>/dev/null; __gradle-completion-init
+# For oh-my-zsh installation:
+source ~/.oh-my-zsh/plugins/gradle-completion-VERSION/_gradle 1>&2 2>/dev/null; __gradle-completion-init
+# OR for manual installation:
+source ~/.zsh/gradle-completion-VERSION/_gradle 1>&2 2>/dev/null; __gradle-completion-init
 ```
 
 ## Installation for Bash 3.2+
 
+This script depends on the `bash-completion` framework, which is not installed on macOS by default.
+
 ### Install via [Homebrew](https://brew.sh)
 
-```
-brew install gradle-completion
+1.  **Install the `bash-completion` framework.** This is a required prerequisite.
+    ```
+    brew install bash-completion
+    ```
 
-# Source completion scripts from bash-completion in your bash profile
-echo '[[ -r "/usr/local/etc/profile.d/bash_completion.sh" ]] && . "/usr/local/etc/profile.d/bash_completion.sh"' >> ~/.bash_profile
+2.  **Install `gradle-completion`.**
+    ```
+    brew install gradle-completion
+    ```
 
-# Load changes to bash profile
-source ~/.bash_profile
-```
+3.  **Configure your `.bash_profile`**. The `bash-completion` framework must be sourced in your profile. When you installed it, Homebrew provided the exact line to add. Add this to your `~/.bash_profile`:
+    ```bash
+    echo '[[ -r "\$(brew --prefix)/etc/profile.d/bash_completion.sh" ]] && . "\$(brew --prefix)/etc/profile.d/bash_completion.sh"' >> ~/.bash_profile
+    ```
+
+4.  **Start a new terminal session** or run `source ~/.bash_profile`.
 
 ### Install manually
 
-Download and place `gradle-completion.bash` in your `bash_completion.d` folder, usually `/etc/bash_completion.d`, `/usr/local/etc/bash_completion.d`, or `$HOME/bash_completion.d`:
-```
-mkdir $HOME/bash_completion.d
-curl -LA gradle-completion https://edub.me/gradle-completion-bash -o $HOME/bash_completion.d/gradle-completion.bash
-```
+1.  **Ensure `bash-completion` is installed and configured.** You can install it with your favorite package manager or by following the [official installation instructions](https://github.com/scop/bash-completion/blob/master/README.md#installation). The main `bash_completion.sh` script must be sourced in your `.bash_profile` or `.bashrc` for this to work.
 
-NOTE: Ensure `bash-completion` 1.2+ is installed using your favorite package manager or by following the [bash-completion installation instructions](https://github.com/scop/bash-completion/blob/master/README.md#installation).
+2.  **Download `gradle-completion.bash`** and place it in your `bash_completion.d` folder (e.g., `/usr/local/etc/bash_completion.d` or `$HOME/bash_completion.d`).
+    ```
+    # Example for Homebrew on Intel Macs
+    curl -LA gradle-completion https://edub.me/gradle-completion-bash -o $(brew --prefix)/etc/bash_completion.d/gradle-completion.bash
+    ```
 
-Add the following to your `.bash_profile` (macOS) or `.bashrc` (Linux) file:
-```
-source $HOME/bash_completion.d/gradle-completion.bash
-```
-
-Start a new terminal session.
+3.  **Start a new terminal session.** The `bash-completion` framework will automatically source the script.
 
 #### (Optional) Manual Completion Cache Initialization
 Completion cache initialization happens the first time you invoke completion,
@@ -176,6 +191,48 @@ zstyle ':completion:*' use-cache on
 ## Contributing
 
 See the [contributing guide](CONTRIBUTING.md).
+
+**Note for contributors:** The completion scripts (`gradle-completion.bash` and `_gradle`) are generated from templates and are not committed to git (they're in `.gitignore`). Run `./gradlew generateCompletionScripts` to regenerate them locally during development. For installation, users should download release tarballs which include the pre-generated completion scripts.
+
+## For Maintainers: Releasing
+
+This project uses template-based generation for completion scripts. The actual `gradle-completion.bash` and `_gradle` files are generated from templates during the release process and are **not committed to git** (they're in `.gitignore`).
+
+### Release Process
+
+1. **Create and push a tag:**
+   ```bash
+   git tag v1.x.x
+   git push origin v1.x.x
+   ```
+
+2. **GitHub Actions automatically:**
+   - Checks out the code at the tag
+   - Sets up Java 17 and Gradle
+   - Runs `./gradlew generateCompletionScripts` to generate completion files from templates
+   - Creates a release tarball (`gradle-completion-1.x.x.tar.gz`) containing:
+     - Generated completion scripts (`gradle-completion.bash`, `_gradle`)
+     - Template files (`gradle-completion.bash.template`, `_gradle.template`)
+     - Build configuration and other necessary files
+   - Creates a GitHub release and uploads the tarball as a release asset
+
+3. **Update Homebrew formula:**
+   ```bash
+   ./bump-version.sh 1.x.x
+   ```
+   This script downloads the release asset tarball from GitHub, calculates its SHA256, and creates a Homebrew bump PR.
+
+   **Important:** The script uses the release asset URL (`releases/download/v1.x.x/gradle-completion-1.x.x.tar.gz`), not the automatic source archive, because the generated completion scripts are only available in the release asset.
+
+### Regenerating Completion Scripts Locally
+
+To regenerate completion scripts from templates during development:
+
+```bash
+./gradlew generateCompletionScripts
+```
+
+This will update `gradle-completion.bash` and `_gradle` based on the current Gradle version's CLI options. These generated files are in `.gitignore` and should not be committed to git.
 
 ## Acknowledgements
 Bash completion is inspired by [Nolan Lawson's Gradle tab completion for bash](https://gist.github.com/nolanlawson/8694399).
