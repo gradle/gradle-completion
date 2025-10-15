@@ -28,7 +28,110 @@ data class CliOption(
     val possibleValues: List<String> = listOf(),
     val isDirectory: Boolean = false,
     val filePattern: String? = null  // e.g., "*.gradle" or "*.{gradle,kts}"
-)
+) {
+    fun addMutexOption(other: CliOption) {
+        if (other.twoDashOption != null) {
+            mutuallyExclusiveWith += "--${other.twoDashOption}"
+        }
+        if (other.oneDashOption != null) {
+            mutuallyExclusiveWith += "-${other.oneDashOption}"
+        }
+    }
+
+    fun addMutexOption(other: CommandLineOptionConfiguration) {
+        mutuallyExclusiveWith += "--${other.longOption}"
+        if (other.shortOption != null) {
+            mutuallyExclusiveWith += "-${other.shortOption}"
+        }
+    }
+
+    fun getMultiplePrefix(): String = if (multipleOccurrencePossible) "\\*" else ""
+
+    fun formatOptionStr(): String {
+        val optBuilder = mutableListOf<String>()
+        if (oneDashOption != null) {
+            optBuilder.add("-$oneDashOption")
+        }
+        if (twoDashOption != null) {
+            optBuilder.add("--$twoDashOption")
+        }
+        return if (optBuilder.size > 1) {
+            // Multiple options: use braces {-a,--long}
+            optBuilder.joinToString(",", prefix = "{", postfix = "}")
+        } else {
+            // Single option: no braces needed
+            optBuilder.firstOrNull() ?: ""
+        }
+    }
+
+    fun getOptionName(): String? =
+        (twoDashOption ?: oneDashOption?.removePrefix("D")?.removeSuffix("="))
+            ?.replace("-", " ")
+
+
+    fun generateArgumentPart(
+        includeArgumentExpected: Boolean
+    ): String {
+        if (!argumentExpected) return ""
+
+        // Handle file options with patterns
+        if (filePattern != null) {
+            val label = getOptionName() ?: "file"
+            val suffix = if (includeArgumentExpected) ":->argument-expected" else ""
+            return ":$label:_files -g \\${filePattern}$suffix"
+        }
+
+        // Handle directory options
+        if (isDirectory) {
+            val label = getOptionName() ?: "directory"
+            val suffix = if (includeArgumentExpected) ":->argument-expected" else ""
+            return ":$label:_directories$suffix"
+        }
+
+        if (possibleValues.isEmpty()) {
+            return if (includeArgumentExpected) ":->argument-expected" else ""
+        }
+
+        // Create a label from the option name
+        val label = getOptionName() ?: "value"
+        val suffix = if (includeArgumentExpected) ":->argument-expected" else ""
+        return ":$label:(${possibleValues.joinToString(" ")})$suffix"
+    }
+
+    fun getOptionLine(includeArgumentExpected: Boolean): String {
+        val multiplePrefix = getMultiplePrefix()
+        val mutex = getMutexOptions()
+        val incubatingText = if (incubating) " (incubating)" else ""
+        val description = getCleanDescription()
+        val optStr = formatOptionStr()
+        val argumentPart = generateArgumentPart(includeArgumentExpected = includeArgumentExpected)
+
+        val commonPostfix = "[${description}${incubatingText}]${argumentPart}"
+        val commonPrefix = "${multiplePrefix}${mutex}"
+
+        // Determine what goes outside quotes (multiplePrefix, mutex, and/or braces)
+        return when {
+            // Has braces but no mutex: braces go outside quotes (along with multiplePrefix)
+            optStr.contains("{") -> {
+                "${commonPrefix}${optStr}'$commonPostfix'"
+            }
+            // Everything else: all inside quotes
+            else -> {
+                "${commonPrefix}'${optStr}$commonPostfix'"
+            }
+        }
+    }
+
+    fun getCleanDescription(): String =
+        description?.lineSequence()?.first()?.replace("[", "(")?.replace("]", ")") ?: ""
+
+    fun getMutexOptions(): String =
+        if (mutuallyExclusiveWith.isNotEmpty()) {
+            "(${mutuallyExclusiveWith.joinToString(",")})"
+        } else {
+            ""
+        }
+}
 
 
 // Hardcoded possible values for specific options
@@ -110,27 +213,6 @@ fun collectAllBuildOptions(): List<BuildOption<*>> {
     ).flatMap { it.allOptions }
 }
 
-fun CliOption.addMutexOption(other: CliOption) {
-    if (other.twoDashOption != null) {
-        mutuallyExclusiveWith += "--${other.twoDashOption}"
-    }
-    if (other.oneDashOption != null) {
-        mutuallyExclusiveWith += "-${other.oneDashOption}"
-    }
-}
-
-fun CliOption.addMutexOption(other: CommandLineOptionConfiguration) {
-    mutuallyExclusiveWith += "--${other.longOption}"
-    if (other.shortOption != null) {
-        mutuallyExclusiveWith += "-${other.shortOption}"
-    }
-}
-
-fun CliOption.getMultiplePrefix(): String {
-    return if (multipleOccurrencePossible) "\\*" else ""
-}
-
-
 fun getPossibleValues(option: BuildOption<*>, longOptionName: String?): List<String> {
     // Check hardcoded values first based on the long option name
     longOptionName?.let { optName ->
@@ -175,56 +257,6 @@ fun getFilePatternForProperty(propertyName: String): String? {
     return FILE_OPTIONS[propertyName]
 }
 
-fun CliOption.formatOptionStr(): String {
-    val optBuilder = mutableListOf<String>()
-    if (oneDashOption != null) {
-        optBuilder.add("-$oneDashOption")
-    }
-    if (twoDashOption != null) {
-        optBuilder.add("--$twoDashOption")
-    }
-    return if (optBuilder.size > 1) {
-        // Multiple options: use braces {-a,--long}
-        optBuilder.joinToString(",", prefix = "{", postfix = "}")
-    } else {
-        // Single option: no braces needed
-        optBuilder.firstOrNull() ?: ""
-    }
-}
-
-fun CliOption.getOptionName(): String? =
-    (twoDashOption ?: oneDashOption?.removePrefix("D")?.removeSuffix("="))
-        ?.replace("-", " ")
-
-
-fun CliOption.generateArgumentPart(
-    includeArgumentExpected: Boolean
-): String {
-    if (!argumentExpected) return ""
-
-    // Handle file options with patterns
-    if (filePattern != null) {
-        val label = getOptionName() ?: "file"
-        val suffix = if (includeArgumentExpected) ":->argument-expected" else ""
-        return ":$label:_files -g \\${filePattern}$suffix"
-    }
-
-    // Handle directory options
-    if (isDirectory) {
-        val label = getOptionName() ?: "directory"
-        val suffix = if (includeArgumentExpected) ":->argument-expected" else ""
-        return ":$label:_directories$suffix"
-    }
-
-    if (possibleValues.isEmpty()) {
-        return if (includeArgumentExpected) ":->argument-expected" else ""
-    }
-
-    // Create a label from the option name
-    val label = getOptionName() ?: "value"
-    val suffix = if (includeArgumentExpected) ":->argument-expected" else ""
-    return ":$label:(${possibleValues.joinToString(" ")})$suffix"
-}
 
 tasks.register("generateCompletionScripts") {
     doLast {
@@ -375,47 +407,12 @@ fun getBashShortOpts(options: List<CliOption>): String = options.filter { it.one
         "$paddedOption - ${it.description?.lineSequence()?.first()} $incubatingText"
     }
 
-fun CliOption.getOptionLine(includeArgumentExpected: Boolean): String {
-    val multiplePrefix = getMultiplePrefix()
-    val mutex = getMutexOptions()
-    val incubatingText = if (incubating) " (incubating)" else ""
-    val description = getDescription()
-    val optStr = formatOptionStr()
-    val argumentPart = generateArgumentPart(includeArgumentExpected = includeArgumentExpected)
-
-    val commonPostfix = "[${description}${incubatingText}]${argumentPart}"
-    val commonPrefix = "${multiplePrefix}${mutex}"
-
-    // Determine what goes outside quotes (multiplePrefix, mutex, and/or braces)
-    return when {
-        // Has braces but no mutex: braces go outside quotes (along with multiplePrefix)
-        optStr.contains("{") -> {
-            "${commonPrefix}${optStr}'$commonPostfix'"
-        }
-        // Everything else: all inside quotes
-        else -> {
-            "${commonPrefix}'${optStr}$commonPostfix'"
-        }
-    }
-}
-
-fun CliOption.getDescription(): String {
-    return description?.lineSequence()?.first()?.replace("[", "(")?.replace("]", ")") ?: ""
-}
 
 fun generateZshMainOpts(options: List<CliOption>): String {
     return options.sortedBy { it.twoDashOption ?: it.oneDashOption }
         .joinToString(" \\\n        ") { option ->
             option.getOptionLine(includeArgumentExpected = true)
         }
-}
-
-fun CliOption.getMutexOptions(): String {
-    return if (mutuallyExclusiveWith.isNotEmpty()) {
-        "(${mutuallyExclusiveWith.joinToString(",")})"
-    } else {
-        ""
-    }
 }
 
 fun generateZshSubcommandOpts(options: List<CliOption>): String {
