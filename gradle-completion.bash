@@ -21,7 +21,7 @@ __gradle-init-cache-dir() {
 }
 
 __gradle-set-settings-file() {
-    # In order of precedence: --settings-file=filename, settings.gradle, settings.gradle.kts
+    # In order of precedence: settings.gradle, settings.gradle.kts
 
     local default_gradle_settings_file="$project_root_dir/settings.gradle"
     if [[ ! -f $default_gradle_settings_file ]]; then
@@ -32,7 +32,7 @@ __gradle-set-settings-file() {
 
 __gradle-set-build-file() {
     __gradle-set-settings-file
-    # In order of precedence: --build-file=filename, rootProject.buildFileName, build.gradle, build.gradle.kts
+    # In order of precedence: rootProject.buildFileName, build.gradle, build.gradle.kts
 
     local default_gradle_build_file_name="build.gradle"
     if [[ -f $gradle_settings_file ]]; then
@@ -79,58 +79,61 @@ __gradle-long-options() {
     local cur
     _get_comp_words_by_ref -n : cur
 
-    local args="--build-cache           - Enables the Gradle build cache
---build-file            - Specifies the build file
---configuration-cache   - Enables the configuration cache. Gradle will try to reuse the build configuration from previous builds. [incubating]
---configuration-cache-problems - Configures how the configuration cache handles problems (fail or warn). Defaults to fail. [incubating]
---configure-on-demand   - Only relevant projects are configured
---console               - Type of console output to generate (plain auto rich verbose)
---continue              - Continues task execution after a task failure
---continuous            - Continuous mode. Automatically re-run build after changes
---daemon                - Use the Gradle Daemon
---debug                 - Log at the debug level
---dry-run               - Runs the build with all task actions disabled
---exclude-task          - Specify a task to be excluded
---full-stacktrace       - Print out the full (very verbose) stacktrace
---gradle-user-home      - Specifies the Gradle user home directory
---gui                   - Launches the Gradle GUI app (Deprecated)
---help                  - Shows a help message
---include-build         - Run the build as a composite, including the specified build
---info                  - Set log level to INFO
---init-script           - Specifies an initialization script
---max-workers           - Set the maximum number of workers that Gradle may use
---no-build-cache        - Do not use the Gradle build cache
---no-configuration-cache  - Disables the configuration cache. [incubating]
---no-configure-on-demand  - Disables configuration on demand
---no-daemon             - Do not use the Gradle Daemon
---no-parallel           - Disables parallel execution to build projects
---no-rebuild            - Do not rebuild project dependencies
---no-scan               - Do not create a build scan
---no-search-upwards     - Do not search parent directories for a settings.gradle (removed)
---no-watch-fs           - Do not watch the filesystem for changes
---offline               - Build without accessing network resources
---parallel              - Build projects in parallel
---profile               - Profile build time and create report
---priority              - Set priority for Gradle worker processes (low normal)
---project-cache-dir     - Specifies the project-specific cache directory
---project-dir           - Specifies the start directory for Gradle
---project-prop          - Sets a project property of the root project
---quiet                 - Log errors only
---recompile-scripts     - Forces scripts to be recompiled, bypassing caching
---refresh-dependencies  - Refresh the state of dependencies
---rerun-tasks           - Specifies that any task optimization is ignored
---scan                  - Create a build scan
---settings-file         - Specifies the settings file
---stacktrace            - Print out the stacktrace also for user exceptions
---status                - Print Gradle Daemon status
---stop                  - Stop all Gradle Daemons
---system-prop           - Set a system property
---update-locks          - Perform a partial update of the dependency lock
---version               - Prints Gradle version info
---warn                  - Log warnings and errors only
---warning-mode          - Set types of warnings to log (all summary none)
---watch-fs              - Gradle watches filesystem for incremental builds
---write-locks           - Persists dependency resolution for locked configurations"
+    local args="--build-cache                  - Enables the Gradle build cache. Gradle will try to reuse outputs from previous builds. 
+--configuration-cache          - Enables the configuration cache. Gradle will try to reuse the build configuration from previous builds. 
+--configuration-cache-problems - Configures how the configuration cache handles problems (fail or warn). Defaults to fail. 
+--configure-on-demand          - Configure necessary projects only. Gradle will attempt to reduce configuration time for large multi-project builds.  [incubating]
+--console                      - Specifies which type of console output to generate. Values are 'plain', 'colored', 'auto' (default), 'rich' or 'verbose'. 
+--continue                     - Continue task execution after a task failure. 
+--continuous                   - Enables continuous build. Gradle does not exit and will re-execute tasks when task file inputs change. 
+--daemon                       - Uses the Gradle daemon to run the build. Starts the daemon if not running. 
+--debug                        - Log in debug mode (includes normal stacktrace). 
+--dependency-verification      - Configures the dependency verification mode. Values are 'strict', 'lenient' or 'off'. 
+--dry-run                      - Run the builds with all task actions disabled. 
+--exclude-task                 - Specify a task to be excluded from execution. 
+--export-keys                  - Exports the public keys used for dependency verification. 
+--foreground                   - Starts the Gradle daemon in the foreground. 
+--full-stacktrace              - Print out the full (very verbose) stacktrace for all exceptions. 
+--gradle-user-home             - Specifies the Gradle user home directory. Defaults to ~/.gradle 
+--help                         - Shows a help message. 
+--include-build                - Include the specified build in the composite. 
+--info                         - Set log level to info. 
+--init-script                  - Specify an initialization script. 
+--max-workers                  - Configure the number of concurrent workers Gradle is allowed to use. 
+--no-build-cache               - Disables the Gradle build cache. 
+--no-configuration-cache       - Disables the configuration cache. 
+--no-configure-on-demand       - Disables the use of configuration on demand.  [incubating]
+--no-continue                  - Stop task execution after a task failure. 
+--no-daemon                    - Do not use the Gradle daemon to run the build. Useful occasionally if you have configured Gradle to always run with the daemon by default. 
+--no-parallel                  - Disables parallel execution to build projects. 
+--no-problems-report           - (Experimental) disables HTML problems report 
+--no-rebuild                   - Do not rebuild project dependencies. 
+--no-scan                      - Disables the creation of a Build Scan. 
+--no-watch-fs                  - Disables watching the file system. 
+--offline                      - Execute the build without accessing network resources. 
+--parallel                     - Build projects in parallel. Gradle will attempt to determine the optimal number of executor threads to use. 
+--priority                     - Specifies the scheduling priority for the Gradle daemon and all processes launched by it. Values are 'normal' (default) or 'low' 
+--problems-report              - (Experimental) enables HTML problems report 
+--profile                      - Profile build execution time and generates a report in the <build_dir>/reports/profile directory. 
+--project-cache-dir            - Specify the project-specific cache directory. Defaults to .gradle in the root project directory. 
+--project-dir                  - Specifies the start directory for Gradle. Defaults to current directory. 
+--property-upgrade-report      - (Experimental) Runs build with experimental property upgrade report. 
+--quiet                        - Log errors only. 
+--refresh-dependencies         - Refresh the state of dependencies. 
+--refresh-keys                 - Refresh the public keys used for dependency verification. 
+--rerun-tasks                  - Ignore previously cached task results. 
+--scan                         - Generate a Build Scan (powered by Develocity). 
+--stacktrace                   - Print out the stacktrace for all exceptions. 
+--status                       - Shows status of running and recently stopped Gradle daemon(s). 
+--stop                         - Stops the Gradle daemon if it is running. 
+--task-graph                   - (Experimental) Print task graph instead of executing tasks. 
+--update-locks                 - Perform a partial update of the dependency lock, letting passed in module notations change version.  [incubating]
+--version                      - Shows the version info. 
+--warn                         - Set log level to warn. 
+--warning-mode                 - Specifies which mode of warnings to generate. Values are 'all', 'fail', 'summary'(default) or 'none' 
+--watch-fs                     - Enables watching the file system for changes, allowing data about the file system to be re-used for the next build. 
+--write-locks                  - Persists dependency resolution for locked configurations, ignoring existing locking information if it exists 
+--write-verification-metadata  - Generates checksums for dependencies used in the project (comma-separated list)"
 
     COMPREPLY=( $(compgen -W "$args" -- "$cur") )
 }
@@ -139,20 +142,55 @@ __gradle-properties() {
     local cur
     _get_comp_words_by_ref -n : cur
 
-    local args="-Dorg.gradle.cache.reserved.mb=   - Reserve Gradle Daemon memory for operations
--Dorg.gradle.caching=             - Set true to enable Gradle build cache
--Dorg.gradle.console=             - Set type of console output to generate (plain auto rich verbose)
--Dorg.gradle.daemon.debug=        - Set true to debug Gradle Daemon
--Dorg.gradle.daemon.idletimeout=  - Kill Gradle Daemon after # idle millis
--Dorg.gradle.debug=               - Set true to debug Gradle Client
--Dorg.gradle.jvmargs=             - Set JVM arguments
--Dorg.gradle.java.home=           - Set JDK home dir
--Dorg.gradle.logging.level=       - Set default Gradle log level (quiet warn lifecycle info debug)
--Dorg.gradle.parallel=            - Set true to enable parallel project builds (incubating)
--Dorg.gradle.priority=            - Set priority for Gradle worker processes (low normal)
--Dorg.gradle.unsafe.watch-fs=     - Set true to enable Gradle file watcher
--Dorg.gradle.warning.mode=        - Set types of warnings to log (all summary none)
--Dorg.gradle.workers.max=         - Set the number of workers Gradle is allowed to use"
+    local args="-Dgradle.user.home=                       - Specifies the Gradle user home directory. Defaults to ~/.gradle
+-Dorg.gradle.projectcachedir=             - Specify the project-specific cache directory. Defaults to .gradle in the root project directory.
+-Dorg.gradle.continue=                    - Continue task execution after a task failure.
+-Dorg.gradle.continuous.quietperiod=      - 
+-Dorg.gradle.configureondemand=           - Configure necessary projects only. Gradle will attempt to reduce configuration time for large multi-project builds.
+-Dorg.gradle.caching=                     - Enables the Gradle build cache. Gradle will try to reuse outputs from previous builds.
+-Dorg.gradle.caching.debug=               - 
+-Dorg.gradle.vfs.watch=                   - Enables watching the file system for changes, allowing data about the file system to be re-used for the next build.
+-Dorg.gradle.vfs.verbose=                 - 
+-Dorg.gradle.dependency.verification=     - Configures the dependency verification mode. Values are 'strict', 'lenient' or 'off'.
+-Dorg.gradle.configuration-cache.problems= - Configures how the configuration cache handles problems (fail or warn). Defaults to fail.
+-Dorg.gradle.configuration-cache=         - Enables the configuration cache. Gradle will try to reuse the build configuration from previous builds.
+-Dorg.gradle.configuration-cache.inputs.unsafe.ignore.in-serialization= - 
+-Dorg.gradle.configuration-cache.unsafe.ignore.unsupported-build-events-listeners= - 
+-Dorg.gradle.configuration-cache.max-problems= - 
+-Dorg.gradle.configuration-cache.inputs.unsafe.ignore.file-system-checks= - 
+-Dorg.gradle.configuration-cache.parallel= - 
+-Dorg.gradle.configuration-cache.read-only= - 
+-Dorg.gradle.configuration-cache.integrity-check= - 
+-Dorg.gradle.configuration-cache.entries-per-key= - 
+-Dorg.gradle.configuration-cache.heap-dump-dir= - 
+-Dorg.gradle.configuration-cache.fine-grained-property-tracking= - 
+-Dorg.gradle.unsafe.isolated-projects=    - 
+-Dorg.gradle.problems.report=             - (Experimental) enables HTML problems report
+-Dorg.gradle.logging.level=               - 
+-Dorg.gradle.logging.stacktrace=          - 
+-Dorg.gradle.console=                     - Specifies which type of console output to generate. Values are 'plain', 'colored', 'auto' (default), 'rich' or 'verbose'.
+-Dorg.gradle.warning.mode=                - Specifies which mode of warnings to generate. Values are 'all', 'fail', 'summary'(default) or 'none'
+-Dorg.gradle.welcome=                     - 
+-Dorg.gradle.daemon.idletimeout=          - 
+-Dorg.gradle.daemon.healthcheckinterval=  - 
+-Dorg.gradle.daemon.registry.base=        - 
+-Dorg.gradle.jvmargs=                     - 
+-Dorg.gradle.java.home=                   - 
+-Dorg.gradle.debug=                       - 
+-Dorg.gradle.debug.host=                  - 
+-Dorg.gradle.debug.port=                  - 
+-Dorg.gradle.debug.server=                - 
+-Dorg.gradle.debug.suspend=               - 
+-Dorg.gradle.daemon=                      - Uses the Gradle daemon to run the build. Starts the daemon if not running.
+-Dorg.gradle.priority=                    - Specifies the scheduling priority for the Gradle daemon and all processes launched by it. Values are 'normal' (default) or 'low'
+-Dorg.gradle.native=                      - 
+-Dorg.gradle.parallel=                    - Build projects in parallel. Gradle will attempt to determine the optimal number of executor threads to use.
+-Dorg.gradle.workers.max=                 - Configure the number of concurrent workers Gradle is allowed to use.
+-Dorg.gradle.java.installations.paths=    - 
+-Dorg.gradle.java.installations.fromEnv=  - 
+-Dorg.gradle.java.installations.auto-detect= - 
+-Dorg.gradle.java.installations.auto-download= - 
+-Dorg.gradle.java.installations.idea-jdks-directory= -"
     COMPREPLY=( $(compgen -W "$args" -- "$cur") )
     return 0
 }
@@ -161,27 +199,26 @@ __gradle-short-options() {
     local cur
     _get_comp_words_by_ref -n : cur
 
-    local args="-?                      - Shows a help message
--a                      - Do not rebuild project dependencies
--b                      - Specifies the build file
--c                      - Specifies the settings file
--d                      - Log at the debug level
--g                      - Specifies the Gradle user home directory
--h                      - Shows a help message
--i                      - Set log level to INFO
--m                      - Runs the build with all task actions disabled
--p                      - Specifies the start directory for Gradle
--q                      - Log errors only
--s                      - Print out the stacktrace also for user exceptions
--t                      - Continuous mode. Automatically re-run build after changes
--u                      - Do not search parent directories for a settings.gradle
--v                      - Prints Gradle version info
--w                      - Log warnings and errors only
--x                      - Specify a task to be excluded
--D                      - Set a system property
--I                      - Specifies an initialization script
--P                      - Sets a project property of the root project
--S                      - Print out the full (very verbose) stacktrace"
+    local args="\
+-a                             - Do not rebuild project dependencies. 
+-d                             - Log in debug mode (includes normal stacktrace). 
+-F                             - Configures the dependency verification mode. Values are 'strict', 'lenient' or 'off'. 
+-g                             - Specifies the Gradle user home directory. Defaults to ~/.gradle 
+-h                             - Shows a help message. 
+-I                             - Specify an initialization script. 
+-i                             - Set log level to info. 
+-m                             - Run the builds with all task actions disabled. 
+-M                             - Generates checksums for dependencies used in the project (comma-separated list) 
+-p                             - Specifies the start directory for Gradle. Defaults to current directory. 
+-q                             - Log errors only. 
+-s                             - Print out the stacktrace for all exceptions. 
+-S                             - Print out the full (very verbose) stacktrace for all exceptions. 
+-t                             - Enables continuous build. Gradle does not exit and will re-execute tasks when task file inputs change. 
+-U                             - Refresh the state of dependencies. 
+-v                             - Shows the version info. 
+-w                             - Set log level to warn. 
+-x                             - Specify a task to be excluded from execution.\
+"
     COMPREPLY=( $(compgen -W "$args" -- "$cur") )
 }
 
@@ -242,7 +279,7 @@ __gradle-options-arguments() {
     _get_comp_words_by_ref -n : -p prev
 
     case "$prev" in
-        -b|--build-file|-c|--settings-file|-I|--init-script)
+        -I|--init-script)
             COMPREPLY=( $(compgen -f -A file -o filenames -X '!*.gradle*' "$cur") )
             return 0
             ;;
@@ -279,9 +316,9 @@ __gradle-generate-tasks-cache() {
     # Reuse Gradle Daemon if IDLE but don't start a new one.
     local gradle_tasks_output
     if [[ ! -z "$("$gradle_cmd" --status 2>/dev/null | grep IDLE)" ]]; then
-        gradle_tasks_output="$("$gradle_cmd" -b "$gradle_build_file" --daemon --no-scan --console=plain -q tasks --all)"
+        gradle_tasks_output="$(cd "$project_root_dir" && "$gradle_cmd" --daemon --no-scan --console=plain -q tasks --all)"
     else
-        gradle_tasks_output="$("$gradle_cmd" -b "$gradle_build_file" --no-daemon --no-scan --console=plain -q tasks --all)"
+        gradle_tasks_output="$(cd "$project_root_dir" && "$gradle_cmd" --no-daemon --no-scan --console=plain -q tasks --all)"
     fi
     local output_line
     local task_description
@@ -364,7 +401,7 @@ _gradle() {
 
     # Remove description ("[:space:]" and after) if only one possibility
     if [[ ${#COMPREPLY[*]} -eq 1 ]]; then
-        COMPREPLY=( ${COMPREPLY[0]%%  *} )
+        COMPREPLY=( ${COMPREPLY[0]%% *} )
     fi
 
     return 0
