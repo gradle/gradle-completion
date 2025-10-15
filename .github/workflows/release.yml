@@ -1,0 +1,48 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*' # Trigger on tags like v1.0.0
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Needed to create releases
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Generate completion scripts
+        run: ./gradlew generateCompletionScripts
+
+      - name: Create release tarball with generated scripts
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          # Create tarball including generated scripts
+          tar -czf gradle-completion-${VERSION}.tar.gz \
+            --transform "s,^,gradle-completion-${VERSION}/," \
+            gradle-completion.bash \
+            gradle-completion.plugin.zsh \
+            _gradle \
+            README.md \
+            LICENSE
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+          files: |
+            gradle-completion-*.tar.gz
