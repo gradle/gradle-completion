@@ -26,7 +26,7 @@ import java.util.Locale
 
 /**
  * Gradle task that generates shell completion scripts for Bash and Zsh.
- * 
+ *
  * This task extracts all CLI options from Gradle's internal API and generates
  * completion data that can be used in shell completion files.
  *
@@ -213,17 +213,14 @@ abstract class GenerateCompletionScriptsTask : DefaultTask() {
     private fun generateBashLongOpts(options: List<CliOption>): String = options.filter { it.twoDashOption != null }
         .sortedBy { it.twoDashOption }
         .joinToString("\n") {
-            val incubatingText = if (it.incubating) " [incubating]" else ""
-            val paddedOption = "--${it.twoDashOption}".padEnd(30)
-            "$paddedOption - ${it.description?.lineSequence()?.first()} $incubatingText"
+            it.getSuggestionLine("--${it.twoDashOption}")
         }
+
 
     private fun getBashShortOpts(options: List<CliOption>): String = options.filter { it.oneDashOption != null }
         .sortedBy { it.oneDashOption?.lowercase(Locale.getDefault()) }
         .joinToString("\n") {
-            val incubatingText = if (it.incubating) " [incubating]" else ""
-            val paddedOption = "-${it.oneDashOption}".padEnd(30)
-            "$paddedOption - ${it.description?.lineSequence()?.first()} $incubatingText"
+            it.getSuggestionLine("-${it.oneDashOption}")
         }
 
     private fun generateZshMainOpts(options: List<CliOption>): String {
@@ -247,7 +244,9 @@ abstract class GenerateCompletionScriptsTask : DefaultTask() {
     }
 
     private fun generatePropertiesOpts(allPropertyNames: List<CliOption>): String {
-        return allPropertyNames.joinToString("\n") {
+        return allPropertyNames
+            .filter { it.oneDashOption != null }
+            .joinToString("\n") {
             val paddingOption = "-${it.oneDashOption!!.padEnd(40)}"
             "$paddingOption - ${it.description?.lineSequence()?.first() ?: ""}"
         }

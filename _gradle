@@ -463,7 +463,8 @@ _gradle() {
         '--warning-mode[Specifies which mode of warnings to generate. Values are 'all', 'fail', 'summary'(default) or 'none']:warning mode:(all summary none):->argument-expected' \
         (--no-watch-fs)'--watch-fs[Enables watching the file system for changes, allowing data about the file system to be re-used for the next build.]' \
         '--write-locks[Persists dependency resolution for locked configurations, ignoring existing locking information if it exists]' \
-        {-M,--write-verification-metadata}'[Generates checksums for dependencies used in the project (comma-separated list)]:->argument-expected'        '(-)*:: :->task-or-option' && ret=0
+        {-M,--write-verification-metadata}'[Generates checksums for dependencies used in the project (comma-separated list)]:->argument-expected' \
+'(-)*:: :->task-or-option' && ret=0
 
     if [[ $words[CURRENT] != -* && $state != "argument-expected" ]]; then
         __gradle_tasks && ret=0

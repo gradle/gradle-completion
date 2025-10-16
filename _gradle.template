@@ -261,7 +261,8 @@ _gradle() {
     typeset -A opt_args
 
     _arguments -C \
-{{GENERATED_ZSH_MAIN_OPTIONS}}        '(-)*:: :->task-or-option' && ret=0
+{{GENERATED_ZSH_MAIN_OPTIONS}} \
+'(-)*:: :->task-or-option' && ret=0
 
     if [[ $words[CURRENT] != -* && $state != "argument-expected" ]]; then
         __gradle_tasks && ret=0

@@ -142,4 +142,10 @@ data class CliOption(
     } else {
         ""
     }
+
+    fun getSuggestionLine(optionString : String): String {
+        val incubatingText = if (incubating) " [incubating]" else ""
+        return "${optionString.padEnd(30)} - ${(description ?: "").lineSequence().firstOrNull() ?: ""} $incubatingText"
+    }
+
 }
