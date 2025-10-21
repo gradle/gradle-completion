@@ -106,7 +106,7 @@ data class CliOption(
         val commonPrefix = "${multiplePrefix}${mutex}"
 
         // Determine what goes outside quotes (multiplePrefix, mutex, and/or braces)
-        return if (optStr.contains("{")) {// Has braces but no mutex: braces go outside quotes (along with multiplePrefix)
+        return if (optStr.contains("{")) { // Has braces but no mutex: braces go outside quotes (along with multiplePrefix)
             "${commonPrefix}${optStr}'$commonPostfix'"
         }
         // Everything else: all inside quotes
