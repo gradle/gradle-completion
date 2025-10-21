@@ -19,12 +19,8 @@ data class CliOption(
      * Adds another CliOption to the list of mutually exclusive options.
      */
     fun addMutexOption(other: CliOption) {
-        if (other.twoDashOption != null) {
-            mutuallyExclusiveWith += "--${other.twoDashOption}"
-        }
-        if (other.oneDashOption != null) {
-            mutuallyExclusiveWith += "-${other.oneDashOption}"
-        }
+        other.twoDashOption?.let { mutuallyExclusiveWith += "--${it}" }
+        other.oneDashOption?.let { mutuallyExclusiveWith += "-${it}" }
     }
 
     /**
@@ -32,9 +28,7 @@ data class CliOption(
      */
     fun addMutexOption(other: CommandLineOptionConfiguration) {
         mutuallyExclusiveWith += "--${other.longOption}"
-        if (other.shortOption != null) {
-            mutuallyExclusiveWith += "-${other.shortOption}"
-        }
+        other.shortOption?.let { mutuallyExclusiveWith += "-${it}" }
     }
 
     /**
@@ -48,12 +42,8 @@ data class CliOption(
      */
     fun formatOptionStr(): String {
         val optBuilder = mutableListOf<String>()
-        if (oneDashOption != null) {
-            optBuilder.add("-$oneDashOption")
-        }
-        if (twoDashOption != null) {
-            optBuilder.add("--$twoDashOption")
-        }
+        oneDashOption?.let { optBuilder.add("-$it") }
+        twoDashOption?.let { optBuilder.add("--$it") }
         return if (optBuilder.size > 1) {
             // Multiple options: use braces {-a,--long}
             optBuilder.joinToString(",", prefix = "{", postfix = "}")
@@ -116,15 +106,12 @@ data class CliOption(
         val commonPrefix = "${multiplePrefix}${mutex}"
 
         // Determine what goes outside quotes (multiplePrefix, mutex, and/or braces)
-        return when {
-            // Has braces but no mutex: braces go outside quotes (along with multiplePrefix)
-            optStr.contains("{") -> {
-                "${commonPrefix}${optStr}'$commonPostfix'"
-            }
-            // Everything else: all inside quotes
-            else -> {
-                "${commonPrefix}'${optStr}$commonPostfix'"
-            }
+        return if (optStr.contains("{")) {// Has braces but no mutex: braces go outside quotes (along with multiplePrefix)
+            "${commonPrefix}${optStr}'$commonPostfix'"
+        }
+        // Everything else: all inside quotes
+        else {
+            "${commonPrefix}'${optStr}$commonPostfix'"
         }
     }
 
@@ -143,7 +130,7 @@ data class CliOption(
         ""
     }
 
-    fun getSuggestionLine(optionString : String): String {
+    fun getSuggestionLine(optionString: String): String {
         val incubatingText = if (incubating) " [incubating]" else ""
         return "${optionString.padEnd(30)} - ${(description ?: "").lineSequence().firstOrNull() ?: ""} $incubatingText"
     }
