@@ -77,6 +77,10 @@ abstract class GenerateCompletionScriptsTask : DefaultTask() {
         val wrapperOptions = extractWrapperOptions()
         logger.lifecycle("Successfully extracted ${wrapperOptions.size} wrapper task options.")
 
+        // STEP 1.6: Extract test task options via reflection
+        val testOptions = extractTestOptions()
+        logger.lifecycle("Successfully extracted ${testOptions.size} test task options.")
+
         // STEP 2: Format the extracted options into Bash and Zsh specific strings
         val bashLongOpts = generateBashLongOpts(allCliOptions)
         val bashShortOpts = getBashShortOpts(allCliOptions)
@@ -85,6 +89,7 @@ abstract class GenerateCompletionScriptsTask : DefaultTask() {
         val zshSubcommandOpts = generateZshSubcommandOpts(allCliOptions)
         val properties = generatePropertiesOpts(allPropertyNames)
         val zshWrapperOpts = generateZshWrapperOpts(wrapperOptions)
+        val zshTestOpts = generateZshTestOpts(testOptions)
 
         // STEP 3: Read templates and substitute placeholders
         val bashCompletionScript = bashTemplate.asFile.get().readText()
@@ -96,6 +101,7 @@ abstract class GenerateCompletionScriptsTask : DefaultTask() {
             .replace("{{GENERATED_ZSH_MAIN_OPTIONS}}", zshMainOpts)
             .replace("{{GENERATED_ZSH_SUBCOMMAND_OPTIONS}}", zshSubcommandOpts)
             .replace("{{GENERATED_ZSH_WRAPPER_OPTIONS}}", zshWrapperOpts)
+            .replace("{{GENERATED_ZSH_TEST_OPTIONS}}", zshTestOpts)
 
         // STEP 4: Write generated files
         bashOutputFile.asFile.get().writeText(bashCompletionScript)
@@ -262,70 +268,42 @@ abstract class GenerateCompletionScriptsTask : DefaultTask() {
 
     /**
      * Extracts wrapper task options from org.gradle.api.tasks.wrapper.Wrapper class via reflection.
-     * Looks for methods annotated with @Option and extracts option names, descriptions, and possible values.
      */
     private fun extractWrapperOptions(): List<WrapperOption> {
-        return try {
-            val wrapperClass = Class.forName("org.gradle.api.tasks.wrapper.Wrapper") ?: return listOf()
-            val methods = wrapperClass.declaredMethods
-
-            methods.mapNotNull { method ->
-                val optionAnnotation = method.getAnnotation(Option::class.java)
-                if (optionAnnotation != null) {
-                    val optionName = optionAnnotation.option
-                    val description = optionAnnotation.description
-
-                    // Extract possible values from enum types or method parameters
-                    val possibleValues = extractPossibleValuesForWrapperOption(method, wrapperClass)
-
-                    WrapperOption(
-                        option = optionName,
-                        description = description,
-                        possibleValues = possibleValues
-                    )
-                } else {
-                    null
-                }
-            }.sortedBy { it.option }
-        } catch (e: ClassNotFoundException) {
-            logger.warn("Could not find Wrapper class, using empty wrapper options list")
-            emptyList()
-        }
+        return TaskOptionExtractor.extractTaskOptions(
+            listOf("org.gradle.api.tasks.wrapper.Wrapper"),
+            "wrapper",
+            logger
+        )
     }
 
     /**
-     * Extracts possible values for a wrapper option based on the method's parameter type.
+     * Extracts test task options from org.gradle.api.tasks.testing.Test class and its parent
+     * AbstractTestTask via reflection.
      */
-    private fun extractPossibleValuesForWrapperOption(method: Method, wrapperClass: Class<*>): List<String> {
-        val paramTypes = method.parameterTypes
-        if (paramTypes.isEmpty()) return emptyList()
-
-        val paramType = paramTypes[0]
-
-        // Check if the parameter is an enum
-        if (paramType.isEnum) {
-            @Suppress("UNCHECKED_CAST")
-            return (paramType.enumConstants as Array<Enum<*>>).map { it.name.lowercase() }
-        }
-
-        return emptyList()
+    private fun extractTestOptions(): List<WrapperOption> {
+        return TaskOptionExtractor.extractTaskOptions(
+            listOf(
+                "org.gradle.api.tasks.testing.Test",
+                "org.gradle.api.tasks.testing.AbstractTestTask"
+            ),
+            "test",
+            logger
+        )
     }
 
     /**
      * Generates Zsh completion options for the wrapper task.
      */
     private fun generateZshWrapperOpts(wrapperOptions: List<WrapperOption>): String {
-        return wrapperOptions.joinToString(" \\\n                ") { option ->
-            val optionName = "--${option.option}"
-            val escapedDescription = option.description.replace("[", "\\[").replace("]", "\\]")
+        return TaskOptionExtractor.generateZshTaskOpts(wrapperOptions)
+    }
 
-            if (option.possibleValues.isNotEmpty()) {
-                val values = option.possibleValues.joinToString(" ")
-                "'$optionName=[$escapedDescription]:*:distribution type:($values)'"
-            } else {
-                "'$optionName=[$escapedDescription]'"
-            }
-        }
+    /**
+     * Generates Zsh completion options for the test task.
+     */
+    private fun generateZshTestOpts(testOptions: List<WrapperOption>): String {
+        return TaskOptionExtractor.generateZshTaskOpts(testOptions, "'(-)*:: :->task-or-option'")
     }
 
     // Companion object for helper functions and constants

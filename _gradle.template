@@ -221,10 +221,7 @@ __gradle_subcommand() {
             ;;
         (test)
             _arguments -C \
-                '--debug-jvm[Enable debugging for the test process. The process is started suspended and listening on port 5005. Requires the "java" plugin.]' \
-                '--fail-fast[Stops test execution after the first failed test. Requires the "java" plugin.]' \
-                '--tests=[Sets test class or method name to be included, * is supported. Requires the "java" plugin.]' \
-                '(-)*:: :->task-or-option' && ret=0
+                {{GENERATED_ZSH_TEST_OPTIONS}} && ret=0
             ;;
         (wrapper)
             _arguments \
