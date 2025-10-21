@@ -40,7 +40,7 @@ data class CliOption(
     /**
      * Returns the prefix for options that can occur multiple times.
      */
-    fun getMultiplePrefix(): String = if (multipleOccurrencePossible) "\\*" else ""
+    fun getMultiplePrefix() = if (multipleOccurrencePossible) "\\*" else ""
 
     /**
      * Formats the option string for Zsh completion.
@@ -66,7 +66,7 @@ data class CliOption(
     /**
      * Returns a human-readable name for this option (used in argument labels).
      */
-    fun getOptionName(): String? =
+    fun getOptionName() =
         (twoDashOption ?: oneDashOption?.removePrefix("D")?.removeSuffix("="))
             ?.replace("-", " ")
 
@@ -131,13 +131,13 @@ data class CliOption(
     /**
      * Returns the description with brackets replaced (for Zsh compatibility).
      */
-    fun getZshCompatibleDescription(): String =
+    fun getZshCompatibleDescription() =
         description?.lineSequence()?.first()?.replace("[", "(")?.replace("]", ")") ?: ""
 
     /**
      * Returns the formatted string of mutually exclusive options.
      */
-    fun getMutexOptions(): String = if (mutuallyExclusiveWith.isNotEmpty()) {
+    fun getMutexOptions() = if (mutuallyExclusiveWith.isNotEmpty()) {
         "(${mutuallyExclusiveWith.joinToString(",")})"
     } else {
         ""
