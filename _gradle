@@ -199,12 +199,14 @@ __gradle_subcommand() {
             ;;
         (dependencyInsight)
             _arguments \
+                '--all-variants=[Show all variants of each dependency]' \
+                '--configuration=[Looks for the dependency in given configuration.]:dependency configuration:_gradle_dependency_configurations' \
                 '--dependency=[Shows the details of given dependency.]' \
-                '--configuration=[Looks for the dependency in given configuration.]:dependency configuration:_gradle_dependency_configurations' && ret=0
+                '--single-path=[Show at most one path to each dependency]' && ret=0
             ;;
         (help)
             _arguments \
-                '--task[The task to show help for.]' && ret=0
+                '--task=[The task to show help for.]' && ret=0
             ;;
         (init)
             _arguments \
@@ -223,8 +225,10 @@ __gradle_subcommand() {
             ;;
         (tasks)
             _arguments \
-                '--all[List all tasks, including subproject tasks.]' \
-                '--group=[Show tasks only from given task group.]' && ret=0
+                '--all=[Show additional tasks and detail.]' \
+                '--group=[Show tasks for a specific group.]' \
+                '--groups=[Show tasks for specific groups (can be used multiple times to specify multiple groups).]' \
+                '--types=[Show task class types]' && ret=0
             ;;
         (test)
             _arguments -C \

@@ -195,16 +195,15 @@ __gradle_subcommand() {
     case "$words[1]" in
         (dependencies)
             _arguments \
-                '--configuration=[The configuration to generate the report for.]:dependency configuration:_gradle_dependency_configurations' && ret=0
+                {{GENERATED_ZSH_DEPENDENCIES_OPTIONS}} && ret=0
             ;;
         (dependencyInsight)
             _arguments \
-                '--dependency=[Shows the details of given dependency.]' \
-                '--configuration=[Looks for the dependency in given configuration.]:dependency configuration:_gradle_dependency_configurations' && ret=0
+                {{GENERATED_ZSH_DEPENDENCY_INSIGHT_OPTIONS}} && ret=0
             ;;
         (help)
             _arguments \
-                '--task[The task to show help for.]' && ret=0
+                {{GENERATED_ZSH_HELP_OPTIONS}} && ret=0
             ;;
         (init)
             _arguments \
@@ -212,8 +211,7 @@ __gradle_subcommand() {
             ;;
         (tasks)
             _arguments \
-                '--all[List all tasks, including subproject tasks.]' \
-                '--group=[Show tasks only from given task group.]' && ret=0
+                {{GENERATED_ZSH_TASKS_OPTIONS}} && ret=0
             ;;
         (test)
             _arguments -C \

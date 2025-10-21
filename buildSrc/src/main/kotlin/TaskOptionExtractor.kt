@@ -21,7 +21,7 @@ object TaskOptionExtractor {
         classNames: List<String>,
         taskName: String,
         logger: Logger
-    ): List<WrapperOption> {
+    ): List<TaskOptionDescriptor> {
         return try {
             val classes = classNames.mapNotNull { className ->
                 try {
@@ -49,7 +49,7 @@ object TaskOptionExtractor {
                     // Extract possible values from enum types, @OptionValues methods, or method parameters
                     val possibleValues = extractPossibleValues(method, allMethods)
                     
-                    WrapperOption(
+                    TaskOptionDescriptor(
                         option = optionName,
                         description = description,
                         possibleValues = possibleValues
@@ -79,14 +79,7 @@ object TaskOptionExtractor {
             // The value property is an array of strings, get the first one
             optionValues != null && optionValues.value.isNotEmpty() && optionValues.value[0] == optionName
         }
-        
-//        if (optionValuesMethod != null) {
-//            // Try to invoke the method to get the list of values
-//            // Note: This won't work for non-static methods that require instance state
-//            // For now, we'll just note that values exist but can't be extracted
-//            return emptyList() // We can't safely invoke instance methods without an instance
-//        }
-        
+
         // Check if the parameter is an enum
         val paramTypes = method.parameterTypes
         if (paramTypes.isNotEmpty()) {
@@ -108,18 +101,25 @@ object TaskOptionExtractor {
      * @return Formatted Zsh completion string
      */
     fun generateZshTaskOpts(
-        options: List<WrapperOption>,
+        options: List<TaskOptionDescriptor>,
         additionalLine: String? = null
     ): String {
         val optionsString = options.joinToString(" \\\n                ") { option ->
             val optionName = "--${option.option}"
             val escapedDescription = option.description.replace("[", "\\[").replace("]", "\\]")
             
-            if (option.possibleValues.isNotEmpty()) {
-                val values = option.possibleValues.joinToString(" ")
-                "'$optionName=[$escapedDescription]:*:distribution type:($values)'"
-            } else {
-                "'$optionName=[$escapedDescription]'"
+            // Use custom completion function if provided, otherwise use possible values or simple completion
+            when {
+                option.completionFunction != null -> {
+                    "'$optionName=[$escapedDescription]${option.completionFunction}'"
+                }
+                option.possibleValues.isNotEmpty() -> {
+                    val values = option.possibleValues.joinToString(" ")
+                    "'$optionName=[$escapedDescription]:*:distribution type:($values)'"
+                }
+                else -> {
+                    "'$optionName=[$escapedDescription]'"
+                }
             }
         }
         
