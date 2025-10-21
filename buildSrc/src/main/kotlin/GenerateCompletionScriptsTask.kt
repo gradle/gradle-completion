@@ -81,6 +81,10 @@ abstract class GenerateCompletionScriptsTask : DefaultTask() {
         val testOptions = extractTestOptions()
         logger.lifecycle("Successfully extracted ${testOptions.size} test task options.")
 
+        // STEP 1.7: Extract init task options via reflection
+        val initOptions = extractInitOptions()
+        logger.lifecycle("Successfully extracted ${initOptions.size} init task options.")
+
         // STEP 2: Format the extracted options into Bash and Zsh specific strings
         val bashLongOpts = generateBashLongOpts(allCliOptions)
         val bashShortOpts = getBashShortOpts(allCliOptions)
@@ -90,6 +94,7 @@ abstract class GenerateCompletionScriptsTask : DefaultTask() {
         val properties = generatePropertiesOpts(allPropertyNames)
         val zshWrapperOpts = generateZshWrapperOpts(wrapperOptions)
         val zshTestOpts = generateZshTestOpts(testOptions)
+        val zshInitOpts = generateZshInitOpts(initOptions)
 
         // STEP 3: Read templates and substitute placeholders
         val bashCompletionScript = bashTemplate.asFile.get().readText()
@@ -102,6 +107,7 @@ abstract class GenerateCompletionScriptsTask : DefaultTask() {
             .replace("{{GENERATED_ZSH_SUBCOMMAND_OPTIONS}}", zshSubcommandOpts)
             .replace("{{GENERATED_ZSH_WRAPPER_OPTIONS}}", zshWrapperOpts)
             .replace("{{GENERATED_ZSH_TEST_OPTIONS}}", zshTestOpts)
+            .replace("{{GENERATED_ZSH_INIT_OPTIONS}}", zshInitOpts)
 
         // STEP 4: Write generated files
         bashOutputFile.asFile.get().writeText(bashCompletionScript)
@@ -293,6 +299,17 @@ abstract class GenerateCompletionScriptsTask : DefaultTask() {
     }
 
     /**
+     * Extracts init task options from org.gradle.buildinit.tasks.InitBuild class via reflection.
+     */
+    private fun extractInitOptions(): List<WrapperOption> {
+        return TaskOptionExtractor.extractTaskOptions(
+            listOf("org.gradle.buildinit.tasks.InitBuild"),
+            "init",
+            logger
+        )
+    }
+
+    /**
      * Generates Zsh completion options for the wrapper task.
      */
     private fun generateZshWrapperOpts(wrapperOptions: List<WrapperOption>): String {
@@ -304,6 +321,13 @@ abstract class GenerateCompletionScriptsTask : DefaultTask() {
      */
     private fun generateZshTestOpts(testOptions: List<WrapperOption>): String {
         return TaskOptionExtractor.generateZshTaskOpts(testOptions, "'(-)*:: :->task-or-option'")
+    }
+
+    /**
+     * Generates Zsh completion options for the init task.
+     */
+    private fun generateZshInitOpts(initOptions: List<WrapperOption>): String {
+        return TaskOptionExtractor.generateZshTaskOpts(initOptions)
     }
 
     // Companion object for helper functions and constants

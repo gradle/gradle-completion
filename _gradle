@@ -208,11 +208,18 @@ __gradle_subcommand() {
             ;;
         (init)
             _arguments \
-                '--dsl=[DSL to be used in generated scripts.]:dsl:(groovy kotlin)' \
-                '--package=[Package for the generated source.]' \
-                '--project-name=[Name of the generated project.]' \
-                '--test-framework=[Test framework to be used.]:test framework:(junit kotlintest scalatest spock testng)' \
-                '--type=[Project type to generate.]:project type:(basic cpp-application cpp-library groovy-application groovy-library java-application java-library kotlin-application kotlin-library pom scala-library)' && ret=0
+                '--comments=[Include clarifying comments in files.]' \
+                '--dsl=[Set the build script DSL to be used in generated scripts.]' \
+                '--incubating=[Allow the generated build to use new features and APIs.]' \
+                '--insecure-protocol=[How to handle insecure URLs used for Maven Repositories.]' \
+                '--java-version=[Provides java version to use in the project.]' \
+                '--overwrite=[Allow existing files in the build directory to be overwritten?]' \
+                '--package=[Set the package for source files.]' \
+                '--project-name=[Set the project name.]' \
+                '--split-project=[Split functionality across multiple subprojects?]' \
+                '--test-framework=[Set the test framework to be used.]' \
+                '--type=[Set the type of project to generate.]' \
+                '--use-defaults=[Use default values for options not configured explicitly]' && ret=0
             ;;
         (tasks)
             _arguments \

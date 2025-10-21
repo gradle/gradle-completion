@@ -208,11 +208,7 @@ __gradle_subcommand() {
             ;;
         (init)
             _arguments \
-                '--dsl=[DSL to be used in generated scripts.]:dsl:(groovy kotlin)' \
-                '--package=[Package for the generated source.]' \
-                '--project-name=[Name of the generated project.]' \
-                '--test-framework=[Test framework to be used.]:test framework:(junit kotlintest scalatest spock testng)' \
-                '--type=[Project type to generate.]:project type:(basic cpp-application cpp-library groovy-application groovy-library java-application java-library kotlin-application kotlin-library pom scala-library)' && ret=0
+                {{GENERATED_ZSH_INIT_OPTIONS}} && ret=0
             ;;
         (tasks)
             _arguments \

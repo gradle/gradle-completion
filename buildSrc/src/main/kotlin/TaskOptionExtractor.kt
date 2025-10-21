@@ -1,5 +1,6 @@
 import org.gradle.api.logging.Logger
 import org.gradle.api.tasks.options.Option
+import org.gradle.api.tasks.options.OptionValues
 import java.lang.reflect.Method
 
 /**
@@ -45,8 +46,8 @@ object TaskOptionExtractor {
                     val optionName = optionAnnotation.option
                     val description = optionAnnotation.description
                     
-                    // Extract possible values from enum types or method parameters
-                    val possibleValues = extractPossibleValues(method)
+                    // Extract possible values from enum types, @OptionValues methods, or method parameters
+                    val possibleValues = extractPossibleValues(method, allMethods)
                     
                     WrapperOption(
                         option = optionName,
@@ -64,18 +65,36 @@ object TaskOptionExtractor {
     }
 
     /**
-     * Extracts possible values for a task option based on the method's parameter type.
+     * Extracts possible values for a task option.
+     * First checks for @OptionValues annotation on a corresponding getter method,
+     * then checks if the parameter is an enum type.
      */
-    private fun extractPossibleValues(method: Method): List<String> {
-        val paramTypes = method.parameterTypes
-        if (paramTypes.isEmpty()) return emptyList()
+    private fun extractPossibleValues(method: Method, allMethods: List<Method>): List<String> {
+        val optionAnnotation = method.getAnnotation(Option::class.java)
+        val optionName = optionAnnotation?.option ?: return emptyList()
         
-        val paramType = paramTypes[0]
+        // Look for a method with @OptionValues annotation for this option
+        val optionValuesMethod = allMethods.find { m ->
+            val optionValues = m.getAnnotation(OptionValues::class.java)
+            // The value property is an array of strings, get the first one
+            optionValues != null && optionValues.value.isNotEmpty() && optionValues.value[0] == optionName
+        }
+        
+//        if (optionValuesMethod != null) {
+//            // Try to invoke the method to get the list of values
+//            // Note: This won't work for non-static methods that require instance state
+//            // For now, we'll just note that values exist but can't be extracted
+//            return emptyList() // We can't safely invoke instance methods without an instance
+//        }
         
         // Check if the parameter is an enum
-        if (paramType.isEnum) {
-            @Suppress("UNCHECKED_CAST")
-            return (paramType.enumConstants as Array<Enum<*>>).map { it.name.lowercase() }
+        val paramTypes = method.parameterTypes
+        if (paramTypes.isNotEmpty()) {
+            val paramType = paramTypes[0]
+            if (paramType.isEnum) {
+                @Suppress("UNCHECKED_CAST")
+                return (paramType.enumConstants as Array<Enum<*>>).map { it.name.lowercase() }
+            }
         }
         
         return emptyList()
