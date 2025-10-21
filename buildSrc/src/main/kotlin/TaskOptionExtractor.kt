@@ -49,10 +49,14 @@ object TaskOptionExtractor {
                     // Extract possible values from enum types, @OptionValues methods, or method parameters
                     val possibleValues = extractPossibleValues(method, allMethods)
                     
+                    // Determine if this option requires an argument by checking the parameter type
+                    val requiresArgument = !isBooleanOption(method)
+                    
                     TaskOptionDescriptor(
                         option = optionName,
                         description = description,
-                        possibleValues = possibleValues
+                        possibleValues = possibleValues,
+                        requiresArgument = requiresArgument
                     )
                 } else {
                     null
@@ -94,6 +98,36 @@ object TaskOptionExtractor {
     }
 
     /**
+     * Determines if an option is a boolean flag (doesn't require an argument).
+     * Boolean options are detected by checking if:
+     * 1. The method parameter is a boolean type (for setter-style options), OR
+     * 2. The method return type is Property<Boolean> (for property-style options)
+     */
+    private fun isBooleanOption(method: Method): Boolean {
+        // Check for setter-style: method with boolean parameter
+        val paramTypes = method.parameterTypes
+        if (paramTypes.isNotEmpty()) {
+            val firstParam = paramTypes[0]
+            if (firstParam == Boolean::class.javaPrimitiveType || 
+                firstParam == Boolean::class.javaObjectType) {
+                return true
+            }
+        }
+        
+        // Check for getter-style: method that returns Property<Boolean>
+        val returnType = method.returnType
+        if (returnType.name == "org.gradle.api.provider.Property") {
+            // Check if it's Property<Boolean> by examining the generic type
+            val genericReturnType = method.genericReturnType
+            if (genericReturnType != null && genericReturnType.toString().contains("Boolean")) {
+                return true
+            }
+        }
+        
+        return false
+    }
+
+    /**
      * Generates Zsh completion options for a task.
      * 
      * @param options List of task options to format
@@ -108,17 +142,24 @@ object TaskOptionExtractor {
             val optionName = "--${option.option}"
             val escapedDescription = option.description.replace("[", "\\[").replace("]", "\\]")
             
+            // Determine if we need the '=' suffix based on whether the option requires an argument
+            val equalsSuffix = if (option.requiresArgument) "=" else ""
+            
             // Use custom completion function if provided, otherwise use possible values or simple completion
             when {
                 option.completionFunction != null -> {
-                    "'$optionName=[$escapedDescription]${option.completionFunction}'"
+                    "'$optionName$equalsSuffix[$escapedDescription]${option.completionFunction}'"
                 }
                 option.possibleValues.isNotEmpty() -> {
                     val values = option.possibleValues.joinToString(" ")
-                    "'$optionName=[$escapedDescription]:*:distribution type:($values)'"
+                    "'$optionName$equalsSuffix[$escapedDescription]:*:distribution type:($values)'"
+                }
+                option.requiresArgument -> {
+                    "'$optionName$equalsSuffix[$escapedDescription]'"
                 }
                 else -> {
-                    "'$optionName=[$escapedDescription]'"
+                    // Boolean flag - no equals sign and no argument completion
+                    "'$optionName[$escapedDescription]'"
                 }
             }
         }

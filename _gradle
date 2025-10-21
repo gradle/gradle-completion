@@ -199,10 +199,10 @@ __gradle_subcommand() {
             ;;
         (dependencyInsight)
             _arguments \
-                '--all-variants=[Show all variants of each dependency]' \
+                '--all-variants[Show all variants of each dependency]' \
                 '--configuration=[Looks for the dependency in given configuration.]:dependency configuration:_gradle_dependency_configurations' \
                 '--dependency=[Shows the details of given dependency.]' \
-                '--single-path=[Show at most one path to each dependency]' && ret=0
+                '--single-path[Show at most one path to each dependency]' && ret=0
             ;;
         (help)
             _arguments \
@@ -210,31 +210,31 @@ __gradle_subcommand() {
             ;;
         (init)
             _arguments \
-                '--comments=[Include clarifying comments in files.]' \
+                '--comments[Include clarifying comments in files.]' \
                 '--dsl=[Set the build script DSL to be used in generated scripts.]' \
-                '--incubating=[Allow the generated build to use new features and APIs.]' \
+                '--incubating[Allow the generated build to use new features and APIs.]' \
                 '--insecure-protocol=[How to handle insecure URLs used for Maven Repositories.]' \
                 '--java-version=[Provides java version to use in the project.]' \
-                '--overwrite=[Allow existing files in the build directory to be overwritten?]' \
+                '--overwrite[Allow existing files in the build directory to be overwritten?]' \
                 '--package=[Set the package for source files.]' \
                 '--project-name=[Set the project name.]' \
-                '--split-project=[Split functionality across multiple subprojects?]' \
+                '--split-project[Split functionality across multiple subprojects?]' \
                 '--test-framework=[Set the test framework to be used.]' \
                 '--type=[Set the type of project to generate.]' \
-                '--use-defaults=[Use default values for options not configured explicitly]' && ret=0
+                '--use-defaults[Use default values for options not configured explicitly]' && ret=0
             ;;
         (tasks)
             _arguments \
-                '--all=[Show additional tasks and detail.]' \
+                '--all[Show additional tasks and detail.]' \
                 '--group=[Show tasks for a specific group.]' \
                 '--groups=[Show tasks for specific groups (can be used multiple times to specify multiple groups).]' \
-                '--types=[Show task class types]' && ret=0
+                '--types[Show task class types]' && ret=0
             ;;
         (test)
             _arguments -C \
-                '--debug-jvm=[Enable debugging for the test process. The process is started suspended and listening on port 5005.]' \
-                '--fail-fast=[Stops test execution after the first failed test.]' \
-                '--test-dry-run=[Simulate test execution.]' \
+                '--debug-jvm[Enable debugging for the test process. The process is started suspended and listening on port 5005.]' \
+                '--fail-fast[Stops test execution after the first failed test.]' \
+                '--test-dry-run[Simulate test execution.]' \
                 '--tests=[Sets test class or method name to be included (in addition to the test task filters), '*' is supported.]' \
                 '(-)*:: :->task-or-option' && ret=0
             ;;
@@ -245,7 +245,7 @@ __gradle_subcommand() {
                 '--gradle-distribution-url=[The URL to download the Gradle distribution from.]' \
                 '--gradle-version=[The version of the Gradle distribution required by the wrapper. The following labels are allowed: latest, release-candidate, release-milestone, release-nightly, and nightly.]' \
                 '--network-timeout=[Timeout in ms to use when the wrapper is performing network operations.]' \
-                '--validate-url=[Sets task to validate the configured distribution url.]' && ret=0
+                '--validate-url[Sets task to validate the configured distribution url.]' && ret=0
             ;;
         (*)
             _arguments -C \
