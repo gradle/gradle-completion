@@ -289,9 +289,9 @@ abstract class GenerateCompletionScriptsTask : DefaultTask() {
         return allPropertyNames
             .filter { it.oneDashOption != null }
             .joinToString("\n") {
-            val paddingOption = "-${it.oneDashOption!!.padEnd(40)}"
-            "$paddingOption - ${it.description?.lineSequence()?.first() ?: ""}"
-        }
+                val paddingOption = "-${it.oneDashOption!!.padEnd(40)}"
+                "$paddingOption - ${it.description?.lineSequence()?.first() ?: ""}"
+            }
     }
 
     /**
@@ -343,16 +343,19 @@ abstract class GenerateCompletionScriptsTask : DefaultTask() {
             "dependencies",
             logger
         )
-        
+
         // Add custom completion function for --configuration option
-        return options.map { option ->
+        return addCustomCompletionFunctionForConfiguration(options)
+    }
+
+    private fun addCustomCompletionFunctionForConfiguration(options: List<TaskOptionDescriptor>) =
+        options.map { option ->
             if (option.option == "configuration") {
                 option.copy(completionFunction = ":dependency configuration:_gradle_dependency_configurations")
             } else {
                 option
             }
         }
-    }
 
     /**
      * Extracts dependencyInsight task options from DependencyInsightReportTask via reflection.
@@ -363,15 +366,9 @@ abstract class GenerateCompletionScriptsTask : DefaultTask() {
             "dependencyInsight",
             logger
         )
-        
+
         // Add custom completion function for --configuration option
-        return options.map { option ->
-            if (option.option == "configuration") {
-                option.copy(completionFunction = ":dependency configuration:_gradle_dependency_configurations")
-            } else {
-                option
-            }
-        }
+        return addCustomCompletionFunctionForConfiguration(options)
     }
 
     /**
