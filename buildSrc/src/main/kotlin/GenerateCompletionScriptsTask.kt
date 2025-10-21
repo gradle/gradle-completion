@@ -6,6 +6,7 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.options.Option
 import org.gradle.initialization.BuildLayoutParametersBuildOptions
 import org.gradle.initialization.ParallelismBuildOptions
 import org.gradle.initialization.StartParameterBuildOptions
@@ -22,6 +23,7 @@ import org.gradle.launcher.cli.converter.WelcomeMessageBuildOptions
 import org.gradle.launcher.daemon.configuration.DaemonBuildOptions
 import org.gradle.launcher.daemon.toolchain.ToolchainBuildOptions
 import java.lang.reflect.Field
+import java.lang.reflect.Method
 import java.util.Locale
 
 /**
@@ -71,6 +73,10 @@ abstract class GenerateCompletionScriptsTask : DefaultTask() {
 
         val allPropertyNames = extractPropertyOptions(allOptions)
 
+        // STEP 1.5: Extract wrapper task options via reflection
+        val wrapperOptions = extractWrapperOptions()
+        logger.lifecycle("Successfully extracted ${wrapperOptions.size} wrapper task options.")
+
         // STEP 2: Format the extracted options into Bash and Zsh specific strings
         val bashLongOpts = generateBashLongOpts(allCliOptions)
         val bashShortOpts = getBashShortOpts(allCliOptions)
@@ -78,6 +84,7 @@ abstract class GenerateCompletionScriptsTask : DefaultTask() {
         val zshMainOpts = generateZshMainOpts(allCliOptions)
         val zshSubcommandOpts = generateZshSubcommandOpts(allCliOptions)
         val properties = generatePropertiesOpts(allPropertyNames)
+        val zshWrapperOpts = generateZshWrapperOpts(wrapperOptions)
 
         // STEP 3: Read templates and substitute placeholders
         val bashCompletionScript = bashTemplate.asFile.get().readText()
@@ -88,6 +95,7 @@ abstract class GenerateCompletionScriptsTask : DefaultTask() {
         val zshCompletionScript = zshTemplate.asFile.get().readText()
             .replace("{{GENERATED_ZSH_MAIN_OPTIONS}}", zshMainOpts)
             .replace("{{GENERATED_ZSH_SUBCOMMAND_OPTIONS}}", zshSubcommandOpts)
+            .replace("{{GENERATED_ZSH_WRAPPER_OPTIONS}}", zshWrapperOpts)
 
         // STEP 4: Write generated files
         bashOutputFile.asFile.get().writeText(bashCompletionScript)
@@ -249,6 +257,74 @@ abstract class GenerateCompletionScriptsTask : DefaultTask() {
             .joinToString("\n") {
             val paddingOption = "-${it.oneDashOption!!.padEnd(40)}"
             "$paddingOption - ${it.description?.lineSequence()?.first() ?: ""}"
+        }
+    }
+
+    /**
+     * Extracts wrapper task options from org.gradle.api.tasks.wrapper.Wrapper class via reflection.
+     * Looks for methods annotated with @Option and extracts option names, descriptions, and possible values.
+     */
+    private fun extractWrapperOptions(): List<WrapperOption> {
+        return try {
+            val wrapperClass = Class.forName("org.gradle.api.tasks.wrapper.Wrapper") ?: return listOf()
+            val methods = wrapperClass.declaredMethods
+
+            methods.mapNotNull { method ->
+                val optionAnnotation = method.getAnnotation(Option::class.java)
+                if (optionAnnotation != null) {
+                    val optionName = optionAnnotation.option
+                    val description = optionAnnotation.description
+
+                    // Extract possible values from enum types or method parameters
+                    val possibleValues = extractPossibleValuesForWrapperOption(method, wrapperClass)
+
+                    WrapperOption(
+                        option = optionName,
+                        description = description,
+                        possibleValues = possibleValues
+                    )
+                } else {
+                    null
+                }
+            }.sortedBy { it.option }
+        } catch (e: ClassNotFoundException) {
+            logger.warn("Could not find Wrapper class, using empty wrapper options list")
+            emptyList()
+        }
+    }
+
+    /**
+     * Extracts possible values for a wrapper option based on the method's parameter type.
+     */
+    private fun extractPossibleValuesForWrapperOption(method: Method, wrapperClass: Class<*>): List<String> {
+        val paramTypes = method.parameterTypes
+        if (paramTypes.isEmpty()) return emptyList()
+
+        val paramType = paramTypes[0]
+
+        // Check if the parameter is an enum
+        if (paramType.isEnum) {
+            @Suppress("UNCHECKED_CAST")
+            return (paramType.enumConstants as Array<Enum<*>>).map { it.name.lowercase() }
+        }
+
+        return emptyList()
+    }
+
+    /**
+     * Generates Zsh completion options for the wrapper task.
+     */
+    private fun generateZshWrapperOpts(wrapperOptions: List<WrapperOption>): String {
+        return wrapperOptions.joinToString(" \\\n                ") { option ->
+            val optionName = "--${option.option}"
+            val escapedDescription = option.description.replace("[", "\\[").replace("]", "\\]")
+
+            if (option.possibleValues.isNotEmpty()) {
+                val values = option.possibleValues.joinToString(" ")
+                "'$optionName=[$escapedDescription]:*:distribution type:($values)'"
+            } else {
+                "'$optionName=[$escapedDescription]'"
+            }
         }
     }
 
