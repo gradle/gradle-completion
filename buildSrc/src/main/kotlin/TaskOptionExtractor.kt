@@ -13,29 +13,24 @@ object TaskOptionExtractor {
      * @param classNames List of fully qualified class names to extract options from (e.g., task class and its parents)
      * @return List of extracted options
      */
-    fun extractTaskOptions(vararg classNames: String): List<TaskOptionDescriptor> {
-        if (classNames.isEmpty()) {
-            throw RuntimeException("no expected class names provided")
-        }
-
-        val classes = classNames.map { Class.forName(it) }
-
-        val allMethods = classes.flatMap { it.declaredMethods.toList() }
-
-        return allMethods.mapNotNull { method ->
-            val optionAnnotation = method.getAnnotation(Option::class.java)
-            if (optionAnnotation != null) {
-                TaskOptionDescriptor(
-                    optionName = optionAnnotation.option,
-                    description = optionAnnotation.description,
-                    possibleValues = extractPossibleValuesFromEnumParameters(method),
-                    requiresArgument = !isBooleanOption(method)
-                )
-            } else {
-                null
+    fun extractTaskOptions(vararg classNames: String) =
+        classNames.also { require(it.isNotEmpty()) { "no expected class names provided" } }
+            .map { Class.forName(it) }
+            .flatMap { it.declaredMethods.toList() }
+            .mapNotNull { method ->
+                method.getAnnotation(Option::class.java)
+                    ?.let { annotation ->
+                        TaskOptionDescriptor(
+                            optionName = annotation.option,
+                            description = annotation.description,
+                            possibleValues = extractPossibleValuesFromEnumParameters(method),
+                            requiresArgument = !isBooleanOption(method),
+                            completionFunction = null
+                        )
+                    }
             }
-        }.distinctBy { it.optionName }.sortedBy { it.optionName }
-    }
+            .distinctBy { it.optionName }
+            .sortedBy { it.optionName }
 
     private fun extractPossibleValuesFromEnumParameters(method: Method): List<String> {
         // Check if the parameter is an enum

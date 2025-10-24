@@ -18,6 +18,7 @@ import org.gradle.internal.buildoption.EnumBuildOption
 import org.gradle.internal.buildoption.IntegerBuildOption
 import org.gradle.internal.buildoption.ListBuildOption
 import org.gradle.internal.buildoption.StringBuildOption
+import org.gradle.internal.extensions.stdlib.uncheckedCast
 import org.gradle.internal.logging.LoggingConfigurationBuildOptions
 import org.gradle.launcher.cli.converter.WelcomeMessageBuildOptions
 import org.gradle.launcher.daemon.configuration.DaemonBuildOptions
@@ -142,10 +143,7 @@ abstract class GenerateCompletionScriptsTask : DefaultTask() {
 
     private fun extractCliOptions(allOptions: List<BuildOption<*>>): MutableList<CliOption> {
         return allOptions.map { option ->
-            val field = findDeclaredField(option, "commandLineOptionConfigurations")
-            val configurations = field?.get(option) as List<*>
-            val configs = configurations.map { it as CommandLineOptionConfiguration }
-            option to configs
+            option to getCliConfigsFrom(option)
         }
             .filter { it.second.isNotEmpty() }
             .flatMap { (option, configurations) ->
@@ -207,9 +205,7 @@ abstract class GenerateCompletionScriptsTask : DefaultTask() {
         return allOptions
             .filter { it.property != null && !it.property?.contains(".internal.")!! }
             .mapNotNull { option ->
-                val field = findDeclaredField(option, "commandLineOptionConfigurations")
-                val configurations = field?.get(option) as List<*>
-                val cliConfigs = configurations.map { it as CommandLineOptionConfiguration }
+                val cliConfigs = getCliConfigsFrom(option)
 
                 option.property?.let { propName ->
                     val shortOption = "D$propName="
@@ -228,6 +224,11 @@ abstract class GenerateCompletionScriptsTask : DefaultTask() {
                 }
             }
     }
+
+    private fun getCliConfigsFrom(option: BuildOption<*>) =
+        (getDeclaredField(option, "commandLineOptionConfigurations")
+            .get(option) as List<*>)
+            .map { it as CommandLineOptionConfiguration }
 
     private fun createHelpOption() =
         CliOption(
@@ -309,10 +310,9 @@ abstract class GenerateCompletionScriptsTask : DefaultTask() {
 
     private fun addCustomCompletionFunctionForConfiguration(options: List<TaskOptionDescriptor>) =
         options.map { option ->
-            if (option.optionName == "configuration") {
-                option.copy(completionFunction = ":dependency configuration:_gradle_dependency_configurations")
-            } else {
-                option
+            when (option.optionName) {
+                "configuration" -> option.copy(completionFunction = ":dependency configuration:_gradle_dependency_configurations")
+                else -> option
             }
         }
 
@@ -374,7 +374,7 @@ abstract class GenerateCompletionScriptsTask : DefaultTask() {
             "init-script" to "*.gradle(|.kts)"
         )
 
-        fun findDeclaredField(obj: Any, fieldName: String): Field? {
+        fun getDeclaredField(obj: Any, fieldName: String): Field {
             var currentClass: Class<*>? = obj.javaClass
 
             while (currentClass != null) {
@@ -386,17 +386,11 @@ abstract class GenerateCompletionScriptsTask : DefaultTask() {
                     currentClass = currentClass.superclass
                 }
             }
-            return null
+            throw RuntimeException("Could not find field $fieldName on object $obj")
         }
 
-        fun getPossibleValues(option: BuildOption<*>, longOptionName: String?): List<String> {
-            longOptionName?.let { optName ->
-                HARDCODED_POSSIBLE_VALUES[optName]?.let {
-                    return it
-                }
-            }
-            return getPossibleValuesList(option)
-        }
+        fun getPossibleValues(option: BuildOption<*>, longOptionName: String?) =
+            longOptionName?.let { HARDCODED_POSSIBLE_VALUES[it] } ?: getPossibleValuesList(option)
 
         fun isDirectoryOption(longOptionName: String?) =
             longOptionName?.let { it in DIRECTORY_OPTIONS } ?: false
@@ -405,20 +399,18 @@ abstract class GenerateCompletionScriptsTask : DefaultTask() {
             longOptionName?.let { FILE_OPTIONS[it] }
 
         fun getPossibleValuesList(option: BuildOption<*>) =
-            if (option is EnumBuildOption<*, *>) {
-                val valuesField = findDeclaredField(option, "possibleValues")
-                @Suppress("UNCHECKED_CAST")
-                (valuesField?.get(option) as? List<Any>)?.map { it.toString().lowercase() } ?: listOf()
-            } else {
-                listOf()
+            when (option) {
+                is EnumBuildOption<*, *> -> getDeclaredField(option, "possibleValues")
+                    .get(option)
+                    ?.uncheckedCast<List<Any>>()
+                    ?.map { it.toString().lowercase() }
+                    ?: emptyList()
+
+                else -> emptyList()
             }
 
-        fun getPossibleValuesForProperty(option: BuildOption<*>, propertyName: String): List<String> {
-            HARDCODED_POSSIBLE_VALUES[propertyName]?.let {
-                return it
-            }
-            return getPossibleValuesList(option)
-        }
+        fun getPossibleValuesForProperty(option: BuildOption<*>, propertyName: String) =
+            HARDCODED_POSSIBLE_VALUES[propertyName] ?: getPossibleValuesList(option)
 
         fun isDirectoryProperty(propertyName: String) =
             propertyName in DIRECTORY_OPTIONS

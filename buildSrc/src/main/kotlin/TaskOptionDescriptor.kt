@@ -10,9 +10,9 @@
 data class TaskOptionDescriptor(
     val optionName: String,
     val description: String,
-    val possibleValues: List<String> = emptyList(),
-    val completionFunction: String? = null,
-    val requiresArgument: Boolean = true
+    val possibleValues: List<String>,
+    val completionFunction: String?,
+    val requiresArgument: Boolean
 ) {
     fun getTaskOptionCompletionLine(): CharSequence {
         val optionName = "--${optionName}"
@@ -24,15 +24,8 @@ data class TaskOptionDescriptor(
     }
 
     private fun getPostfix() = when {
-        completionFunction != null -> {
-            completionFunction
-        }
-        possibleValues.isNotEmpty() -> {
-            val values = possibleValues.joinToString(" ")
-            ":*:distribution type:($values)"
-        }
-        else -> {
-            ""
-        }
+        completionFunction != null -> completionFunction
+        possibleValues.isNotEmpty() -> ":*:distribution type:(${possibleValues.joinToString(" ")})"
+        else -> ""
     }
 }
