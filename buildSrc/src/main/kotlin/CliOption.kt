@@ -19,12 +19,8 @@ data class CliOption(
      * Adds another CliOption to the list of mutually exclusive options.
      */
     fun addMutexOption(other: CliOption) {
-        if (other.twoDashOption != null) {
-            mutuallyExclusiveWith += "--${other.twoDashOption}"
-        }
-        if (other.oneDashOption != null) {
-            mutuallyExclusiveWith += "-${other.oneDashOption}"
-        }
+        other.twoDashOption?.let { mutuallyExclusiveWith += "--${it}" }
+        other.oneDashOption?.let { mutuallyExclusiveWith += "-${it}" }
     }
 
     /**
@@ -32,15 +28,10 @@ data class CliOption(
      */
     fun addMutexOption(other: CommandLineOptionConfiguration) {
         mutuallyExclusiveWith += "--${other.longOption}"
-        if (other.shortOption != null) {
-            mutuallyExclusiveWith += "-${other.shortOption}"
-        }
+        other.shortOption?.let { mutuallyExclusiveWith += "-${it}" }
     }
 
-    /**
-     * Returns the prefix for options that can occur multiple times.
-     */
-    fun getMultiplePrefix(): String = if (multipleOccurrencePossible) "\\*" else ""
+    fun getMultipleOccurrencePrefix() = if (multipleOccurrencePossible) "\\*" else ""
 
     /**
      * Formats the option string for Zsh completion.
@@ -48,12 +39,8 @@ data class CliOption(
      */
     fun formatOptionStr(): String {
         val optBuilder = mutableListOf<String>()
-        if (oneDashOption != null) {
-            optBuilder.add("-$oneDashOption")
-        }
-        if (twoDashOption != null) {
-            optBuilder.add("--$twoDashOption")
-        }
+        oneDashOption?.let { optBuilder.add("-$it") }
+        twoDashOption?.let { optBuilder.add("--$it") }
         return if (optBuilder.size > 1) {
             // Multiple options: use braces {-a,--long}
             optBuilder.joinToString(",", prefix = "{", postfix = "}")
@@ -66,7 +53,7 @@ data class CliOption(
     /**
      * Returns a human-readable name for this option (used in argument labels).
      */
-    fun getOptionName(): String? =
+    fun getOptionName() =
         (twoDashOption ?: oneDashOption?.removePrefix("D")?.removeSuffix("="))
             ?.replace("-", " ")
 
@@ -77,35 +64,31 @@ data class CliOption(
     fun generateArgumentPart(includeArgumentExpected: Boolean): String {
         if (!argumentExpected) return ""
 
-        // Handle file options with patterns
+        val argumentExpectedQualifier = if (includeArgumentExpected) ":->argument-expected" else ""
+
         if (filePattern != null) {
             val label = getOptionName() ?: "file"
-            val suffix = if (includeArgumentExpected) ":->argument-expected" else ""
-            return ":$label:_files -g \\${filePattern}$suffix"
+            return ":$label:_files -g \\${filePattern}$argumentExpectedQualifier"
         }
 
-        // Handle directory options
         if (isDirectory) {
             val label = getOptionName() ?: "directory"
-            val suffix = if (includeArgumentExpected) ":->argument-expected" else ""
-            return ":$label:_directories$suffix"
+            return ":$label:_directories$argumentExpectedQualifier"
         }
 
         if (possibleValues.isEmpty()) {
-            return if (includeArgumentExpected) ":->argument-expected" else ""
+            return argumentExpectedQualifier
         }
 
-        // Create a label from the option name
         val label = getOptionName() ?: "value"
-        val suffix = if (includeArgumentExpected) ":->argument-expected" else ""
-        return ":$label:(${possibleValues.joinToString(" ")})$suffix"
+        return ":$label:(${possibleValues.joinToString(" ")})$argumentExpectedQualifier"
     }
 
     /**
      * Generates a complete option line for Zsh completion.
      */
     fun getOptionLine(includeArgumentExpected: Boolean): String {
-        val multiplePrefix = getMultiplePrefix()
+        val multiplePrefix = getMultipleOccurrencePrefix()
         val mutex = getMutexOptions()
         val incubatingText = if (incubating) " (incubating)" else ""
         val description = getZshCompatibleDescription()
@@ -115,35 +98,30 @@ data class CliOption(
         val commonPostfix = "[${description}${incubatingText}]${argumentPart}"
         val commonPrefix = "${multiplePrefix}${mutex}"
 
-        // Determine what goes outside quotes (multiplePrefix, mutex, and/or braces)
         return when {
-            // Has braces but no mutex: braces go outside quotes (along with multiplePrefix)
-            optStr.contains("{") -> {
+            optStr.contains("{") ->
                 "${commonPrefix}${optStr}'$commonPostfix'"
-            }
-            // Everything else: all inside quotes
-            else -> {
+            else ->
                 "${commonPrefix}'${optStr}$commonPostfix'"
-            }
         }
     }
 
     /**
      * Returns the description with brackets replaced (for Zsh compatibility).
      */
-    fun getZshCompatibleDescription(): String =
+    fun getZshCompatibleDescription() =
         description?.lineSequence()?.first()?.replace("[", "(")?.replace("]", ")") ?: ""
 
     /**
      * Returns the formatted string of mutually exclusive options.
      */
-    fun getMutexOptions(): String = if (mutuallyExclusiveWith.isNotEmpty()) {
+    fun getMutexOptions() = if (mutuallyExclusiveWith.isNotEmpty()) {
         "(${mutuallyExclusiveWith.joinToString(",")})"
     } else {
         ""
     }
 
-    fun getSuggestionLine(optionString : String): String {
+    fun getSuggestionLine(optionString: String): String {
         val incubatingText = if (incubating) " [incubating]" else ""
         return "${optionString.padEnd(30)} - ${(description ?: "").lineSequence().firstOrNull() ?: ""} $incubatingText"
     }

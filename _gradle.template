@@ -195,43 +195,31 @@ __gradle_subcommand() {
     case "$words[1]" in
         (dependencies)
             _arguments \
-                '--configuration=[The configuration to generate the report for.]:dependency configuration:_gradle_dependency_configurations' && ret=0
+                {{GENERATED_ZSH_DEPENDENCIES_OPTIONS}} && ret=0
             ;;
         (dependencyInsight)
             _arguments \
-                '--dependency=[Shows the details of given dependency.]' \
-                '--configuration=[Looks for the dependency in given configuration.]:dependency configuration:_gradle_dependency_configurations' && ret=0
+                {{GENERATED_ZSH_DEPENDENCY_INSIGHT_OPTIONS}} && ret=0
             ;;
         (help)
             _arguments \
-                '--task[The task to show help for.]' && ret=0
+                {{GENERATED_ZSH_HELP_OPTIONS}} && ret=0
             ;;
         (init)
             _arguments \
-                '--dsl=[DSL to be used in generated scripts.]:dsl:(groovy kotlin)' \
-                '--package=[Package for the generated source.]' \
-                '--project-name=[Name of the generated project.]' \
-                '--test-framework=[Test framework to be used.]:test framework:(junit kotlintest scalatest spock testng)' \
-                '--type=[Project type to generate.]:project type:(basic cpp-application cpp-library groovy-application groovy-library java-application java-library kotlin-application kotlin-library pom scala-library)' && ret=0
+                {{GENERATED_ZSH_INIT_OPTIONS}} && ret=0
             ;;
         (tasks)
             _arguments \
-                '--all[List all tasks, including subproject tasks.]' \
-                '--group=[Show tasks only from given task group.]' && ret=0
+                {{GENERATED_ZSH_TASKS_OPTIONS}} && ret=0
             ;;
         (test)
             _arguments -C \
-                '--debug-jvm[Enable debugging for the test process. The process is started suspended and listening on port 5005. Requires the "java" plugin.]' \
-                '--fail-fast[Stops test execution after the first failed test. Requires the "java" plugin.]' \
-                '--tests=[Sets test class or method name to be included, * is supported. Requires the "java" plugin.]' \
-                '(-)*:: :->task-or-option' && ret=0
+                {{GENERATED_ZSH_TEST_OPTIONS}} && ret=0
             ;;
         (wrapper)
             _arguments \
-                '--distribution-type=[Binary-only or all with docs and sources]:*:distribution type:(bin all)' \
-                '--gradle-version=[Set Gradle version for wrapper]' \
-                '--gradle-distribution-sha256-sum=[SHA-256 checksum]' \
-                '--gradle-distribution-url=[Set Gradle distribution URL]' && ret=0
+                {{GENERATED_ZSH_WRAPPER_OPTIONS}} && ret=0
             ;;
         (*)
             _arguments -C \

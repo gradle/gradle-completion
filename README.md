@@ -3,9 +3,9 @@ Bash and Zsh completion support for [Gradle](https://gradle.org).
 
 This provides _fast_ tab completion for:
 
- * Gradle tasks for the current project and sub-projects
- * Gradle CLI switches (e.g. `--parallel`)
- * Common Gradle properties (e.g. `-Dorg.gradle.debug`)
+* Gradle tasks for the current project and sub-projects
+* Gradle CLI switches (e.g. `--parallel`)
+* Common Gradle properties (e.g. `-Dorg.gradle.debug`)
 
 It also handles custom default build files, so `rootProject.buildFileName = 'build.gradle.kts'` is supported.
 
@@ -207,14 +207,14 @@ This project uses template-based generation for completion scripts. The actual `
    ```
 
 2. **GitHub Actions automatically:**
-   - Checks out the code at the tag
-   - Sets up Java 17 and Gradle
-   - Runs `./gradlew generateCompletionScripts` to generate completion files from templates
-   - Creates a release tarball (`gradle-completion-1.x.x.tar.gz`) containing:
-     - Generated completion scripts (`gradle-completion.bash`, `_gradle`)
-     - Template files (`gradle-completion.bash.template`, `_gradle.template`)
-     - Build configuration and other necessary files
-   - Creates a GitHub release and uploads the tarball as a release asset
+    - Checks out the code at the tag
+    - Sets up Java 17 and Gradle
+    - Runs `./gradlew generateCompletionScripts` to generate completion files from templates
+    - Creates a release tarball (`gradle-completion-1.x.x.tar.gz`) containing:
+        - Generated completion scripts (`gradle-completion.bash`, `_gradle`)
+        - Template files (`gradle-completion.bash.template`, `_gradle.template`)
+        - Build configuration and other necessary files
+    - Creates a GitHub release and uploads the tarball as a release asset
 
 3. **Update Homebrew formula:**
    ```bash
@@ -240,9 +240,9 @@ Bash completion is inspired by [Nolan Lawson's Gradle tab completion for bash](h
 Zsh completion is an improved version of [zsh](https://github.com/zsh-users/zsh)'s built-in Gradle completion.
 
 Current improvements over built-in support:
- - Subproject tasks are completed
- - Gradle CLI options are current as of Gradle 9.2.0
- - Common Gradle properties are completed
- - Handles default build file as specified in settings.gradle
- - ~20x faster completion speed for medium to large projects
- - Completion cache updates in the background after first invocation
+- Subproject tasks are completed
+- Gradle CLI options are current as of Gradle 9.2.0
+- Common Gradle properties are completed
+- Handles default build file as specified in settings.gradle
+- ~20x faster completion speed for medium to large projects
+- Completion cache updates in the background after first invocation
