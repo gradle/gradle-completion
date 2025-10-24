@@ -31,10 +31,7 @@ data class CliOption(
         other.shortOption?.let { mutuallyExclusiveWith += "-${it}" }
     }
 
-    /**
-     * Returns the prefix for options that can occur multiple times.
-     */
-    fun getMultiplePrefix() = if (multipleOccurrencePossible) "\\*" else ""
+    fun getMultipleOccurrencePrefix() = if (multipleOccurrencePossible) "\\*" else ""
 
     /**
      * Formats the option string for Zsh completion.
@@ -67,35 +64,31 @@ data class CliOption(
     fun generateArgumentPart(includeArgumentExpected: Boolean): String {
         if (!argumentExpected) return ""
 
-        // Handle file options with patterns
+        val argumentExpectedQualifier = if (includeArgumentExpected) ":->argument-expected" else ""
+
         if (filePattern != null) {
             val label = getOptionName() ?: "file"
-            val suffix = if (includeArgumentExpected) ":->argument-expected" else ""
-            return ":$label:_files -g \\${filePattern}$suffix"
+            return ":$label:_files -g \\${filePattern}$argumentExpectedQualifier"
         }
 
-        // Handle directory options
         if (isDirectory) {
             val label = getOptionName() ?: "directory"
-            val suffix = if (includeArgumentExpected) ":->argument-expected" else ""
-            return ":$label:_directories$suffix"
+            return ":$label:_directories$argumentExpectedQualifier"
         }
 
         if (possibleValues.isEmpty()) {
-            return if (includeArgumentExpected) ":->argument-expected" else ""
+            return argumentExpectedQualifier
         }
 
-        // Create a label from the option name
         val label = getOptionName() ?: "value"
-        val suffix = if (includeArgumentExpected) ":->argument-expected" else ""
-        return ":$label:(${possibleValues.joinToString(" ")})$suffix"
+        return ":$label:(${possibleValues.joinToString(" ")})$argumentExpectedQualifier"
     }
 
     /**
      * Generates a complete option line for Zsh completion.
      */
     fun getOptionLine(includeArgumentExpected: Boolean): String {
-        val multiplePrefix = getMultiplePrefix()
+        val multiplePrefix = getMultipleOccurrencePrefix()
         val mutex = getMutexOptions()
         val incubatingText = if (incubating) " (incubating)" else ""
         val description = getZshCompatibleDescription()
@@ -105,13 +98,11 @@ data class CliOption(
         val commonPostfix = "[${description}${incubatingText}]${argumentPart}"
         val commonPrefix = "${multiplePrefix}${mutex}"
 
-        // Determine what goes outside quotes (multiplePrefix, mutex, and/or braces)
-        return if (optStr.contains("{")) { // Has braces but no mutex: braces go outside quotes (along with multiplePrefix)
-            "${commonPrefix}${optStr}'$commonPostfix'"
-        }
-        // Everything else: all inside quotes
-        else {
-            "${commonPrefix}'${optStr}$commonPostfix'"
+        return when {
+            optStr.contains("{") ->
+                "${commonPrefix}${optStr}'$commonPostfix'"
+            else ->
+                "${commonPrefix}'${optStr}$commonPostfix'"
         }
     }
 

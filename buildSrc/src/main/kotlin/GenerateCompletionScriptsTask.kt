@@ -1,3 +1,4 @@
+import TaskOptionExtractor.generateZshTaskOpts
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.CacheableTask
@@ -58,63 +59,51 @@ abstract class GenerateCompletionScriptsTask : DefaultTask() {
     fun generate() {
         logger.lifecycle("Starting generation of completion scripts...")
 
-        // STEP 1: Get the command line options from Gradle's internal API
         val allOptions = collectAllBuildOptions()
         logger.lifecycle("Successfully extracted start parameter from Gradle instance.")
 
         val allCliOptions = extractCliOptions(allOptions)
         logger.lifecycle("Successfully extracted ${allCliOptions.size} CLI options from Gradle API.")
 
-        // Add help and version options that aren't exposed via the API
-        allCliOptions += createHelpOption()
-        allCliOptions += createVersionOption()
+        allCliOptions += listOf(createHelpOption(), createVersionOption())
 
         val allPropertyNames = extractPropertyOptions(allOptions)
 
-        // STEP 1.5: Extract wrapper task options via reflection
         val wrapperOptions = extractWrapperOptions()
         logger.lifecycle("Successfully extracted ${wrapperOptions.size} wrapper task options.")
 
-        // STEP 1.6: Extract test task options via reflection
         val testOptions = extractTestOptions()
         logger.lifecycle("Successfully extracted ${testOptions.size} test task options.")
 
-        // STEP 1.7: Extract init task options via reflection
         val initOptions = extractInitOptions()
         logger.lifecycle("Successfully extracted ${initOptions.size} init task options.")
 
-        // STEP 1.8: Extract dependencies task options via reflection
         val dependenciesOptions = extractDependenciesOptions()
         logger.lifecycle("Successfully extracted ${dependenciesOptions.size} dependencies task options.")
 
-        // STEP 1.9: Extract dependencyInsight task options via reflection
         val dependencyInsightOptions = extractDependencyInsightOptions()
         logger.lifecycle("Successfully extracted ${dependencyInsightOptions.size} dependencyInsight task options.")
 
-        // STEP 1.10: Extract tasks task options via reflection
         val tasksOptions = extractTasksOptions()
         logger.lifecycle("Successfully extracted ${tasksOptions.size} tasks task options.")
 
-        // STEP 1.11: Extract help task options via reflection
         val helpOptions = extractHelpOptions()
         logger.lifecycle("Successfully extracted ${helpOptions.size} help task options.")
 
-        // STEP 2: Format the extracted options into Bash and Zsh specific strings
         val bashLongOpts = generateBashLongOpts(allCliOptions)
         val bashShortOpts = getBashShortOpts(allCliOptions)
         allCliOptions += allPropertyNames
         val zshMainOpts = generateZshMainOpts(allCliOptions)
         val zshSubcommandOpts = generateZshSubcommandOpts(allCliOptions)
         val properties = generatePropertiesOpts(allPropertyNames)
-        val zshWrapperOpts = generateZshWrapperOpts(wrapperOptions)
-        val zshTestOpts = generateZshTestOpts(testOptions)
-        val zshInitOpts = generateZshInitOpts(initOptions)
-        val zshDependenciesOpts = generateZshDependenciesOpts(dependenciesOptions)
-        val zshDependencyInsightOpts = generateZshDependencyInsightOpts(dependencyInsightOptions)
-        val zshTasksOpts = generateZshTasksOpts(tasksOptions)
-        val zshHelpOpts = generateZshHelpOpts(helpOptions)
+        val zshWrapperOpts = generateZshTaskOpts(wrapperOptions)
+        val zshTestOpts = generateZshTaskOpts(testOptions) + " \\\n                '(-)*:: :->task-or-option'"
+        val zshInitOpts = generateZshTaskOpts(initOptions)
+        val zshDependenciesOpts = generateZshTaskOpts(dependenciesOptions)
+        val zshDependencyInsightOpts = generateZshTaskOpts(dependencyInsightOptions)
+        val zshTasksOpts = generateZshTaskOpts(tasksOptions)
+        val zshHelpOpts = generateZshTaskOpts(helpOptions)
 
-        // STEP 3: Read templates and substitute placeholders
         val bashCompletionScript = bashTemplate.asFile.get().readText()
             .replace("{{GENERATED_BASH_LONG_OPTIONS}}", bashLongOpts.trimEnd())
             .replace("{{GENERATED_BASH_SHORT_OPTIONS}}", bashShortOpts.trimEnd())
@@ -131,7 +120,6 @@ abstract class GenerateCompletionScriptsTask : DefaultTask() {
             .replace("{{GENERATED_ZSH_TASKS_OPTIONS}}", zshTasksOpts)
             .replace("{{GENERATED_ZSH_HELP_OPTIONS}}", zshHelpOpts)
 
-        // STEP 4: Write generated files
         bashOutputFile.asFile.get().writeText(bashCompletionScript)
         zshOutputFile.asFile.get().writeText(zshCompletionScript)
 
@@ -141,8 +129,8 @@ abstract class GenerateCompletionScriptsTask : DefaultTask() {
         logger.lifecycle("\nGeneration complete!")
     }
 
-    private fun collectAllBuildOptions(): List<BuildOption<*>> {
-        return listOf(
+    private fun collectAllBuildOptions() =
+        listOf(
             BuildLayoutParametersBuildOptions(),
             StartParameterBuildOptions(),
             LoggingConfigurationBuildOptions(),
@@ -151,7 +139,6 @@ abstract class GenerateCompletionScriptsTask : DefaultTask() {
             ParallelismBuildOptions(),
             ToolchainBuildOptions.forToolChainConfiguration()
         ).flatMap { it.allOptions }
-    }
 
     private fun extractCliOptions(allOptions: List<BuildOption<*>>): MutableList<CliOption> {
         return allOptions.map { option ->
@@ -174,11 +161,7 @@ abstract class GenerateCompletionScriptsTask : DefaultTask() {
                             description = optionDetails.description.replace("\"", "'"),
                             incubating = optionDetails.isIncubating,
                             multipleOccurrencePossible = option is ListBuildOption<*>,
-                            argumentExpected = option is StringBuildOption ||
-                                    option is IntegerBuildOption ||
-                                    option is EnumBuildOption<*, *> ||
-                                    isDirectory ||
-                                    filePattern != null,
+                            argumentExpected = isArgumentExpected(option, isDirectory, filePattern),
                             possibleValues = getPossibleValues(option, optionDetails.longOption),
                             isDirectory = isDirectory,
                             filePattern = filePattern
@@ -210,6 +193,16 @@ abstract class GenerateCompletionScriptsTask : DefaultTask() {
             }.toMutableList()
     }
 
+    private fun isArgumentExpected(
+        option: BuildOption<*>,
+        isDirectory: Boolean,
+        filePattern: String?
+    ): Boolean = option is StringBuildOption ||
+            option is IntegerBuildOption ||
+            option is EnumBuildOption<*, *> ||
+            isDirectory ||
+            filePattern != null
+
     private fun extractPropertyOptions(allOptions: List<BuildOption<*>>): List<CliOption> {
         return allOptions
             .filter { it.property != null && !it.property?.contains(".internal.")!! }
@@ -236,41 +229,40 @@ abstract class GenerateCompletionScriptsTask : DefaultTask() {
             }
     }
 
-    private fun createHelpOption(): CliOption {
-        return CliOption(
+    private fun createHelpOption() =
+        CliOption(
             twoDashOption = "help",
             oneDashOption = "h",
             description = "Shows a help message."
         )
-    }
 
-    private fun createVersionOption(): CliOption {
-        return CliOption(
+    private fun createVersionOption() =
+        CliOption(
             twoDashOption = "version",
             oneDashOption = "v",
             description = "Shows the version info."
         )
-    }
 
-    private fun generateBashLongOpts(options: List<CliOption>): String = options.filter { it.twoDashOption != null }
-        .sortedBy { it.twoDashOption }
-        .joinToString("\n") {
-            it.getSuggestionLine("--${it.twoDashOption}")
-        }
+    private fun generateBashLongOpts(options: List<CliOption>) =
+        options.filter { it.twoDashOption != null }
+            .sortedBy { it.twoDashOption }
+            .joinToString("\n") {
+                it.getSuggestionLine("--${it.twoDashOption}")
+            }
 
 
-    private fun getBashShortOpts(options: List<CliOption>): String = options.filter { it.oneDashOption != null }
-        .sortedBy { it.oneDashOption?.lowercase(Locale.getDefault()) }
-        .joinToString("\n") {
-            it.getSuggestionLine("-${it.oneDashOption}")
-        }
+    private fun getBashShortOpts(options: List<CliOption>) =
+        options.filter { it.oneDashOption != null }
+            .sortedBy { it.oneDashOption?.lowercase(Locale.getDefault()) }
+            .joinToString("\n") {
+                it.getSuggestionLine("-${it.oneDashOption}")
+            }
 
-    private fun generateZshMainOpts(options: List<CliOption>): String {
-        return options.sortedBy { it.twoDashOption ?: it.oneDashOption }
+    private fun generateZshMainOpts(options: List<CliOption>) =
+        options.sortedBy { it.twoDashOption ?: it.oneDashOption }
             .joinToString(" \\\n        ") { option ->
                 option.getOptionLine(includeArgumentExpected = true)
             }
-    }
 
     private fun generateZshSubcommandOpts(options: List<CliOption>): String {
         val standaloneOptions = setOf("help", "h", "version", "v", "status", "stop", "gui")
@@ -285,72 +277,39 @@ abstract class GenerateCompletionScriptsTask : DefaultTask() {
             }
     }
 
-    private fun generatePropertiesOpts(allPropertyNames: List<CliOption>): String {
-        return allPropertyNames
+    private fun generatePropertiesOpts(allPropertyNames: List<CliOption>) =
+        allPropertyNames
             .filter { it.oneDashOption != null }
             .joinToString("\n") {
                 val paddingOption = "-${it.oneDashOption!!.padEnd(40)}"
                 "$paddingOption - ${it.description?.lineSequence()?.first() ?: ""}"
             }
-    }
 
-    /**
-     * Extracts wrapper task options from org.gradle.api.tasks.wrapper.Wrapper class via reflection.
-     */
     private fun extractWrapperOptions(): List<TaskOptionDescriptor> {
-        return TaskOptionExtractor.extractTaskOptions(
-            listOf("org.gradle.api.tasks.wrapper.Wrapper"),
-            "wrapper",
-            logger
-        )
+        return TaskOptionExtractor.extractTaskOptions("org.gradle.api.tasks.wrapper.Wrapper")
     }
 
-    /**
-     * Extracts test task options from org.gradle.api.tasks.testing.Test class and its parent
-     * AbstractTestTask via reflection.
-     */
-    private fun extractTestOptions(): List<TaskOptionDescriptor> {
-        return TaskOptionExtractor.extractTaskOptions(
-            listOf(
-                "org.gradle.api.tasks.testing.Test",
-                "org.gradle.api.tasks.testing.AbstractTestTask"
-            ),
-            "test",
-            logger
+    private fun extractTestOptions() =
+        TaskOptionExtractor.extractTaskOptions(
+            "org.gradle.api.tasks.testing.Test",
+            "org.gradle.api.tasks.testing.AbstractTestTask"
         )
-    }
 
-    /**
-     * Extracts init task options from org.gradle.buildinit.tasks.InitBuild class via reflection.
-     */
-    private fun extractInitOptions(): List<TaskOptionDescriptor> {
-        return TaskOptionExtractor.extractTaskOptions(
-            listOf("org.gradle.buildinit.tasks.InitBuild"),
-            "init",
-            logger
-        )
-    }
+    private fun extractInitOptions() =
+        TaskOptionExtractor.extractTaskOptions("org.gradle.buildinit.tasks.InitBuild")
 
-    /**
-     * Extracts dependencies task options from DependencyReportTask and its parent via reflection.
-     */
     private fun extractDependenciesOptions(): List<TaskOptionDescriptor> {
         val options = TaskOptionExtractor.extractTaskOptions(
-            listOf(
-                "org.gradle.api.tasks.diagnostics.DependencyReportTask",
-                "org.gradle.api.tasks.diagnostics.AbstractDependencyReportTask"
-            ),
-            "dependencies",
-            logger
+            "org.gradle.api.tasks.diagnostics.DependencyReportTask",
+            "org.gradle.api.tasks.diagnostics.AbstractDependencyReportTask"
         )
 
-        // Add custom completion function for --configuration option
         return addCustomCompletionFunctionForConfiguration(options)
     }
 
     private fun addCustomCompletionFunctionForConfiguration(options: List<TaskOptionDescriptor>) =
         options.map { option ->
-            if (option.option == "configuration") {
+            if (option.optionName == "configuration") {
                 option.copy(completionFunction = ":dependency configuration:_gradle_dependency_configurations")
             } else {
                 option
@@ -361,86 +320,17 @@ abstract class GenerateCompletionScriptsTask : DefaultTask() {
      * Extracts dependencyInsight task options from DependencyInsightReportTask via reflection.
      */
     private fun extractDependencyInsightOptions(): List<TaskOptionDescriptor> {
-        val options = TaskOptionExtractor.extractTaskOptions(
-            listOf("org.gradle.api.tasks.diagnostics.DependencyInsightReportTask"),
-            "dependencyInsight",
-            logger
-        )
+        val options =
+            TaskOptionExtractor.extractTaskOptions("org.gradle.api.tasks.diagnostics.DependencyInsightReportTask")
 
-        // Add custom completion function for --configuration option
         return addCustomCompletionFunctionForConfiguration(options)
     }
 
-    /**
-     * Extracts tasks task options from TaskReportTask via reflection.
-     */
-    private fun extractTasksOptions(): List<TaskOptionDescriptor> {
-        return TaskOptionExtractor.extractTaskOptions(
-            listOf("org.gradle.api.tasks.diagnostics.TaskReportTask"),
-            "tasks",
-            logger
-        )
-    }
+    private fun extractTasksOptions() =
+        TaskOptionExtractor.extractTaskOptions("org.gradle.api.tasks.diagnostics.TaskReportTask")
 
-    /**
-     * Extracts help task options from Help class via reflection.
-     */
-    private fun extractHelpOptions(): List<TaskOptionDescriptor> {
-        return TaskOptionExtractor.extractTaskOptions(
-            listOf("org.gradle.configuration.Help"),
-            "help",
-            logger
-        )
-    }
-
-    /**
-     * Generates Zsh completion options for the wrapper task.
-     */
-    private fun generateZshWrapperOpts(taskOptionDescriptors: List<TaskOptionDescriptor>): String {
-        return TaskOptionExtractor.generateZshTaskOpts(taskOptionDescriptors)
-    }
-
-    /**
-     * Generates Zsh completion options for the test task.
-     */
-    private fun generateZshTestOpts(testOptions: List<TaskOptionDescriptor>): String {
-        return TaskOptionExtractor.generateZshTaskOpts(testOptions, "'(-)*:: :->task-or-option'")
-    }
-
-    /**
-     * Generates Zsh completion options for the init task.
-     */
-    private fun generateZshInitOpts(initOptions: List<TaskOptionDescriptor>): String {
-        return TaskOptionExtractor.generateZshTaskOpts(initOptions)
-    }
-
-    /**
-     * Generates Zsh completion options for the dependencies task.
-     */
-    private fun generateZshDependenciesOpts(dependenciesOptions: List<TaskOptionDescriptor>): String {
-        return TaskOptionExtractor.generateZshTaskOpts(dependenciesOptions)
-    }
-
-    /**
-     * Generates Zsh completion options for the dependencyInsight task.
-     */
-    private fun generateZshDependencyInsightOpts(dependencyInsightOptions: List<TaskOptionDescriptor>): String {
-        return TaskOptionExtractor.generateZshTaskOpts(dependencyInsightOptions)
-    }
-
-    /**
-     * Generates Zsh completion options for the tasks task.
-     */
-    private fun generateZshTasksOpts(tasksOptions: List<TaskOptionDescriptor>): String {
-        return TaskOptionExtractor.generateZshTaskOpts(tasksOptions)
-    }
-
-    /**
-     * Generates Zsh completion options for the help task.
-     */
-    private fun generateZshHelpOpts(helpOptions: List<TaskOptionDescriptor>): String {
-        return TaskOptionExtractor.generateZshTaskOpts(helpOptions)
-    }
+    private fun extractHelpOptions() =
+        TaskOptionExtractor.extractTaskOptions("org.gradle.configuration.Help")
 
     // Companion object for helper functions and constants
     companion object {
@@ -501,40 +391,39 @@ abstract class GenerateCompletionScriptsTask : DefaultTask() {
 
         fun getPossibleValues(option: BuildOption<*>, longOptionName: String?): List<String> {
             longOptionName?.let { optName ->
-                HARDCODED_POSSIBLE_VALUES[optName]?.let { return it }
+                HARDCODED_POSSIBLE_VALUES[optName]?.let {
+                    return it
+                }
             }
             return getPossibleValuesList(option)
         }
 
-        fun isDirectoryOption(longOptionName: String?): Boolean {
-            return longOptionName?.let { it in DIRECTORY_OPTIONS } ?: false
-        }
+        fun isDirectoryOption(longOptionName: String?) =
+            longOptionName?.let { it in DIRECTORY_OPTIONS } ?: false
 
-        fun getFilePattern(longOptionName: String?): String? {
-            return longOptionName?.let { FILE_OPTIONS[it] }
-        }
+        fun getFilePattern(longOptionName: String?) =
+            longOptionName?.let { FILE_OPTIONS[it] }
 
-        fun getPossibleValuesList(option: BuildOption<*>): List<String> {
-            return if (option is EnumBuildOption<*, *>) {
+        fun getPossibleValuesList(option: BuildOption<*>) =
+            if (option is EnumBuildOption<*, *>) {
                 val valuesField = findDeclaredField(option, "possibleValues")
                 @Suppress("UNCHECKED_CAST")
                 (valuesField?.get(option) as? List<Any>)?.map { it.toString().lowercase() } ?: listOf()
             } else {
                 listOf()
             }
-        }
 
         fun getPossibleValuesForProperty(option: BuildOption<*>, propertyName: String): List<String> {
-            HARDCODED_POSSIBLE_VALUES[propertyName]?.let { return it }
+            HARDCODED_POSSIBLE_VALUES[propertyName]?.let {
+                return it
+            }
             return getPossibleValuesList(option)
         }
 
-        fun isDirectoryProperty(propertyName: String): Boolean {
-            return propertyName in DIRECTORY_OPTIONS
-        }
+        fun isDirectoryProperty(propertyName: String) =
+            propertyName in DIRECTORY_OPTIONS
 
-        fun getFilePatternForProperty(propertyName: String): String? {
-            return FILE_OPTIONS[propertyName]
-        }
+        fun getFilePatternForProperty(propertyName: String) =
+            FILE_OPTIONS[propertyName]
     }
 }

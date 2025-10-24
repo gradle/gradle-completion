@@ -13,7 +13,7 @@ dependencies {
     testImplementation("io.mockk:mockk:1.13.8")
 }
 
-tasks.withType<Test> {
+tasks.withType<Test>().configureEach {
     useJUnitPlatform()
     testLogging {
         events("passed", "skipped", "failed")
