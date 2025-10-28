@@ -4,11 +4,16 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.UntrackedTask
 import org.gradle.util.internal.VersionNumber
+import org.gradle.work.DisableCachingByDefault
+import java.net.URI
 import java.net.URL
 
 private const val HTTPS_SERVICES_GRADLE_ORG_VERSIONS = "https://services.gradle.org/versions"
 
+@DisableCachingByDefault(because = "Uses Data from a URL, which is not cacheable")
+@UntrackedTask(because = "when executed locally we want it to always fetch the data, in CI we don't care about caching this for a once a day execution")
 abstract class FetchLatestGradleVersionTask : DefaultTask() {
 
     @get:OutputFile
@@ -17,7 +22,6 @@ abstract class FetchLatestGradleVersionTask : DefaultTask() {
     init {
         group = "gradle wrapper"
         description = "Fetches the latest Gradle version (comparing stable release and RC)"
-        outputs.upToDateWhen { false }
     }
 
     @TaskAction
@@ -51,7 +55,7 @@ abstract class FetchLatestGradleVersionTask : DefaultTask() {
 
     private fun fetchVersionFromEndpoint(urlString: String): String? {
         return try {
-            val jsonResponse = URL(urlString).readText()
+            val jsonResponse = URI(urlString).toURL().readText()
             parseVersion(jsonResponse)
         } catch (e: java.io.IOException) {
             throw IllegalStateException(
@@ -96,17 +100,5 @@ abstract class FetchLatestGradleVersionTask : DefaultTask() {
 
     private data class GradleVersionInfo(
         val version: String? = null,
-        val buildTime: String? = null,
-        val current: Boolean? = null,
-        val snapshot: Boolean? = null,
-        val nightly: Boolean? = null,
-        val releaseNightly: Boolean? = null,
-        val activeRc: Boolean? = null,
-        val rcFor: String? = null,
-        val milestoneFor: String? = null,
-        val broken: Boolean? = null,
-        val downloadUrl: String? = null,
-        val checksumUrl: String? = null,
-        val wrapperChecksumUrl: String? = null
     )
 }
