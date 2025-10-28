@@ -91,7 +91,7 @@ This script depends on the `bash-completion` framework, which is not installed o
 
 3.  **Configure your `.bash_profile`**. The `bash-completion` framework must be sourced in your profile. When you installed it, Homebrew provided the exact line to add. Add this to your `~/.bash_profile`:
     ```bash
-    echo '[[ -r "\$(brew --prefix)/etc/profile.d/bash_completion.sh" ]] && . "\$(brew --prefix)/etc/profile.d/bash_completion.sh"' >> ~/.bash_profile
+    echo '[[ -r "$(brew --prefix)/etc/profile.d/bash_completion.sh" ]] && . "$(brew --prefix)/etc/profile.d/bash_completion.sh"' >> ~/.bash_profile
     ```
 
 4.  **Start a new terminal session** or run `source ~/.bash_profile`.

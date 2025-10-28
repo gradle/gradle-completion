@@ -23,8 +23,18 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
+      - name: Fetch Latest Gradle Version
+        run: ./gradlew fetchLatestGradleVersion
+
+      - name: Read Gradle Version
+        id: gradle-version
+        run: |
+          GRADLE_VERSION=$(cat build/gradle-version.txt)
+          echo "gradle-version=$GRADLE_VERSION" >> $GITHUB_OUTPUT
+          echo "Selected Gradle version: $GRADLE_VERSION"
+
       - name: Upgrade Gradle Wrapper
-        run: ./gradlew wrapper --gradle-version=release-candidate
+        run: ./gradlew wrapper --gradle-version=${{ steps.gradle-version.outputs.gradle-version }}
 
       - name: Generate Scripts
         run: ./gradlew generateCompletionScripts
