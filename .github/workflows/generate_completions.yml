@@ -2,7 +2,7 @@ name: Generate Completion Scripts
 
 on:
   schedule:
-    - cron: '0 0 * * 0' # Runs every Sunday at midnight
+    - cron: '0 0 * * *' # Runs every day at midnight UTC
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
@@ -23,8 +23,21 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Fetch Latest Gradle Version
+        run: ./gradlew fetchLatestGradleVersion
+
+      - name: Read Gradle Version
+        id: gradle-version
+        run: |
+          GRADLE_VERSION=$(cat build/gradle-version.txt)
+          echo "gradle-version=$GRADLE_VERSION" >> $GITHUB_OUTPUT
+          echo "Selected Gradle version: $GRADLE_VERSION"
+
       - name: Upgrade Gradle Wrapper
-        run: ./gradlew wrapper --gradle-version=release-candidate
+        run: ./gradlew wrapper --gradle-version=${{ steps.gradle-version.outputs.gradle-version }}
 
       - name: Generate Scripts
         run: ./gradlew generateCompletionScripts

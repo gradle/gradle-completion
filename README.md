@@ -91,7 +91,7 @@ This script depends on the `bash-completion` framework, which is not installed o
 
 3.  **Configure your `.bash_profile`**. The `bash-completion` framework must be sourced in your profile. When you installed it, Homebrew provided the exact line to add. Add this to your `~/.bash_profile`:
     ```bash
-    echo '[[ -r "\$(brew --prefix)/etc/profile.d/bash_completion.sh" ]] && . "\$(brew --prefix)/etc/profile.d/bash_completion.sh"' >> ~/.bash_profile
+    echo '[[ -r "$(brew --prefix)/etc/profile.d/bash_completion.sh" ]] && . "$(brew --prefix)/etc/profile.d/bash_completion.sh"' >> ~/.bash_profile
     ```
 
 4.  **Start a new terminal session** or run `source ~/.bash_profile`.
@@ -196,7 +196,19 @@ See the [contributing guide](CONTRIBUTING.md).
 
 ## For Maintainers: Releasing
 
-This project uses template-based generation for completion scripts. The actual `gradle-completion.bash` and `_gradle` files are generated from templates during the release process and are **not committed to git** (they're in `.gitignore`).
+This project uses template-based generation for completion scripts. The actual `gradle-completion.bash` and `_gradle` files are generated from templates during the release process.
+
+### Versioning
+
+From Gradle `9.2.0` onwards, gradle-completion versions align with the Gradle version used to generate the completion scripts. For example, version `9.2.0` of gradle-completion corresponds to Gradle `9.2.0`. This implies we will release a new version of gradle-completion every time Gradle releases a new version.
+
+**Compatibility:** gradle-completion generally works with multiple Gradle versions. If you use a newer Gradle version, some newer CLI options won't appear in completions. If you use an older Gradle version, some completion suggestions may not be recognized (but won't cause errors).
+
+**Patch versions:** We use patch versions (e.g., `9.2.1`, `9.2.2`) for bug fixes and improvements to the completion scripts themselves, without updating to a newer Gradle version. This means `9.2.1` and `9.2.2` both correspond to any Gradle `9.2.x`.
+
+**Recommendation:** Use the gradle-completion version that matches or is closest to your primary Gradle version for the best experience.
+
+**Note:** Versions prior to `9.2.0` used independent versioning (e.g., `1.4.4`).
 
 ### Release Process
 

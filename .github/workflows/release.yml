@@ -22,10 +22,7 @@ jobs:
           java-version: '17'
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
-
-      - name: Generate completion scripts
-        run: ./gradlew generateCompletionScripts
+        uses: gradle/actions/setup-gradle@v4
 
       - name: Create release tarball with generated scripts
         run: |
