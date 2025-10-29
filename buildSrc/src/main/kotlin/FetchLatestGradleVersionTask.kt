@@ -8,11 +8,9 @@ import org.gradle.api.tasks.UntrackedTask
 import org.gradle.util.internal.VersionNumber
 import org.gradle.work.DisableCachingByDefault
 import java.net.URI
-import java.net.URL
 
 private const val HTTPS_SERVICES_GRADLE_ORG_VERSIONS = "https://services.gradle.org/versions"
 
-@DisableCachingByDefault(because = "Uses Data from a URL, which is not cacheable")
 @UntrackedTask(because = "when executed locally we want it to always fetch the data, in CI we don't care about caching this for a once a day execution")
 abstract class FetchLatestGradleVersionTask : DefaultTask() {
 
@@ -43,7 +41,7 @@ abstract class FetchLatestGradleVersionTask : DefaultTask() {
             }
 
             else -> {
-                val newerVersion = compareVersions(currentRelease, releaseCandidate)
+                val newerVersion = calculateHigherVersion(currentRelease, releaseCandidate)
                 logger.lifecycle("Selected newer version: $newerVersion")
                 newerVersion
             }
@@ -76,25 +74,13 @@ abstract class FetchLatestGradleVersionTask : DefaultTask() {
         return versionInfo?.version
     }
 
-    private fun compareVersions(version1: String, version2: String): String {
+    private fun calculateHigherVersion(version1: String, version2: String): String {
         val v1 = VersionNumber.parse(version1)
         val v2 = VersionNumber.parse(version2)
 
         return when {
-            v1 > v2 -> {
-                logger.lifecycle("$version1 is newer than $version2")
-                version1
-            }
-
-            v2 > v1 -> {
-                logger.lifecycle("$version2 is newer than $version1")
-                version2
-            }
-
-            else -> {
-                logger.lifecycle("Versions are equal, using first: $version1")
-                version1
-            }
+            v2 > v1 -> version2
+            else -> version1
         }
     }
 
