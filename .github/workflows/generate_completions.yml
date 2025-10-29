@@ -23,6 +23,9 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
       - name: Fetch Latest Gradle Version
         run: ./gradlew fetchLatestGradleVersion
 
