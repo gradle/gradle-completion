@@ -27,30 +27,16 @@ abstract class FetchLatestGradleVersionTask : DefaultTask() {
         val releaseCandidate = fetchVersionFromEndpoint("$HTTPS_SERVICES_GRADLE_ORG_VERSIONS/release-candidate")
 
         logger.lifecycle("Latest stable release: $currentRelease")
-        logger.lifecycle("Latest release candidate: ${releaseCandidate ?: "none"}")
+        logger.lifecycle("Latest release candidate: $releaseCandidate")
 
-        val selectedVersion = when {
-            currentRelease == null -> {
-                throw IllegalStateException("Failed to fetch current Gradle release version")
-            }
-
-            releaseCandidate == null -> {
-                logger.lifecycle("No RC available, using stable release: $currentRelease")
-                currentRelease
-            }
-
-            else -> {
-                val newerVersion = calculateHigherVersion(currentRelease, releaseCandidate)
-                logger.lifecycle("Selected newer version: $newerVersion")
-                newerVersion
-            }
-        }
+        val selectedVersion = calculateHigherVersion(currentRelease, releaseCandidate)
+        logger.lifecycle("Selected newer version: $selectedVersion")
 
         versionFile.get().asFile.writeText(selectedVersion)
         logger.lifecycle("Written version to file: $selectedVersion")
     }
 
-    private fun fetchVersionFromEndpoint(urlString: String): String? {
+    private fun fetchVersionFromEndpoint(urlString: String): String {
         return try {
             val jsonResponse = URI(urlString).toURL().readText()
             parseVersion(jsonResponse)
@@ -67,10 +53,14 @@ abstract class FetchLatestGradleVersionTask : DefaultTask() {
         }
     }
 
-    private fun parseVersion(jsonResponse: String): String? {
-        val gson = Gson()
+    private val gson = Gson()
+
+    private fun parseVersion(jsonResponse: String): String {
         val versionInfo = gson.fromJson(jsonResponse, GradleVersionInfo::class.java)
-        return versionInfo?.version
+        if (versionInfo == null || versionInfo.version == null) {
+            throw IllegalStateException("Failed to parse version info from response")
+        }
+        return versionInfo.version
     }
 
     private fun calculateHigherVersion(version1: String, version2: String): String {
