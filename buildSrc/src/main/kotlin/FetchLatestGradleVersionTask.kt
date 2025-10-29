@@ -6,7 +6,6 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.UntrackedTask
 import org.gradle.util.internal.VersionNumber
-import org.gradle.work.DisableCachingByDefault
 import java.net.URI
 
 private const val HTTPS_SERVICES_GRADLE_ORG_VERSIONS = "https://services.gradle.org/versions"
@@ -53,8 +52,13 @@ abstract class FetchLatestGradleVersionTask : DefaultTask() {
 
     private fun fetchVersionFromEndpoint(urlString: String): String? {
         return try {
-            val jsonResponse = URI(urlString).toURL().readText()
+            val connection = URI(urlString).toURL().openConnection()
+            connection.connect()
+            val jsonResponse = connection.getInputStream().bufferedReader().use { it.readText() }
             parseVersion(jsonResponse)
+        } catch (e: java.io.FileNotFoundException) {
+            // 404 - endpoint not found (e.g., no RC available)
+            null
         } catch (e: java.io.IOException) {
             throw IllegalStateException(
                 "Failed to fetch Gradle version from $urlString",
