@@ -121,14 +121,16 @@ __gradle-long-options() {
 --quiet                        - Log errors only. 
 --refresh-dependencies         - Refresh the state of dependencies. 
 --refresh-keys                 - Refresh the public keys used for dependency verification. 
+--rerun                        - Causes the task to be re-run even if up-to-date. 
 --rerun-tasks                  - Ignore previously cached task results. 
 --scan                         - Generate a Build Scan (powered by Develocity). 
+--show-version                 - Print version info and continue. 
 --stacktrace                   - Print out the stacktrace for all exceptions. 
 --status                       - Shows status of running and recently stopped Gradle daemon(s). 
 --stop                         - Stops the Gradle daemon if it is running. 
 --task-graph                   - (Experimental) Print task graph instead of executing tasks. 
 --update-locks                 - Perform a partial update of the dependency lock, letting passed in module notations change version.  [incubating]
---version                      - Shows the version info. 
+--version                      - Print version info and exit. 
 --warn                         - Set log level to warn. 
 --warning-mode                 - Specifies which mode of warnings to generate. Values are 'all', 'fail', 'summary'(default) or 'none' 
 --watch-fs                     - Enables watching the file system for changes, allowing data about the file system to be re-used for the next build. 
@@ -215,7 +217,8 @@ __gradle-short-options() {
 -S                             - Print out the full (very verbose) stacktrace for all exceptions. 
 -t                             - Enables continuous build. Gradle does not exit and will re-execute tasks when task file inputs change. 
 -U                             - Refresh the state of dependencies. 
--v                             - Shows the version info. 
+-v                             - Print version info and exit. 
+-V                             - Print version info and continue. 
 -w                             - Set log level to warn. 
 -x                             - Specify a task to be excluded from execution.\
 "
