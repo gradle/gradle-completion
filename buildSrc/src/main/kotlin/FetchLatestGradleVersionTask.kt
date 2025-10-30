@@ -26,8 +26,11 @@ abstract class FetchLatestGradleVersionTask : DefaultTask() {
         val currentRelease = fetchVersionFromEndpoint("$HTTPS_SERVICES_GRADLE_ORG_VERSIONS/current")
         val releaseCandidate = fetchVersionFromEndpoint("$HTTPS_SERVICES_GRADLE_ORG_VERSIONS/release-candidate")
 
+        if(currentRelease == null) {
+            throw IllegalStateException("Failed to fetch current Gradle release version")
+        }
         logger.lifecycle("Latest stable release: $currentRelease")
-        logger.lifecycle("Latest release candidate: $releaseCandidate")
+        logger.lifecycle("Latest release candidate: ${releaseCandidate?:"none available"}")
 
         val selectedVersion = calculateHigherVersion(currentRelease, releaseCandidate)
         logger.lifecycle("Selected newer version: $selectedVersion")
@@ -36,7 +39,7 @@ abstract class FetchLatestGradleVersionTask : DefaultTask() {
         logger.lifecycle("Written version to file: $selectedVersion")
     }
 
-    private fun fetchVersionFromEndpoint(urlString: String): String {
+    private fun fetchVersionFromEndpoint(urlString: String): String? {
         return try {
             val jsonResponse = URI(urlString).toURL().readText()
             parseVersion(jsonResponse)
@@ -51,25 +54,31 @@ abstract class FetchLatestGradleVersionTask : DefaultTask() {
                 e
             )
         }
+        catch (e: IllegalStateException) {
+            throw IllegalStateException(
+                "Failed to fetch Gradle version from $urlString",
+            )
+        }
     }
 
     private val gson = Gson()
 
-    private fun parseVersion(jsonResponse: String): String {
+    private fun parseVersion(jsonResponse: String): String? {
         val versionInfo = gson.fromJson(jsonResponse, GradleVersionInfo::class.java)
-        if (versionInfo == null || versionInfo.version == null) {
-            throw IllegalStateException("Failed to parse version info from response")
-        }
+            ?: throw IllegalStateException("Failed to parse version info from response")
         return versionInfo.version
     }
 
-    private fun calculateHigherVersion(version1: String, version2: String): String {
-        val v1 = VersionNumber.parse(version1)
-        val v2 = VersionNumber.parse(version2)
+    private fun calculateHigherVersion(releaseVersion: String, releaseCandidate: String?): String {
+        if(releaseCandidate == null) {
+            return releaseVersion
+        }
+        val releaseVersionVersion = VersionNumber.parse(releaseVersion)
+        val releaseCandidateVersion = VersionNumber.parse(releaseCandidate)
 
         return when {
-            v2 > v1 -> version2
-            else -> version1
+            releaseCandidateVersion > releaseVersionVersion -> releaseCandidate
+            else -> releaseVersion
         }
     }
 
