@@ -334,9 +334,6 @@ abstract class GenerateCompletionScriptsTask : DefaultTask() {
             }
         }
 
-    /**
-     * Extracts dependencyInsight task options from DependencyInsightReportTask via reflection.
-     */
     private fun extractDependencyInsightOptions(): List<TaskOptionDescriptor> {
         val options =
             TaskOptionExtractor.extractTaskOptions("org.gradle.api.tasks.diagnostics.DependencyInsightReportTask")
@@ -350,7 +347,6 @@ abstract class GenerateCompletionScriptsTask : DefaultTask() {
     private fun extractHelpOptions() =
         TaskOptionExtractor.extractTaskOptions("org.gradle.configuration.Help")
 
-    // Companion object for helper functions and constants
     companion object {
         private val CACHING_VALUES = listOf("true", "false")
         private val CC_CACHE_PROBLEMS = listOf("fail", "warn")

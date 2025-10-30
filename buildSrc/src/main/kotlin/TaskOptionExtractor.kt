@@ -33,7 +33,6 @@ object TaskOptionExtractor {
             .sortedBy { it.optionName }
 
     private fun extractPossibleValuesFromEnumParameters(method: Method): List<String> {
-        // Check if the parameter is an enum
         val paramTypes = method.parameterTypes
         if (paramTypes.isNotEmpty()) {
             val paramType = paramTypes[0]
@@ -61,7 +60,6 @@ object TaskOptionExtractor {
         // Check for getter-style: method that returns Property<Boolean>
         val returnType = method.returnType
         if (returnType.name == "org.gradle.api.provider.Property") {
-            // Check if it's Property<Boolean> by examining the generic type
             val genericReturnType = method.genericReturnType
             if (genericReturnType != null && genericReturnType.toString().contains("Boolean")) {
                 return true
