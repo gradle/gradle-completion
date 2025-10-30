@@ -66,7 +66,12 @@ abstract class GenerateCompletionScriptsTask : DefaultTask() {
         val allCliOptions = extractCliOptions(allOptions)
         logger.lifecycle("Successfully extracted ${allCliOptions.size} CLI options from Gradle API.")
 
-        allCliOptions += listOf(createHelpOption(), createVersionOption())
+        allCliOptions += listOf(
+            createHelpOption(),
+            createVersionOption(),
+            createShowVersionOption(),
+            createRerunOption()
+        )
 
         val allPropertyNames = extractPropertyOptions(allOptions)
 
@@ -241,7 +246,20 @@ abstract class GenerateCompletionScriptsTask : DefaultTask() {
         CliOption(
             twoDashOption = "version",
             oneDashOption = "v",
-            description = "Shows the version info."
+            description = "Print version info and exit."
+        )
+
+    private fun createShowVersionOption() =
+        CliOption(
+            twoDashOption = "show-version",
+            oneDashOption = "V",
+            description = "Print version info and continue."
+        )
+
+    private fun createRerunOption() =
+        CliOption(
+            twoDashOption = "rerun",
+            description = "Causes the task to be re-run even if up-to-date."
         )
 
     private fun generateBashLongOpts(options: List<CliOption>) =
