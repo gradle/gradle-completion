@@ -1,5 +1,6 @@
 plugins {
     `kotlin-dsl`
+    id("dev.detekt") version "2.0.0-alpha.1"
 }
 
 repositories {
@@ -24,4 +25,9 @@ tasks.withType<Test>().configureEach {
 
 tasks.validatePlugins {
     enableStricterValidation = true
+}
+
+detekt {
+    buildUponDefaultConfig = true
+    config.from(layout.settingsDirectory.file("../gradle/detekt.yml"))
 }

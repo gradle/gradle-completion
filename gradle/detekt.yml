@@ -1,0 +1,9 @@
+complexity:
+  TooManyFunctions:
+    active: false
+  LongMethod:
+    allowedLines: 120
+
+style:
+  MagicNumber:
+    active: false
