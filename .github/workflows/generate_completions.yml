@@ -36,8 +36,11 @@ jobs:
           echo "gradle-version=$GRADLE_VERSION" >> $GITHUB_OUTPUT
           echo "Selected Gradle version: $GRADLE_VERSION"
 
-      - name: Upgrade Gradle Wrapper
+      - name: Upgrade Gradle Wrapper - Stage 1
         run: ./gradlew wrapper --gradle-version=${{ steps.gradle-version.outputs.gradle-version }}
+
+      - name: Upgrade Gradle Wrapper - Stage 2
+        run: ./gradlew wrapper
 
       - name: Generate Scripts
         run: ./gradlew generateCompletionScripts

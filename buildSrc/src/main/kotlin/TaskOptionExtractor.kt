@@ -33,7 +33,6 @@ object TaskOptionExtractor {
             .sortedBy { it.optionName }
 
     private fun extractPossibleValuesFromEnumParameters(method: Method): List<String> {
-        // Check if the parameter is an enum
         val paramTypes = method.parameterTypes
         if (paramTypes.isNotEmpty()) {
             val paramType = paramTypes[0]
@@ -46,30 +45,20 @@ object TaskOptionExtractor {
         return emptyList()
     }
 
-    private fun isBooleanOption(method: Method): Boolean {
-        // Check for setter-style: method with boolean parameter
-        val paramTypes = method.parameterTypes
-        if (paramTypes.isNotEmpty()) {
-            val firstParam = paramTypes[0]
-            if (firstParam == Boolean::class.javaPrimitiveType ||
-                firstParam == Boolean::class.javaObjectType
-            ) {
-                return true
-            }
+    private fun isBooleanOption(method: Method) =
+        isJavaBeanBooleanOption(method) || isGradlePropertyBooleanOption(method)
+
+    private fun isJavaBeanBooleanOption(method: Method) =
+        method.parameterTypes.let { paramTypes ->
+            paramTypes.isNotEmpty() &&
+                    (paramTypes[0] == Boolean::class.javaPrimitiveType ||
+                            paramTypes[0] == Boolean::class.javaObjectType)
         }
 
-        // Check for getter-style: method that returns Property<Boolean>
-        val returnType = method.returnType
-        if (returnType.name == "org.gradle.api.provider.Property") {
-            // Check if it's Property<Boolean> by examining the generic type
-            val genericReturnType = method.genericReturnType
-            if (genericReturnType != null && genericReturnType.toString().contains("Boolean")) {
-                return true
-            }
-        }
+    private fun isGradlePropertyBooleanOption(method: Method) =
+        method.returnType.name == "org.gradle.api.provider.Property" &&
+                method.genericReturnType.toString().contains("Boolean")
 
-        return false
-    }
 
     /**
      * Generates Zsh completion options for a task.

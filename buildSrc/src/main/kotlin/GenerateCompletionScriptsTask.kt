@@ -329,14 +329,14 @@ abstract class GenerateCompletionScriptsTask : DefaultTask() {
     private fun addCustomCompletionFunctionForConfiguration(options: List<TaskOptionDescriptor>) =
         options.map { option ->
             when (option.optionName) {
-                "configuration" -> option.copy(completionFunction = ":dependency configuration:_gradle_dependency_configurations")
+                "configuration" -> option.copy(
+                    completionFunction = ":dependency configuration:_gradle_dependency_configurations"
+                )
+
                 else -> option
             }
         }
 
-    /**
-     * Extracts dependencyInsight task options from DependencyInsightReportTask via reflection.
-     */
     private fun extractDependencyInsightOptions(): List<TaskOptionDescriptor> {
         val options =
             TaskOptionExtractor.extractTaskOptions("org.gradle.api.tasks.diagnostics.DependencyInsightReportTask")
@@ -350,7 +350,6 @@ abstract class GenerateCompletionScriptsTask : DefaultTask() {
     private fun extractHelpOptions() =
         TaskOptionExtractor.extractTaskOptions("org.gradle.configuration.Help")
 
-    // Companion object for helper functions and constants
     companion object {
         private val CACHING_VALUES = listOf("true", "false")
         private val CC_CACHE_PROBLEMS = listOf("fail", "warn")
@@ -400,11 +399,11 @@ abstract class GenerateCompletionScriptsTask : DefaultTask() {
                     return currentClass.getDeclaredField(fieldName).apply {
                         isAccessible = true
                     }
-                } catch (e: NoSuchFieldException) {
+                } catch (_: NoSuchFieldException) {
                     currentClass = currentClass.superclass
                 }
             }
-            throw RuntimeException("Could not find field $fieldName on object $obj")
+            throw IllegalStateException("Could not find field $fieldName on object $obj")
         }
 
         fun getPossibleValues(option: BuildOption<*>, longOptionName: String?) =

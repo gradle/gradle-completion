@@ -10,7 +10,7 @@ import java.net.URI
 
 private const val HTTPS_SERVICES_GRADLE_ORG_VERSIONS = "https://services.gradle.org/versions"
 
-@UntrackedTask(because = "when executed locally we want it to always fetch the data, in CI we don't care about caching this for a once a day execution")
+@UntrackedTask(because = "Relies on external state from services.gradle.org")
 abstract class FetchLatestGradleVersionTask : DefaultTask() {
 
     @get:OutputFile
@@ -26,11 +26,11 @@ abstract class FetchLatestGradleVersionTask : DefaultTask() {
         val currentRelease = fetchVersionFromEndpoint("$HTTPS_SERVICES_GRADLE_ORG_VERSIONS/current")
         val releaseCandidate = fetchVersionFromEndpoint("$HTTPS_SERVICES_GRADLE_ORG_VERSIONS/release-candidate")
 
-        if(currentRelease == null) {
+        if (currentRelease == null) {
             throw IllegalStateException("Failed to fetch current Gradle release version")
         }
         logger.lifecycle("Latest stable release: $currentRelease")
-        logger.lifecycle("Latest release candidate: ${releaseCandidate?:"none available"}")
+        logger.lifecycle("Latest release candidate: ${releaseCandidate ?: "none available"}")
 
         val selectedVersion = calculateHigherVersion(currentRelease, releaseCandidate)
         logger.lifecycle("Selected newer version: $selectedVersion")
@@ -39,27 +39,31 @@ abstract class FetchLatestGradleVersionTask : DefaultTask() {
         logger.lifecycle("Written version to file: $selectedVersion")
     }
 
-    private fun fetchVersionFromEndpoint(urlString: String): String? {
-        return try {
+    @Suppress("TooGenericExceptionCaught")
+    private fun fetchVersionFromEndpoint(urlString: String): String? =
+        try {
             val jsonResponse = URI(urlString).toURL().readText()
             parseVersion(jsonResponse)
-        } catch (e: java.io.IOException) {
-            throw IllegalStateException(
-                "Failed to fetch Gradle version from $urlString",
-                e
-            )
-        } catch (e: JsonSyntaxException) {
-            throw IllegalStateException(
-                "Failed to parse Gradle version response from $urlString",
-                e
-            )
+        } catch (e: Exception) {
+            throw when (e) {
+                is java.io.IOException -> IllegalStateException(
+                    "Failed to fetch Gradle version from $urlString",
+                    e
+                )
+
+                is JsonSyntaxException -> IllegalStateException(
+                    "Failed to parse Gradle version response from $urlString",
+                    e
+                )
+
+                is IllegalStateException -> IllegalStateException(
+                    "Failed to fetch Gradle version from $urlString",
+                    e
+                )
+
+                else -> e
+            }
         }
-        catch (e: IllegalStateException) {
-            throw IllegalStateException(
-                "Failed to fetch Gradle version from $urlString",
-            )
-        }
-    }
 
     private val gson = Gson()
 
@@ -70,7 +74,7 @@ abstract class FetchLatestGradleVersionTask : DefaultTask() {
     }
 
     private fun calculateHigherVersion(releaseVersion: String, releaseCandidate: String?): String {
-        if(releaseCandidate == null) {
+        if (releaseCandidate == null) {
             return releaseVersion
         }
         val releaseVersionVersion = VersionNumber.parse(releaseVersion)
