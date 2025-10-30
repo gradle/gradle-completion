@@ -3,8 +3,10 @@
  *
  * @property optionName The option name (without the -- prefix)
  * @property description The description of the option
- * @property possibleValues List of possible values for this option (e.g., for enum types)
- * @property completionFunction Optional Zsh completion function (e.g., ":dependency configuration:_gradle_dependency_configurations")
+ * @property possibleValues List of possible values for this option
+ *                          (e.g., for enum types)
+ * @property completionFunction Optional Zsh completion function
+ *                              (e.g., ":dependency configuration:_gradle_dependency_configurations")
  * @property requiresArgument Whether this option requires a value (true) or is a boolean flag (false)
  */
 data class TaskOptionDescriptor(

@@ -329,7 +329,10 @@ abstract class GenerateCompletionScriptsTask : DefaultTask() {
     private fun addCustomCompletionFunctionForConfiguration(options: List<TaskOptionDescriptor>) =
         options.map { option ->
             when (option.optionName) {
-                "configuration" -> option.copy(completionFunction = ":dependency configuration:_gradle_dependency_configurations")
+                "configuration" -> option.copy(
+                    completionFunction = ":dependency configuration:_gradle_dependency_configurations"
+                )
+
                 else -> option
             }
         }
@@ -396,11 +399,11 @@ abstract class GenerateCompletionScriptsTask : DefaultTask() {
                     return currentClass.getDeclaredField(fieldName).apply {
                         isAccessible = true
                     }
-                } catch (e: NoSuchFieldException) {
+                } catch (_: NoSuchFieldException) {
                     currentClass = currentClass.superclass
                 }
             }
-            throw RuntimeException("Could not find field $fieldName on object $obj")
+            throw IllegalStateException("Could not find field $fieldName on object $obj")
         }
 
         fun getPossibleValues(option: BuildOption<*>, longOptionName: String?) =

@@ -66,22 +66,22 @@ data class CliOption(
 
         val argumentExpectedQualifier = if (includeArgumentExpected) ":->argument-expected" else ""
 
-        if (filePattern != null) {
-            val label = getOptionName() ?: "file"
-            return ":$label:_files -g \\${filePattern}$argumentExpectedQualifier"
-        }
+        fun optionNameOr(default: String): String =
+            getOptionName() ?: default
 
-        if (isDirectory) {
-            val label = getOptionName() ?: "directory"
-            return ":$label:_directories$argumentExpectedQualifier"
-        }
+        return when {
+            filePattern != null ->
+                ":${optionNameOr("file")}:_files -g \\${filePattern}$argumentExpectedQualifier"
 
-        if (possibleValues.isEmpty()) {
-            return argumentExpectedQualifier
-        }
+            isDirectory ->
+                ":${optionNameOr("directory")}:_directories$argumentExpectedQualifier"
 
-        val label = getOptionName() ?: "value"
-        return ":$label:(${possibleValues.joinToString(" ")})$argumentExpectedQualifier"
+            possibleValues.isEmpty() ->
+                argumentExpectedQualifier
+
+            else ->
+                ":${optionNameOr("value")}:(${possibleValues.joinToString(" ")})$argumentExpectedQualifier"
+        }
     }
 
     /**
@@ -101,6 +101,7 @@ data class CliOption(
         return when {
             optStr.contains("{") ->
                 "${commonPrefix}${optStr}'$commonPostfix'"
+
             else ->
                 "${commonPrefix}'${optStr}$commonPostfix'"
         }
