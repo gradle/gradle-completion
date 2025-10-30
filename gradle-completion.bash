@@ -230,7 +230,6 @@ __gradle-tasks() {
     _get_comp_words_by_ref -n : cur
 
     __gradle-init-cache-dir
-    __gradle-set-project-root-dir
     __gradle-set-build-file
     if [[ -f "$gradle_build_file" ]]; then
         __gradle-set-cache-name
@@ -356,14 +355,22 @@ __gradle-generate-tasks-cache() {
     echo "$gradle_files_checksum" >| "$cache_dir/$cache_name.md5"
 }
 
+__gradle-source-project-overrides() {
+    if [[ -f "$project_root_dir/.gradle-completion/gradle-completion.bash" ]]; then
+        # override default behaviours of this script
+        source "$project_root_dir"/.gradle-completion/gradle-completion.bash
+    fi
+}
+
 __gradle-completion-init() {
     local cache_dir cache_name gradle_build_file gradle_files_checksum project_root_dir
 
     local OLDIFS="$IFS"
     local IFS=$'\n'
 
-    __gradle-init-cache-dir
     __gradle-set-project-root-dir
+    __gradle-source-project-overrides
+    __gradle-init-cache-dir
     __gradle-set-build-file
     if [[ -f "$gradle_build_file" ]]; then
         __gradle-set-cache-name
@@ -387,6 +394,9 @@ _gradle() {
     # This allows us to provide descriptions for options and tasks
     local OLDIFS="$IFS"
     local IFS=$'\n'
+
+    __gradle-set-project-root-dir
+    __gradle-source-project-overrides
 
     if [[ ${cur} == --* ]]; then
         __gradle-long-options
