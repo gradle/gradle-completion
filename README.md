@@ -228,13 +228,9 @@ From Gradle `9.2.0` onwards, gradle-completion versions align with the Gradle ve
         - Build configuration and other necessary files
     - Creates a GitHub release and uploads the tarball as a release asset
 
-3. **Update Homebrew formula:**
-   ```bash
-   ./bump-version.sh 1.x.x
-   ```
-   This script downloads the release asset tarball from GitHub, calculates its SHA256, and creates a Homebrew bump PR.
+3. **Update Homebrew:**
 
-   **Important:** The script uses the release asset URL (`releases/download/v1.x.x/gradle-completion-1.x.x.tar.gz`), not the automatic source archive, because the generated completion scripts are only available in the release asset.
+   This project is on auto update in Homebrew. No need for us to do anything.
 
 ### Regenerating Completion Scripts Locally
 
@@ -244,7 +240,7 @@ To regenerate completion scripts from templates during development:
 ./gradlew generateCompletionScripts
 ```
 
-This will update `gradle-completion.bash` and `_gradle` based on the current Gradle version's CLI options. These generated files are in `.gitignore` and should not be committed to git.
+This will update `gradle-completion.bash` and `_gradle` based on the current Gradle version's CLI options. 
 
 ## Acknowledgements
 Bash completion is inspired by [Nolan Lawson's Gradle tab completion for bash](https://gist.github.com/nolanlawson/8694399).
