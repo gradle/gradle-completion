@@ -53,8 +53,8 @@ body:
   - type: input
     id: gradle-version
     attributes:
-      label: Gradle version
-      description: What version of Gradle are you running?
+      label: Gradle completion version
+      description: What version of gradle-completion are you running?
     validations:
       required: true
   - type: input
