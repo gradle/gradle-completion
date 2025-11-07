@@ -15,11 +15,7 @@ tasks {
         zshOutputFile = layout.projectDirectory.file("_gradle")
     }
 
-    assemble {
-        dependsOn(generateCompletionScripts)
-    }
-
-    register<Tar>("distTar") {
+    val distTar = register<Tar>("distTar") {
         val version = providers
             .gradleProperty("release-version").orElse("")
             // TODO: better ways to do this?
@@ -41,4 +37,9 @@ tasks {
             println("Created archive: ${archiveFile.get()}")
         }
     }
+
+    assemble {
+        dependsOn(distTar)
+    }
+
 }
