@@ -15,17 +15,19 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
       - name: Create release tarball with generated scripts
         run: |
           VERSION=${GITHUB_REF#refs/tags/v}
-          # Create tarball including generated scripts
-          tar -czf gradle-completion-${VERSION}.tar.gz \
-            --transform "s,^,gradle-completion-${VERSION}/," \
-            gradle-completion.bash \
-            gradle-completion.plugin.zsh \
-            _gradle \
-            README.md \
-            LICENSE
+          ./gradlew distTar -Prelease-version=${VERSION}
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -33,4 +35,4 @@ jobs:
           generate_release_notes: true
           token: ${{ secrets.GITHUB_TOKEN }}
           files: |
-            gradle-completion-*.tar.gz
+            build/gradle-completion-*.tar.gz
