@@ -65,9 +65,9 @@ abstract class FetchLatestGradleVersionTask : DefaultTask() {
             }
         }
 
-    private val gson = Gson()
 
     private fun parseVersion(jsonResponse: String): String? {
+        val gson = Gson()
         val versionInfo = gson.fromJson(jsonResponse, GradleVersionInfo::class.java)
             ?: throw IllegalStateException("Failed to parse version info from response")
         return versionInfo.version
