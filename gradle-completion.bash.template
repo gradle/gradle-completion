@@ -120,11 +120,11 @@ __gradle-tasks() {
             local cached_checksum="$(cat "$cache_dir/$cache_name.md5")"
             local -a cached_tasks
             if [[ -z "$cur" ]]; then
-                cached_tasks=( $(grep -v "^:" "$cache_dir/$cached_checksum") )
+                readarray -t cached_tasks < <(grep -v "^:" "$cache_dir/$cached_checksum")
             else
-                cached_tasks=( $(grep "^$cur" "$cache_dir/$cached_checksum") )
+                readarray -t cached_tasks < <(grep "^$cur" "$cache_dir/$cached_checksum")
             fi
-            COMPREPLY=( $(compgen -W "${cached_tasks[*]}" -- "$cur") )
+            COMPREPLY=( "${cached_tasks[@]}" )
         else
             __gradle-notify-tasks-cache-build
         fi
@@ -206,18 +206,39 @@ __gradle-generate-tasks-cache() {
     local -a gradle_all_tasks=()
     local -a root_tasks=()
     local -a subproject_tasks=()
+    local OLDIFS="$IFS"
+    IFS=$'\n'
     for output_line in ${gradle_tasks_output}; do
-        if [[ "$output_line" =~ ^([[:alpha:]][[:alnum:][:punct:]]*)([[:space:]]-[[:space:]]([[:print:]]*))? ]]; then
+        # The forbidden characters should be aligned with this variable org.gradle.util.internal.NameValidator.FORBIDDEN_CHARACTERS in the gradle/gradle repo
+        if [[ "$output_line" =~ ^([[:alpha:]][^/\\:<>\"?*|]*)\ -\ (.*)$ ]]; then
+            # Task with description (exclude forbidden gradle chars: /, \, :, <, >, ", ?, *, |)
             task_name="${BASH_REMATCH[1]}"
-            task_description="${BASH_REMATCH[3]}"
-            gradle_all_tasks+=( "$task_name  - $task_description" )
-            # Completion for subproject tasks with ':' prefix
-            if [[ "$task_name" =~ ^([[:alnum:][:punct:]]+):([[:alnum:]]+) ]]; then
-                gradle_all_tasks+=( ":$task_name  - $task_description" )
-                subproject_tasks+=( "${BASH_REMATCH[2]}" )
+            task_description="${BASH_REMATCH[2]}"
+        elif [[ "$output_line" =~ ^([[:alpha:]][^/\\:<>\"?*|]*)$ ]]; then
+            # Task without description (exclude forbidden gradle chars)
+            task_name="${BASH_REMATCH[1]}"
+            task_description=""
+        else
+            continue
+        fi
+
+        # No escaping needed - tasks are used directly without shell evaluation
+        if [[ -n "$task_description" ]]; then
+            gradle_all_tasks+=( "$task_name - $task_description" )
+        else
+            gradle_all_tasks+=( "$task_name" )
+        fi
+
+        # Completion for subproject tasks with ':' prefix
+        if [[ "$task_name" =~ ^([[:alpha:]][^/\\:<>\"?*|]*):([[:alnum:]_]+)$ ]]; then
+            if [[ -n "$task_description" ]]; then
+                gradle_all_tasks+=( ":$task_name - $task_description" )
             else
-                root_tasks+=( "$task_name" )
+                gradle_all_tasks+=( ":$task_name" )
             fi
+            subproject_tasks+=( "${BASH_REMATCH[2]}" )
+        else
+            root_tasks+=( "$task_name" )
         fi
     done
 
@@ -229,6 +250,8 @@ __gradle-generate-tasks-cache() {
             gradle_all_tasks+=( "$task" )
         done
     fi
+
+    IFS="$OLDIFS"
 
     printf "%s\n" "${gradle_all_tasks[@]}" >| "$cache_dir/$gradle_files_checksum"
     echo "$gradle_files_checksum" >| "$cache_dir/$cache_name.md5"
