@@ -117,7 +117,7 @@ The [bash-completion documentation](https://github.com/scop/bash-completion#read
 
 3.  **Configure `~/.bash_profile`** to source `~/.bashrc`:
     ```bash
-    { echo '[[ -f ~/.bashrc ]] && source ~/.bashrc'; cat ~/.bash_profile 2>/dev/null; } > ~/.bash_profile.tmp && mv ~/.bash_profile.tmp ~/.bash_profile     
+    LINE='[[ -f ~/.bashrc ]] && source ~/.bashrc' && grep -qxF "$LINE" ~/.bash_profile 2>/dev/null || printf '%s\n' "$LINE" >> ~/.bash_profile     
     ```
 
 4.  **Configure `~/.bashrc`** to load bash-completion:
@@ -125,7 +125,7 @@ The [bash-completion documentation](https://github.com/scop/bash-completion#read
     echo '[[ -r "$(brew --prefix)/etc/profile.d/bash_completion.sh" ]] && source "$(brew --prefix)/etc/profile.d/bash_completion.sh"' >> ~/.bashrc
     ```
 
-5.  **Start a new terminal session** or run `source ~/.bashrc`.
+5.  **Start a new Bash session** (for example, open a new Terminal window that uses Bash or run `bash` in your current shell), then run `source ~/.bashrc` (or `source ~/.bash_profile` in a login shell).
 
 ### Install manually
 
@@ -133,9 +133,11 @@ The [bash-completion documentation](https://github.com/scop/bash-completion#read
 
     > **Note:** Homebrew's `bash-completion@2` is patched to load completions from `bash_completion.d/`. If you install bash-completion@2 from source or another package manager, it only loads from the `completions/` directory by default. In that case, either install to the `completions/` directory or source `gradle-completion.bash` directly in your `~/.bashrc`.
 
-2.  **Download `gradle-completion.bash`** and place it in your `bash_completion.d` folder (e.g., `/usr/local/etc/bash_completion.d` or `$HOME/bash_completion.d`).
+2.  **Download `gradle-completion.bash`** and place it in your `bash_completion.d` folder (e.g., `/usr/local/etc/bash_completion.d` or `${HOME}/bash_completion.d`).
     ```bash
-    curl -LA gradle-completion https://raw.githubusercontent.com/gradle/gradle-completion/master/gradle-completion.bash -o $(brew --prefix)/etc/bash_completion.d/gradle
+    DEST="/usr/local/etc/bash_completion.d" # or DEST="${HOME}/bash_completion.d"
+    mkdir -p "$DEST"
+    curl -LA gradle-completion https://raw.githubusercontent.com/gradle/gradle-completion/master/gradle-completion.bash -o "$DEST/gradle"
     ```
 
 3.  **Configure your shell profile** (continue from step 3 in the Homebrew section above).
