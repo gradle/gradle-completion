@@ -77,36 +77,91 @@ source ~/.zsh/gradle-completion-VERSION/_gradle 1>&2 2>/dev/null; __gradle-compl
 
 This script depends on the `bash-completion` framework, which is not installed on macOS by default.
 
+### Understanding `.bashrc` vs `.bash_profile`
+
+Bash reads different config files depending on how it's started:
+
+| Shell type | Config file | When |
+|------------|-------------|------|
+| Login shell | `~/.bash_profile` | First shell at login, or `bash -l` |
+| Non-login interactive | `~/.bashrc` | Running `bash` from another shell (e.g., zsh) |
+
+**Since macOS Catalina (2019), zsh is the default shell.** If you type `bash` to switch from zsh, you get a non-login shell that only reads `~/.bashrc`.
+
+The [bash-completion documentation](https://github.com/scop/bash-completion#readme) recommends:
+
+1. Put all interactive bash configuration (including completions) in `~/.bashrc`
+2. Have `~/.bash_profile` source `~/.bashrc`
+3. **Do not** source bash-completion directly in `~/.bash_profile` — it won't work in non-login shells
+
 ### Install via [Homebrew](https://brew.sh)
 
 1.  **Install the `bash-completion` framework.** This is a required prerequisite.
+
+    For **macOS built-in Bash 3.2**:
     ```
     brew install bash-completion
     ```
+
+    For **Homebrew Bash 4.2+** (recommended):
+    ```
+    brew install bash bash-completion@2
+    ```
+
+    > **Note:** The macOS built-in Bash 3.2 is quite old. If you experience issues, consider installing a newer Bash via Homebrew.
 
 2.  **Install `gradle-completion`.**
     ```
     brew install gradle-completion
     ```
 
-3.  **Configure your `.bash_profile`**. The `bash-completion` framework must be sourced in your profile. When you installed it, Homebrew provided the exact line to add. Add this to your `~/.bash_profile`:
+3.  **Configure `~/.bash_profile`** to source `~/.bashrc`:
     ```bash
-    echo '[[ -r "$(brew --prefix)/etc/profile.d/bash_completion.sh" ]] && . "$(brew --prefix)/etc/profile.d/bash_completion.sh"' >> ~/.bash_profile
+    { echo '[[ -f ~/.bashrc ]] && source ~/.bashrc'; cat ~/.bash_profile 2>/dev/null; } > ~/.bash_profile.tmp && mv ~/.bash_profile.tmp ~/.bash_profile     
     ```
 
-4.  **Start a new terminal session** or run `source ~/.bash_profile`.
+4.  **Configure `~/.bashrc`** to load bash-completion:
+    ```bash
+    echo '[[ -r "$(brew --prefix)/etc/profile.d/bash_completion.sh" ]] && source "$(brew --prefix)/etc/profile.d/bash_completion.sh"' >> ~/.bashrc
+    ```
+
+5.  **Start a new terminal session** or run `source ~/.bashrc`.
 
 ### Install manually
 
-1.  **Ensure `bash-completion` is installed and configured.** You can install it with your favorite package manager or by following the [official installation instructions](https://github.com/scop/bash-completion/blob/master/README.md#installation). The main `bash_completion.sh` script must be sourced in your `.bash_profile` or `.bashrc` for this to work.
+1.  **Ensure `bash-completion` is installed and configured.** You can install it with your favorite package manager or by following the [official installation instructions](https://github.com/scop/bash-completion/blob/master/README.md#installation).
+
+    > **Note:** Homebrew's `bash-completion@2` is patched to load completions from `bash_completion.d/`. If you install bash-completion@2 from source or another package manager, it only loads from the `completions/` directory by default. In that case, either install to the `completions/` directory or source `gradle-completion.bash` directly in your `~/.bashrc`.
 
 2.  **Download `gradle-completion.bash`** and place it in your `bash_completion.d` folder (e.g., `/usr/local/etc/bash_completion.d` or `$HOME/bash_completion.d`).
-    ```
-    # Example for Homebrew on Intel Macs
-    curl -LA gradle-completion https://edub.me/gradle-completion-bash -o $(brew --prefix)/etc/bash_completion.d/gradle-completion.bash
+    ```bash
+    curl -LA gradle-completion https://raw.githubusercontent.com/gradle/gradle-completion/master/gradle-completion.bash -o $(brew --prefix)/etc/bash_completion.d/gradle
     ```
 
-3.  **Start a new terminal session.** The `bash-completion` framework will automatically source the script.
+3.  **Configure your shell profile** (continue from step 3 in the Homebrew section above).
+
+### Troubleshooting
+
+**Check if completion is loaded:**
+```bash
+type _gradle
+```
+If it shows `_gradle is a function`, completion is working. If it says `not found`, the completion script hasn't been sourced.
+
+**Check if you're in a login shell:**
+```bash
+shopt -q login_shell && echo "login" || echo "not login"
+```
+If it shows `not login`, make sure your `~/.bash_profile` sources `~/.bashrc` (see step 3 above).
+
+**Check your Bash version:**
+```bash
+echo $BASH_VERSION
+```
+If you're using macOS built-in Bash 3.2 and experiencing issues, consider installing a newer Bash: `brew install bash`
+
+**Common mistake — escaped `$`:**
+Make sure your config uses `$(brew --prefix)` and not `\$(brew --prefix)` (with a backslash). The backslash prevents the command from running.
 
 #### (Optional) Manual Completion Cache Initialization
 Completion cache initialization happens the first time you invoke completion,
