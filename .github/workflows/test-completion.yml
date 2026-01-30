@@ -1,0 +1,42 @@
+name: Test Completion Script
+
+on:
+  pull_request:
+    branches: [ master ]
+    paths:
+      - 'gradle-completion.bash'
+      - 'gradle-completion.bash.template'
+      - 'tests/**'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java (for Gradle)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Cache Gradle files
+        uses: actions/cache@v4
+        with:
+          path: ~/.gradle/caches
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Run bash completion tests
+        run: bash tests/integration_test.sh
+
+      - name: Run zsh completion tests
+        run: bash tests/zsh_test_runner.sh
