@@ -1,4 +1,25 @@
+# Gradle
 .gradle/
 build/
-.idea
-.kotlin
+gradle/
+# But allow gradle wrapper in test projects
+!tests/projects/*/gradle/wrapper/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Kotlin
+.kotlin/
+
+# Test artifacts
+tests/.gradle-test*/
+*.patch
+
+# OS specific
+.DS_Store
+Thumbs.db
+*.log
