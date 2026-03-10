@@ -84,6 +84,7 @@ __gradle-long-options() {
 --configuration-cache-problems - Configures how the configuration cache handles problems (fail or warn). Defaults to fail. 
 --configure-on-demand          - Configure necessary projects only. Gradle will attempt to reduce configuration time for large multi-project builds.  [incubating]
 --console                      - Specifies which type of console output to generate. Values are 'plain', 'colored', 'auto' (default), 'rich' or 'verbose'. 
+--console-unicode              - Specifies which character types are allowed in console output to generate. Values are 'auto' (default), 'disable' or 'enable'. 
 --continue                     - Continue task execution after a task failure. 
 --continuous                   - Enables continuous build. Gradle does not exit and will re-execute tasks when task file inputs change. 
 --daemon                       - Uses the Gradle daemon to run the build. Starts the daemon if not running. 
@@ -128,7 +129,7 @@ __gradle-long-options() {
 --stacktrace                   - Print out the stacktrace for all exceptions. 
 --status                       - Shows status of running and recently stopped Gradle daemon(s). 
 --stop                         - Stops the Gradle daemon if it is running. 
---task-graph                   - (Experimental) Print task graph instead of executing tasks. 
+--task-graph                   - Print task graph instead of executing tasks. 
 --update-locks                 - Perform a partial update of the dependency lock, letting passed in module notations change version.  [incubating]
 --version                      - Print version info and exit. 
 --warn                         - Set log level to warn. 
@@ -168,9 +169,11 @@ __gradle-properties() {
 -Dorg.gradle.configuration-cache.fine-grained-property-tracking= - 
 -Dorg.gradle.unsafe.isolated-projects=    - 
 -Dorg.gradle.problems.report=             - (Experimental) enables HTML problems report
+-Dorg.gradle.tooling.parallel=            - 
 -Dorg.gradle.logging.level=               - 
 -Dorg.gradle.logging.stacktrace=          - 
 -Dorg.gradle.console=                     - Specifies which type of console output to generate. Values are 'plain', 'colored', 'auto' (default), 'rich' or 'verbose'.
+-Dorg.gradle.console.unicode=             - Specifies which character types are allowed in console output to generate. Values are 'auto' (default), 'disable' or 'enable'.
 -Dorg.gradle.warning.mode=                - Specifies which mode of warnings to generate. Values are 'all', 'fail', 'summary'(default) or 'none'
 -Dorg.gradle.welcome=                     - 
 -Dorg.gradle.daemon.idletimeout=          - 
