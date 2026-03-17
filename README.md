@@ -27,11 +27,11 @@ echo $fpath | grep "/usr/local/share/zsh/site-functions"
 
 ### Install as [oh-my-zsh](https://ohmyz.sh/) plugin
 
-Download the latest release tarball and extract it into your oh-my-zsh plugins directory:
+Download the latest release tarball and extract it into your oh-my-zsh custom plugins directory:
 
 ```bash
 VERSION=1.4.4  # Replace with the latest version from https://github.com/gradle/gradle-completion/releases
-curl -L https://github.com/gradle/gradle-completion/releases/download/v${VERSION}/gradle-completion-${VERSION}.tar.gz | tar xz -C ~/.oh-my-zsh/plugins/
+curl -L https://github.com/gradle/gradle-completion/releases/download/v${VERSION}/gradle-completion-${VERSION}.tar.gz | tar xz -C ~/.oh-my-zsh/custom/plugins/
 ```
 
 Add `gradle-completion` to the plugins array in your '.zshrc' file:
