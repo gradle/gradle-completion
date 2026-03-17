@@ -3,9 +3,9 @@ Bash and Zsh completion support for [Gradle](https://gradle.org).
 
 This provides _fast_ tab completion for:
 
- * Gradle tasks for the current project and sub-projects
- * Gradle CLI switches (e.g. `--parallel`)
- * Common Gradle properties (e.g. `-Dorg.gradle.debug`)
+* Gradle tasks for the current project and sub-projects
+* Gradle CLI switches (e.g. `--parallel`)
+* Common Gradle properties (e.g. `-Dorg.gradle.debug`)
 
 It also handles custom default build files, so `rootProject.buildFileName = 'build.gradle.kts'` is supported.
 
@@ -27,26 +27,34 @@ echo $fpath | grep "/usr/local/share/zsh/site-functions"
 
 ### Install as [oh-my-zsh](https://ohmyz.sh/) plugin
 
-Download and place the plugin and completion script into your oh-my-zsh plugins directory. 
-```
-git clone https://github.com/gradle/gradle-completion ~/.oh-my-zsh/custom/plugins/gradle-completion
+Download the latest release tarball and extract it into your oh-my-zsh custom plugins directory:
+
+```bash
+VERSION=1.4.4  # Replace with the latest version from https://github.com/gradle/gradle-completion/releases
+curl -L https://github.com/gradle/gradle-completion/releases/download/v${VERSION}/gradle-completion-${VERSION}.tar.gz | tar xz -C ~/.oh-my-zsh/custom/plugins/
 ```
 
-Add `gradle-completion` to the plugins array in your '.zshrc' file.
-```
+Add `gradle-completion` to the plugins array in your '.zshrc' file:
+```bash
 plugins+=(gradle-completion)
 ```
 
+Start a new terminal session.
+
 ### Install manually
 
-Download and place `_gradle` on your `$fpath`. I recommend `$HOME/.zsh/gradle-completion`:
-```
-git clone https://github.com/gradle/gradle-completion ~/.zsh/gradle-completion
+Download the latest release tarball and extract it to your preferred location:
+
+```bash
+VERSION=1.4.4  # Replace with the latest version from https://github.com/gradle/gradle-completion/releases
+mkdir -p ~/.zsh
+curl -L https://github.com/gradle/gradle-completion/releases/download/v${VERSION}/gradle-completion-${VERSION}.tar.gz | tar xz -C ~/.zsh/
 ```
 
-Add the following do your '.zshrc' file:
-```
-echo "\nfpath=($HOME/.zsh/gradle-completion \$fpath)" >> ~/.zshrc
+Add the following to your '.zshrc' file:
+```bash
+fpath=(~/.zsh/gradle-completion-${VERSION} $fpath)
+autoload -Uz compinit && compinit
 ```
 
 Start a new terminal session. You may need to disable the `gradle` plugin for `oh-my-zsh`.
@@ -59,39 +67,103 @@ running:
 
 ```bash
 cd path/to/your-project
-source ~/.zsh/gradle-completion/_gradle 1>&2 2>/dev/null; __gradle-completion-init
+# For oh-my-zsh installation:
+source ~/.oh-my-zsh/plugins/gradle-completion-VERSION/_gradle 1>&2 2>/dev/null; __gradle-completion-init
+# OR for manual installation:
+source ~/.zsh/gradle-completion-VERSION/_gradle 1>&2 2>/dev/null; __gradle-completion-init
 ```
 
 ## Installation for Bash 3.2+
 
+This script depends on the `bash-completion` framework, which is not installed on macOS by default.
+
+### Understanding `.bashrc` vs `.bash_profile`
+
+Bash reads different config files depending on how it's started:
+
+| Shell type | Config file | When |
+|------------|-------------|------|
+| Login shell | `~/.bash_profile` | First shell at login, or `bash -l` |
+| Non-login interactive | `~/.bashrc` | Running `bash` from another shell (e.g., zsh) |
+
+**Since macOS Catalina (2019), zsh is the default shell.** If you type `bash` to switch from zsh, you get a non-login shell that only reads `~/.bashrc`.
+
+The [bash-completion documentation](https://github.com/scop/bash-completion#readme) recommends:
+
+1. Put all interactive bash configuration (including completions) in `~/.bashrc`
+2. Have `~/.bash_profile` source `~/.bashrc`
+3. **Do not** source bash-completion directly in `~/.bash_profile` — it won't work in non-login shells
+
 ### Install via [Homebrew](https://brew.sh)
 
-```
-brew install gradle-completion
+1.  **Install the `bash-completion` framework.** This is a required prerequisite.
 
-# Source completion scripts from bash-completion in your bash profile
-echo '[[ -r "/usr/local/etc/profile.d/bash_completion.sh" ]] && . "/usr/local/etc/profile.d/bash_completion.sh"' >> ~/.bash_profile
+    For **macOS built-in Bash 3.2**:
+    ```
+    brew install bash-completion
+    ```
 
-# Load changes to bash profile
-source ~/.bash_profile
-```
+    For **Homebrew Bash 4.2+** (recommended):
+    ```
+    brew install bash bash-completion@2
+    ```
+
+    > **Note:** The macOS built-in Bash 3.2 is quite old. If you experience issues, consider installing a newer Bash via Homebrew.
+
+2.  **Install `gradle-completion`.**
+    ```
+    brew install gradle-completion
+    ```
+
+3.  **Configure `~/.bash_profile`** to source `~/.bashrc`:
+    ```bash
+    LINE='[[ -f ~/.bashrc ]] && source ~/.bashrc' && grep -qxF "$LINE" ~/.bash_profile 2>/dev/null || printf '%s\n' "$LINE" >> ~/.bash_profile     
+    ```
+
+4.  **Configure `~/.bashrc`** to load bash-completion:
+    ```bash
+    echo '[[ -r "$(brew --prefix)/etc/profile.d/bash_completion.sh" ]] && source "$(brew --prefix)/etc/profile.d/bash_completion.sh"' >> ~/.bashrc
+    ```
+
+5.  **Start a new Bash session** (for example, open a new Terminal window that uses Bash or run `bash` in your current shell), then run `source ~/.bashrc` (or `source ~/.bash_profile` in a login shell).
 
 ### Install manually
 
-Download and place `gradle-completion.bash` in your `bash_completion.d` folder, usually `/etc/bash_completion.d`, `/usr/local/etc/bash_completion.d`, or `$HOME/bash_completion.d`:
-```
-mkdir $HOME/bash_completion.d
-curl -LA gradle-completion https://edub.me/gradle-completion-bash -o $HOME/bash_completion.d/gradle-completion.bash
-```
+1.  **Ensure `bash-completion` is installed and configured.** You can install it with your favorite package manager or by following the [official installation instructions](https://github.com/scop/bash-completion/blob/master/README.md#installation).
 
-NOTE: Ensure `bash-completion` 1.2+ is installed using your favorite package manager or by following the [bash-completion installation instructions](https://github.com/scop/bash-completion/blob/master/README.md#installation).
+    > **Note:** Homebrew's `bash-completion@2` is patched to load completions from `bash_completion.d/`. If you install bash-completion@2 from source or another package manager, it only loads from the `completions/` directory by default. In that case, either install to the `completions/` directory or source `gradle-completion.bash` directly in your `~/.bashrc`.
 
-Add the following to your `.bash_profile` (macOS) or `.bashrc` (Linux) file:
-```
-source $HOME/bash_completion.d/gradle-completion.bash
-```
+2.  **Download `gradle-completion.bash`** and place it in your `bash_completion.d` folder (e.g., `/usr/local/etc/bash_completion.d` or `${HOME}/bash_completion.d`).
+    ```bash
+    DEST="/usr/local/etc/bash_completion.d" # or DEST="${HOME}/bash_completion.d"
+    mkdir -p "$DEST"
+    curl -LA gradle-completion https://raw.githubusercontent.com/gradle/gradle-completion/master/gradle-completion.bash -o "$DEST/gradle"
+    ```
 
-Start a new terminal session.
+3.  **Configure your shell profile** (continue from step 3 in the Homebrew section above).
+
+### Troubleshooting
+
+**Check if completion is loaded:**
+```bash
+type _gradle
+```
+If it shows `_gradle is a function`, completion is working. If it says `not found`, the completion script hasn't been sourced.
+
+**Check if you're in a login shell:**
+```bash
+shopt -q login_shell && echo "login" || echo "not login"
+```
+If it shows `not login`, make sure your `~/.bash_profile` sources `~/.bashrc` (see step 3 above).
+
+**Check your Bash version:**
+```bash
+echo $BASH_VERSION
+```
+If you're using macOS built-in Bash 3.2 and experiencing issues, consider installing a newer Bash: `brew install bash`
+
+**Common mistake — escaped `$`:**
+Make sure your config uses `$(brew --prefix)` and not `\$(brew --prefix)` (with a backslash). The backslash prevents the command from running.
 
 #### (Optional) Manual Completion Cache Initialization
 Completion cache initialization happens the first time you invoke completion,
@@ -158,12 +230,6 @@ You may need to invalidate the cache using the cache config above or by executin
 ## Troubleshooting
 If zsh completion isn't working, first try checking your `$fpath` with `echo $fpath`.
 
-zsh completion using `./gradlew` may not work on Linux if you don't have `.` on your `$PATH`,
-so I recommend adding it in your `~/.zshrc` file:
-```bash
-export PATH=".:$PATH"
-```
-
 > HEADS UP: If you get an error 'parse error near `]]"', please [upgrade zsh](http://stackoverflow.com/questions/17648621/how-do-i-update-zsh-to-the-latest-version).
 zsh 5.0.5 has a bug in script parsing that is fixed as of zsh 5.0.8. See issues #4 and #7 for more details.
 
@@ -177,15 +243,65 @@ zstyle ':completion:*' use-cache on
 
 See the [contributing guide](CONTRIBUTING.md).
 
+**Note for contributors:** The completion scripts (`gradle-completion.bash` and `_gradle`) are generated from templates and are not committed to git (they're in `.gitignore`). Run `./gradlew generateCompletionScripts` to regenerate them locally during development. For installation, users should download release tarballs which include the pre-generated completion scripts.
+
+## For Maintainers: Releasing
+
+This project uses template-based generation for completion scripts. The actual `gradle-completion.bash` and `_gradle` files are generated from templates during the release process.
+
+### Versioning
+
+From Gradle `9.2.0` onwards, gradle-completion versions align with the Gradle version used to generate the completion scripts. For example, version `9.2.0` of gradle-completion corresponds to Gradle `9.2.0`. This implies we will release a new version of gradle-completion every time Gradle releases a new version.
+
+**Compatibility:** gradle-completion generally works with multiple Gradle versions. If you use a newer Gradle version, some newer CLI options won't appear in completions. If you use an older Gradle version, some completion suggestions may not be recognized (but won't cause errors).
+
+**Patch versions:** We use patch versions (e.g., `9.2.1`, `9.2.2`) for bug fixes and improvements to the completion scripts themselves, without updating to a newer Gradle version. This means `9.2.1` and `9.2.2` both correspond to any Gradle `9.2.x`.
+
+**Recommendation:** Use the gradle-completion version that matches or is closest to your primary Gradle version for the best experience.
+
+**Note:** Versions prior to `9.2.0` used independent versioning (e.g., `1.4.4`).
+
+### Release Process
+
+1. **Create and push a tag:**
+   ```bash
+   git tag v1.x.x
+   git push origin v1.x.x
+   ```
+
+2. **GitHub Actions automatically:**
+    - Checks out the code at the tag
+    - Sets up Java 17 and Gradle
+    - Runs `./gradlew generateCompletionScripts` to generate completion files from templates
+    - Creates a release tarball (`gradle-completion-1.x.x.tar.gz`) containing:
+        - Generated completion scripts (`gradle-completion.bash`, `_gradle`)
+        - Template files (`gradle-completion.bash.template`, `_gradle.template`)
+        - Build configuration and other necessary files
+    - Creates a GitHub release and uploads the tarball as a release asset
+
+3. **Update Homebrew:**
+
+   This project is on auto update in Homebrew. No need for us to do anything.
+
+### Regenerating Completion Scripts Locally
+
+To regenerate completion scripts from templates during development:
+
+```bash
+./gradlew generateCompletionScripts
+```
+
+This will update `gradle-completion.bash` and `_gradle` based on the current Gradle version's CLI options. 
+
 ## Acknowledgements
 Bash completion is inspired by [Nolan Lawson's Gradle tab completion for bash](https://gist.github.com/nolanlawson/8694399).
 
 Zsh completion is an improved version of [zsh](https://github.com/zsh-users/zsh)'s built-in Gradle completion.
 
 Current improvements over built-in support:
- - Subproject tasks are completed
- - Gradle CLI options are current as of Gradle 6.4
- - Common Gradle properties are completed
- - Handles default build file as specified in settings.gradle
- - ~20x faster completion speed for medium to large projects
- - Completion cache updates in the background after first invocation
+- Subproject tasks are completed
+- Gradle CLI options are current as of Gradle 9.2.0
+- Common Gradle properties are completed
+- Handles default build file as specified in settings.gradle
+- ~20x faster completion speed for medium to large projects
+- Completion cache updates in the background after first invocation
