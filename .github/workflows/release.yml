@@ -5,6 +5,8 @@ on:
     tags:
       - 'v*.*.*' # Trigger on tags like v1.0.0
 
+permissions: {}
+
 jobs:
   release:
     runs-on: ubuntu-latest
