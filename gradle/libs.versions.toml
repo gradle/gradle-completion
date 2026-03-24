@@ -1,0 +1,11 @@
+[versions]
+junit = "6.0.3"
+
+[libraries]
+gson = { module = "com.google.code.gson:gson", version = "2.10.1" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
+junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher", version.ref = "junit" }
+mokk = { module = "io.mockk:mockk", version = "1.13.8" }
+
+[plugins]
+detekt = { id = "dev.detekt", version = "2.0.0-alpha.1" }

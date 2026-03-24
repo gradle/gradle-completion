@@ -1,6 +1,6 @@
 plugins {
     `kotlin-dsl`
-    id("dev.detekt") version "2.0.0-alpha.1"
+    alias(libs.plugins.detekt)
 }
 
 repositories {
@@ -9,10 +9,10 @@ repositories {
 }
 
 dependencies {
-    implementation("com.google.code.gson:gson:2.10.1")
-    testImplementation("org.junit.jupiter:junit-jupiter:5.10.1")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher:6.0.3")
-    testImplementation("io.mockk:mockk:1.13.8")
+    implementation(libs.gson)
+    testImplementation(libs.junit.jupiter)
+    testRuntimeOnly(libs.junit.platform.launcher)
+    testImplementation(libs.mokk)
 }
 
 tasks.withType<Test>().configureEach {
