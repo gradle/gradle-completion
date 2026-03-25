@@ -1,4 +1,23 @@
+# Gradle
 .gradle/
 build/
-.idea
-.kotlin
+gradle/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Kotlin
+.kotlin/
+
+# Test artifacts
+tests/.gradle-test*/
+*.patch
+
+# OS specific
+.DS_Store
+Thumbs.db
+*.log
