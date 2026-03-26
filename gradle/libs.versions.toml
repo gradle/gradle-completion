@@ -8,4 +8,4 @@ junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher
 mokk = { module = "io.mockk:mockk", version = "1.14.9" }
 
 [plugins]
-detekt = { id = "dev.detekt", version = "2.0.0-alpha.1" }
+detekt = { id = "dev.detekt", version = "2.0.0-alpha.2" }
