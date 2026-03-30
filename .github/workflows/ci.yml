@@ -12,7 +12,10 @@ permissions: {}
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
     permissions:
       contents: read
       id-token: write
@@ -40,6 +43,10 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v5
+
+      - name: Install modern bash (macOS)
+        if: runner.os == 'macOS'
+        run: brew install bash
 
       - name: Check
         run: ./gradlew :buildSrc:check :check
