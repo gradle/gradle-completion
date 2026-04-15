@@ -20,6 +20,7 @@ import org.gradle.internal.buildoption.ListBuildOption
 import org.gradle.internal.buildoption.StringBuildOption
 import org.gradle.internal.extensions.stdlib.uncheckedCast
 import org.gradle.internal.logging.LoggingConfigurationBuildOptions
+import org.gradle.language.base.plugins.LifecycleBasePlugin.BUILD_GROUP
 import org.gradle.launcher.cli.converter.WelcomeMessageBuildOptions
 import org.gradle.launcher.daemon.configuration.DaemonBuildOptions
 import org.gradle.launcher.daemon.toolchain.ToolchainBuildOptions
@@ -52,7 +53,7 @@ abstract class GenerateCompletionScriptsTask : DefaultTask() {
     abstract val zshOutputFile: RegularFileProperty
 
     init {
-        group = "build"
+        group = BUILD_GROUP
         description = "Generates shell completion scripts for Bash and Zsh"
     }
 
