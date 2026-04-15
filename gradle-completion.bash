@@ -334,13 +334,13 @@ __gradle-generate-tasks-cache() {
     local OLDIFS="$IFS"
     IFS=$'\n'
     for output_line in ${gradle_tasks_output}; do
-        # The forbidden characters should be aligned with this variable org.gradle.util.internal.NameValidator.FORBIDDEN_CHARACTERS in the gradle/gradle repo
-        if [[ "$output_line" =~ ^([[:alpha:]][^/\\:<>\"?*|]*)\ -\ (.*)$ ]]; then
-            # Task with description (exclude forbidden gradle chars: /, \, :, <, >, ", ?, *, |)
+        # Forbidden characters in task names: / \ : < > " ? * | (see org.gradle.util.internal.NameValidator.FORBIDDEN_CHARACTERS)
+        # Colon is forbidden within a task name but used as the qualified path separator (e.g. sub:taskName),
+        # so the regex allows ':' to match both root and subproject task lines.
+        if [[ "$output_line" =~ ^([[:alpha:]][^/\\<>\"?*|]*)\ -\ (.*)$ ]]; then
             task_name="${BASH_REMATCH[1]}"
             task_description="${BASH_REMATCH[2]}"
-        elif [[ "$output_line" =~ ^([[:alpha:]][^/\\:<>\"?*|]*)$ ]]; then
-            # Task without description (exclude forbidden gradle chars)
+        elif [[ "$output_line" =~ ^([[:alpha:]][^/\\<>\"?*|]*)$ ]]; then
             task_name="${BASH_REMATCH[1]}"
             task_description=""
         else

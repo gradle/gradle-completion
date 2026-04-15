@@ -134,13 +134,9 @@ CACHE_GEN
         partial_match=$(grep "^desc_b" "$cache_file" | head -1)
         test_assert "grep finds tasks starting with 'desc_b'" "desc_backtick_cmd" "$partial_match"
 
-        # Test 9: Colon-prefixed subproject tasks
-        subproject_line=$(grep "^:" "$cache_file" | head -1 2>/dev/null || echo "")
-        if [[ -n "$subproject_line" ]]; then
-            test_assert "subproject tasks have colon prefix" ":" "$subproject_line"
-        else
-            echo -e "${YELLOW}⊘${NC} No subproject tasks (expected if single project)"
-        fi
+        # Colon-prefixed subproject tasks
+        subproject_line=$(grep "^:" "$cache_file" | head -1)
+        test_assert "subproject tasks have colon prefix" ":sub:" "$subproject_line"
 
         echo ""
         echo "Test Group: Security - No Shell Expansion"
