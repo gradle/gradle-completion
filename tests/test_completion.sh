@@ -11,7 +11,7 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 COMPLETION_SCRIPT="$PROJECT_ROOT/gradle-completion.bash"
-TEST_PROJECT="$SCRIPT_DIR/projects/gradle-completion-security-test"
+TEST_PROJECT="$SCRIPT_DIR/projects/gradle-completion-test-build"
 
 # Colors for output
 RED='\033[0;31m'

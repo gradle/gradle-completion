@@ -21,7 +21,7 @@ setopt local_options no_null_glob
 
 SCRIPT_DIR=${0:a:h}
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
-TEST_PROJECT="$SCRIPT_DIR/projects/gradle-completion-security-test"
+TEST_PROJECT="$SCRIPT_DIR/projects/gradle-completion-test-build"
 GRADLE_USER_HOME_TEST="$SCRIPT_DIR/.gradle-test"
 
 # Colors
