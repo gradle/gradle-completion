@@ -113,6 +113,7 @@ __gradle-long-options() {
 --no-rebuild                   - Disables rebuilding of project dependencies. 
 --no-scan                      - Disables the creation of a Build Scan. 
 --no-watch-fs                  - Disables file system watching. 
+--non-interactive              - Do not do interactive prompting.  [incubating]
 --offline                      - Runs the build without accessing network resources. 
 --parallel                     - Builds projects in parallel. Gradle will attempt to determine the optimal number of executor threads to use. 
 --priority                     - Specifies the scheduling priority for the Gradle daemon and all processes launched by it. Supported values are 'normal' (default) or 'low'. 
@@ -172,13 +173,15 @@ __gradle-properties() {
 -Dorg.gradle.configuration-cache.heap-dump-dir= - 
 -Dorg.gradle.configuration-cache.fine-grained-property-tracking= - 
 -Dorg.gradle.unsafe.isolated-projects=    - 
+-Dorg.gradle.unsafe.isolated-projects.diagnostics= - 
 -Dorg.gradle.problems.report=             - Enables the HTML problems report.
 -Dorg.gradle.tooling.parallel=            - 
 -Dorg.gradle.logging.level=               - 
 -Dorg.gradle.logging.stacktrace=          - 
+-Dorg.gradle.warning.mode=                - Specifies which mode of warnings to generate. Supported values are 'all', 'fail', 'summary' (default), or 'none'.
 -Dorg.gradle.console=                     - Specifies which type of console output to generate. Supported values are 'plain', 'colored', 'auto' (default), 'rich', or 'verbose'.
 -Dorg.gradle.console.unicode=             - Specifies which character types are allowed in the console output. Supported values are 'auto' (default), 'disable', or 'enable'.
--Dorg.gradle.warning.mode=                - Specifies which mode of warnings to generate. Supported values are 'all', 'fail', 'summary' (default), or 'none'.
+-Dorg.gradle.console.interactive=         - 
 -Dorg.gradle.welcome=                     - 
 -Dorg.gradle.daemon.idletimeout=          - 
 -Dorg.gradle.daemon.healthcheckinterval=  - 
