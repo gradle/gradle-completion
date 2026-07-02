@@ -1,5 +1,5 @@
 [versions]
-junit = "6.0.3"
+junit = "6.1.0"
 
 [libraries]
 gson = { module = "com.google.code.gson:gson", version = "2.13.2" }
