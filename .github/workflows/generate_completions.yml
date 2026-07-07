@@ -26,7 +26,7 @@ jobs:
           distribution: 'temurin'
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v6.1.1
+        uses: gradle/actions/setup-gradle@v6.2.0
 
       - name: Fetch Latest Gradle Version
         run: ./gradlew fetchLatestGradleVersion
