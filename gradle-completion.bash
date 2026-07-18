@@ -102,12 +102,14 @@ __gradle-long-options() {
 --include-build                - Includes the specified build in the composite. 
 --info                         - Sets the log level to info. 
 --init-script                  - Specifies an initialization script. 
+--isolated-projects            - Enables Isolated Projects. Projects are configured in parallel. Implies `--configuration-cache`.  [incubating]
 --max-workers                  - Configures the maximum number of concurrent workers Gradle is allowed to use. 
 --no-build-cache               - Disables the Gradle build cache. 
 --no-configuration-cache       - Disables the configuration cache. 
 --no-configure-on-demand       - Disables the use of configuration on demand.  [incubating]
 --no-continue                  - Stops task execution after a task failure. 
 --no-daemon                    - Runs the build without the Gradle daemon. Useful occasionally if you have configured Gradle to always run with the daemon by default. 
+--no-isolated-projects         - Disables Isolated Projects.  [incubating]
 --no-parallel                  - Disables parallel project execution. 
 --no-problems-report           - Disables the HTML problems report.  [incubating]
 --no-rebuild                   - Disables rebuilding of project dependencies. 
@@ -172,8 +174,9 @@ __gradle-properties() {
 -Dorg.gradle.configuration-cache.entries-per-key= - 
 -Dorg.gradle.configuration-cache.heap-dump-dir= - 
 -Dorg.gradle.configuration-cache.fine-grained-property-tracking= - 
--Dorg.gradle.unsafe.isolated-projects=    - 
--Dorg.gradle.unsafe.isolated-projects.diagnostics= - 
+-Dorg.gradle.isolated-projects=           - Enables Isolated Projects. Projects are configured in parallel. Implies `--configuration-cache`.
+-Dorg.gradle.isolated-projects.diagnostics= - 
+-Dorg.gradle.isolated-projects.dangerously-ignore-problems= - 
 -Dorg.gradle.problems.report=             - Enables the HTML problems report.
 -Dorg.gradle.tooling.parallel=            - 
 -Dorg.gradle.logging.level=               - 
