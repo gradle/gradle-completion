@@ -157,6 +157,7 @@ __gradle-properties() {
 -Dorg.gradle.configureondemand=           - Configures necessary projects only. Gradle will attempt to reduce configuration time for large multi-project builds.
 -Dorg.gradle.caching=                     - Enables the Gradle build cache. Gradle will try to reuse outputs from previous builds.
 -Dorg.gradle.caching.debug=               - 
+-Dorg.gradle.mirror.maven.settings=       - 
 -Dorg.gradle.vfs.watch=                   - Enables file system watching. Reuses file system data for subsequent builds.
 -Dorg.gradle.vfs.verbose=                 - 
 -Dcom.gradle.develocity.url=              - Default URL of the Develocity server to publish Build Scan to. Triggers auto-application of the Develocity plugin if not already applied.
@@ -166,6 +167,7 @@ __gradle-properties() {
 -Dorg.gradle.configuration-cache=         - Enables the configuration cache. Gradle will try to reuse the build configuration from previous builds.
 -Dorg.gradle.configuration-cache.inputs.unsafe.ignore.in-serialization= - 
 -Dorg.gradle.configuration-cache.unsafe.ignore.unsupported-build-events-listeners= - 
+-Dorg.gradle.configuration-cache.unsafe.skip-task-logging-listeners-serialization= - 
 -Dorg.gradle.configuration-cache.max-problems= - 
 -Dorg.gradle.configuration-cache.inputs.unsafe.ignore.file-system-checks= - 
 -Dorg.gradle.configuration-cache.parallel= - 
