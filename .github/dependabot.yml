@@ -13,6 +13,7 @@ updates:
       interval: "weekly"
     labels:
       - "@dev-productivity"
+      - "dependencies"
   - package-ecosystem: "gradle"
     cooldown:
       default-days: 7 # don't immediately create PRs for available updates
@@ -21,3 +22,4 @@ updates:
       interval: "weekly"
     labels:
       - "@dev-productivity"
+      - "dependencies"
